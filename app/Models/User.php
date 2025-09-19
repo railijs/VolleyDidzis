@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -21,6 +20,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // add role to be mass assignable
     ];
 
     /**
@@ -34,7 +34,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
      * @return array<string, string>
      */
@@ -45,4 +45,44 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Check if user is admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if user is a regular user.
+     */
+    public function isUser(): bool
+    {
+        return $this->role === 'user';
+    }
+
+    public function tournaments()
+{
+    return $this->belongsToMany(Tournament::class, 'tournament_user')
+                ->withTimestamps();
+}
+
+public function tournamentApplications()
+{
+    return $this->hasMany(\App\Models\TournamentApplication::class);
+}
+
+public function appliedTournaments()
+{
+    return $this->hasManyThrough(
+        \App\Models\Tournament::class,
+        \App\Models\TournamentApplication::class,
+        'user_id',       // Foreign key on applications table...
+        'id',            // Foreign key on tournaments table...
+        'id',            // Local key on users table...
+        'tournament_id'  // Local key on applications table...
+    );
+}
+
 }

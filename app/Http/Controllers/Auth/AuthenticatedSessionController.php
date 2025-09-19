@@ -11,37 +11,28 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
+     // Parāda pieteikšanās formu (login view).
     public function create(): View
     {
         return view('auth.login');
     }
-
-    /**
-     * Handle an incoming authentication request.
-     */
+     // Apstrādā ienākošu autentifikācijas pieprasījumu (pieteikšanos).
     public function store(LoginRequest $request): RedirectResponse
     {
+        
         $request->authenticate();
-
+        // Atjauno sesiju, lai novērstu "session fixation" uzbrukumus
         $request->session()->regenerate();
-
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
+    // Izbeidz autentificētu sesiju (izraksta lietotāju).
     public function destroy(Request $request): RedirectResponse
     {
+        // Atvieno lietotāju no sistēmas
         Auth::guard('web')->logout();
-
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
-
         return redirect('/');
     }
 }
