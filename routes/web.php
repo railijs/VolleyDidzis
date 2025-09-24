@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TournamentController;
@@ -10,17 +10,25 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
+use App\Models\News;
+use App\Models\Tournament;
+use Carbon\Carbon;
 
 // Home
-Route::get('/', fn () => view('welcome'));
+Route::get('/', fn() => view('welcome'));
 
 // Dashboard
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::get('/dashboard', function () {
+    $news = News::latest()->take(5)->get(); // latest 5 news
+    $tournaments = Tournament::where('start_date', '>=', Carbon::today())
+        ->orderBy('start_date')
+        ->get();
+
+    return view('dashboard', compact('news', 'tournaments'));
+})->name('dashboard');
 
 // About
-Route::get('/about', fn () => view('about'))->name('about');
+Route::get('/about', fn() => view('about'))->name('about');
 
 // Tournament calendar & day view (public)
 Route::get('/tournaments/calendar', [TournamentController::class, 'calendar'])
@@ -68,7 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::delete('/admin/users/{user}', [AdminController::class, 'destroyUser'])->name('admin.users.destroy');
     Route::patch('/admin/users/{user}/role', [AdminController::class, 'updateRole'])
-    ->name('admin.users.updateRole');
+        ->name('admin.users.updateRole');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

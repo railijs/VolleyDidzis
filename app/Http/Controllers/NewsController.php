@@ -42,6 +42,14 @@ class NewsController extends Controller
             'title'   => 'required|string|max:255',
             'content' => 'required|string',
             'image'   => 'nullable|image|max:2048',
+        ], [
+            'title.required'   => 'Lūdzu ievadiet virsrakstu.',
+            'title.string'     => 'Virsraksts jābūt tekstam.',
+            'title.max'        => 'Virsraksts nedrīkst pārsniegt 255 rakstzīmes.',
+            'content.required' => 'Lūdzu ievadiet saturu.',
+            'content.string'   => 'Saturs jābūt tekstam.',
+            'image.image'      => 'Izvēlētais fails nav attēls.',
+            'image.max'        => 'Attēls nedrīkst būt lielāks par 2MB.',
         ]);
 
         if ($request->hasFile('image')) {
@@ -51,7 +59,7 @@ class NewsController extends Controller
         News::create($validated);
 
         return redirect()->route('news.index')
-                         ->with('success', 'News created successfully.');
+            ->with('success', 'Ziņa veiksmīgi pievienota.');
     }
 
     /**
@@ -87,6 +95,14 @@ class NewsController extends Controller
             'title'   => 'required|string|max:255',
             'content' => 'required|string',
             'image'   => 'nullable|image|max:2048',
+        ], [
+            'title.required'   => 'Lūdzu ievadiet virsrakstu.',
+            'title.string'     => 'Virsraksts jābūt tekstam.',
+            'title.max'        => 'Virsraksts nedrīkst pārsniegt 255 rakstzīmes.',
+            'content.required' => 'Lūdzu ievadiet saturu.',
+            'content.string'   => 'Saturs jābūt tekstam.',
+            'image.image'      => 'Izvēlētais fails nav attēls.',
+            'image.max'        => 'Attēls nedrīkst būt lielāks par 2MB.',
         ]);
 
         if ($request->hasFile('image')) {
@@ -96,7 +112,7 @@ class NewsController extends Controller
         $news->update($validated);
 
         return redirect()->route('news.index')
-                         ->with('success', 'News updated successfully.');
+            ->with('success', 'Ziņa veiksmīgi atjaunināta.');
     }
 
     /**
@@ -111,6 +127,6 @@ class NewsController extends Controller
         $news->delete();
 
         return redirect()->route('news.index')
-                         ->with('success', 'News deleted successfully.');
+            ->with('success', 'News deleted successfully.');
     }
 }
