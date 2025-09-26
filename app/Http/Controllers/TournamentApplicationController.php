@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Tournament;
 use Illuminate\Http\Request;
 
-class TournamentApplicationController extends Controller
+class TournamentApplicationController
 {
     public function join(Request $request, Tournament $tournament)
     {

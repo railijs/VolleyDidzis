@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 
-class TournamentController extends Controller
+class TournamentController
 {
     // List upcoming tournaments
     public function index()

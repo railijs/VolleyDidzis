@@ -1,91 +1,125 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto mt-24 mb-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto mt-24 mb-12 px-4 sm:px-6 lg:px-8">
 
-        <!-- Header -->
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 text-center sm:text-left">
-            {{ $news->title }}
-        </h1>
+        {{-- ========== Page-load / reveal (no libs) ========== --}}
+        <style>
+            @media (prefers-reduced-motion: no-preference) {
+                .fade-up {
+                    opacity: 0;
+                    transform: translateY(12px);
+                    transition: opacity .6s ease, transform .6s ease
+                }
 
-        <!-- Edit/Delete Buttons (Admin Only) -->
-        @if(auth()->user()?->isAdmin())
-        <div class="flex flex-col sm:flex-row sm:space-x-3 mb-6 justify-center sm:justify-start space-y-2 sm:space-y-0">
-            <!-- Edit Button -->
-            <a href="{{ route('news.edit', $news) }}"
-               class="inline-flex items-center justify-center text-gray-700 hover:text-gray-900 border border-gray-300 hover:border-gray-400 px-4 py-2 rounded-md text-sm font-medium transition w-full sm:w-auto">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 20h9M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z"/>
-                </svg>
-                Edit
-            </a>
+                .loaded .fade-up {
+                    opacity: 1;
+                    transform: none
+                }
+            }
+        </style>
 
-            <!-- Delete Button -->
-            <form action="{{ route('news.destroy', $news) }}" method="POST"
-                  onsubmit="return confirm('Are you sure you want to delete this news item?');" class="w-full sm:w-auto">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                        class="inline-flex items-center justify-center text-gray-700 hover:text-red-600 border border-gray-300 hover:border-red-400 px-4 py-2 rounded-md text-sm font-medium transition w-full sm:w-auto">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24"
-                         stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                    Delete
-                </button>
-            </form>
-        </div>
-        @endif
+        {{-- ========== HERO ========== --}}
+        <section class="relative overflow-hidden rounded-2xl shadow-2xl mb-8 fade-up">
+            @if ($news->image)
+                <img src="{{ Storage::url($news->image) }}" alt="{{ $news->title }}"
+                    class="absolute inset-0 w-full h-full object-cover pointer-events-none"><!-- no click capture -->
+            @else
+                <div class="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-600 pointer-events-none"></div>
+            @endif
 
-        <!-- Publication Date -->
-        <p class="text-sm text-gray-600 mb-6 text-center sm:text-left">
-            Published on {{ $news->created_at->format('F j, Y') }}
-        </p>
-
-        <!-- News Image -->
-        @if($news->image)
-            <div class="mb-8 flex justify-center overflow-hidden rounded-lg shadow-lg">
-                <img src="{{ Storage::url($news->image) }}"
-                     alt="{{ $news->title }}"
-                     class="w-full max-h-[400px] sm:max-h-[500px] object-cover transition-transform duration-300 hover:scale-105 rounded-lg">
+            {{-- Overlay (now NON-interactive) --}}
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-transparent pointer-events-none">
             </div>
+
+            {{-- Floating admin toolbar (top-right) --}}
+            @if (auth()->user()?->isAdmin())
+                <div class="absolute top-4 right-4 z-20 flex gap-2"> <!-- z-20 to ensure topmost -->
+                    <a href="{{ route('news.edit', $news) }}"
+                        class="rounded-full bg-white/90 hover:bg-white text-gray-900 px-3 py-1.5 text-xs font-semibold shadow">
+                        Rediģēt
+                    </a>
+                    <form action="{{ route('news.destroy', $news) }}" method="POST"
+                        onsubmit="return confirm('Tiešām dzēst šo ziņu?');">
+                        @csrf @method('DELETE')
+                        <button type="submit"
+                            class="rounded-full bg-white/90 hover:bg-white text-red-700 px-3 py-1.5 text-xs font-semibold shadow">
+                            Dzēst
+                        </button>
+                    </form>
+                </div>
+            @endif
+
+            {{-- Content --}}
+            <div class="relative z-10 p-6 sm:p-10">
+                <div class="max-w-3xl">
+                    <p class="text-red-300/90 text-[11px] tracking-[0.18em] font-bold uppercase">Ziņa</p>
+                    <h1 class="mt-2 text-white font-extrabold leading-[1.02] text-3xl sm:text-5xl">
+                        {{ $news->title }}
+                    </h1>
+                    <p class="mt-3 text-white/80 text-sm">
+                        Publicēts {{ $news->created_at->format('d.m.Y') }}
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        {{-- ========== ARTICLE CARD ========== --}}
+        <article
+            class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm p-6 sm:p-10 fade-up">
+            {{-- If you store HTML in content, render it; if plain text, keep nl2br(e()) --}}
+            <div class="prose prose-sm sm:prose lg:prose-lg max-w-none text-gray-900">
+                {!! nl2br(e($news->content)) !!}
+            </div>
+
+            <div class="mt-8 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                <a href="{{ route('news.index') }}"
+                    class="inline-flex items-center justify-center rounded-full border border-red-200 text-red-700 hover:bg-red-50 px-5 py-2 font-semibold transition">
+                    ← Atpakaļ uz ziņām
+                </a>
+
+                <div class="flex gap-2">
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(request()->fullUrl()) }}"
+                        target="_blank"
+                        class="rounded-full bg-gray-100 hover:bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 transition">
+                        Dalīties Facebook
+                    </a>
+                </div>
+            </div>
+        </article>
+
+        {{-- ========== “Vēl ziņas” (compact) ========== --}}
+        @if (isset($more) && $more->count())
+            <section class="mt-10 fade-up">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900">Vēl ziņas</h2>
+                    <a href="{{ route('news.index') }}"
+                        class="text-sm font-semibold text-red-600 hover:text-red-800">Visas ziņas →</a>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    @foreach ($more as $n)
+                        <a href="{{ route('news.show', $n) }}"
+                            class="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-sm overflow-hidden hover:shadow-lg hover:border-gray-300 transition">
+                            @if ($n->image)
+                                <img src="{{ Storage::url($n->image) }}" alt="{{ $n->title }}"
+                                    class="w-full h-36 object-cover">
+                            @endif
+                            <div class="p-4">
+                                <h3 class="text-base font-semibold text-gray-900 line-clamp-2 hover:text-red-600">
+                                    {{ $n->title }}
+                                </h3>
+                                <p class="text-[11px] text-gray-500 mt-1">{{ $n->created_at->format('d.m.Y') }}</p>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
         @endif
 
-        <!-- News Content -->
-        <div class="prose prose-sm sm:prose lg:prose-lg max-w-full text-gray-900 leading-relaxed space-y-6">
-            {!! nl2br(e($news->content)) !!}
-        </div>
-
-        <!-- Back Button -->
-        <div class="mt-10 text-center">
-            <a href="{{ route('news.index') }}"
-               class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-md shadow-md transition text-sm sm:text-base">
-                ← Back to News
-            </a>
-        </div>
     </div>
+
+    {{-- Page-load trigger --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.documentElement.classList.add('loaded');
+        });
+    </script>
 </x-app-layout>
-
-<!-- Footer -->
-<footer class="bg-gray-50 dark:bg-gray-900 py-8 mt-12">
-    <div class="max-w-6xl mx-auto px-6 text-center space-y-6">
-        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">Connect with us</h3>
-        <div class="flex justify-center gap-6">
-            <a href="https://www.facebook.com/" target="_blank" class="text-gray-700 dark:text-gray-300 hover:text-blue-600 transition">
-                <svg class="w-6 h-6 inline-block" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M22.675 0h-21.35c-.734 0-1.325.591-1.325 1.325v21.351c0 .734.591 1.324 1.325 1.324h11.495v-9.294h-3.124v-3.622h3.124v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.464.099 2.795.143v3.24l-1.918.001c-1.504 0-1.796.715-1.796 1.763v2.312h3.587l-.467 3.622h-3.12v9.293h6.116c.733 0 1.324-.59 1.324-1.324v-21.35c0-.734-.591-1.325-1.324-1.325z"/>
-                </svg>
-            </a>
-            <a href="https://twitter.com/" target="_blank" class="text-gray-700 dark:text-gray-300 hover:text-blue-400 transition">
-                <svg class="w-6 h-6 inline-block" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 4.557a9.83 9.83 0 01-2.828.775 4.932 4.932 0 002.165-2.724 9.864 9.864 0 01-3.127 1.195 4.916 4.916 0 00-8.38 4.482c-4.083-.195-7.702-2.16-10.126-5.134a4.822 4.822 0 00-.664 2.475c0 1.708.87 3.216 2.188 4.099a4.904 4.904 0 01-2.228-.616c-.054 1.982 1.381 3.833 3.415 4.247a4.936 4.936 0 01-2.224.084 4.923 4.923 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.396 0-.788-.023-1.175-.068a13.945 13.945 0 007.557 2.212c9.054 0 14.001-7.496 14.001-13.986 0-.21-.005-.423-.014-.634a9.936 9.936 0 002.457-2.548l.002-.003z"/>
-                </svg>
-            </a>
-            <a href="https://www.instagram.com/" target="_blank" class="text-gray-700 dark:text-gray-300 hover:text-pink-500 transition">
-                <svg class="w-6 h-6 inline-block" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.336 3.608 1.311.975.975 1.249 2.242 1.311 3.608.058 1.266.07 1.646.07 4.851s-.012 3.584-.07 4.85c-.062 1.366-.336 2.633-1.311 3.608-.975.975-2.242 1.249-3.608 1.311-1.266.058-1.646.07-4.85.07s-3.584-.012-4.851-.07c-1.366-.062-2.633-.336-3.608-1.311-.975-.975-1.249-2.242-1.311-3.608-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.851c.062-1.366.336-2.633 1.311-3.608.975-.975 2.242-1.249 3.608-1.311 1.266-.058 1.646-.07 4.851-.07zm0-2.163c-3.259 0-3.667.012-4.947.072-1.523.066-2.874.35-3.905 1.382-1.031 1.03-1.315 2.382-1.382 3.905-.06 1.28-.072 1.688-.072 4.947s.012 3.667.072 4.947c.066 1.523.35 2.874 1.382 3.905 1.03 1.031 2.382 1.315 3.905 1.382 1.28.06 1.688.072 4.947.072s3.667-.012 4.947-.072c1.523-.066 2.874-.35 3.905-1.382 1.031-1.03 1.315-2.382 1.382-3.905.06-1.28.072-1.688.072-4.947s-.012-3.667-.072-4.947c-.066-1.523-.35-2.874-1.382-3.905-1.03-1.031-2.382-1.315-3.905-1.382-1.28-.06-1.688-.072-4.947-.072zM12 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a3.999 3.999 0 110-7.998 3.999 3.999 0 010 7.998zm6.406-11.845a1.44 1.44 0 11-2.879 0 1.44 1.44 0 012.879 0z"/>
-                </svg>
-            </a>
-        </div>
-        <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">&copy; {{ date('Y') }} VolleyLV. All rights reserved.</p>
-    </div>
-</footer>

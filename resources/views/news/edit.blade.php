@@ -1,74 +1,176 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto mt-32 mb-20 px-4 sm:px-6 lg:px-8"> {{-- Added mb-20 for bottom spacing --}}
+    <div class="max-w-4xl mx-auto mt-28 mb-20 px-4 sm:px-6 lg:px-8">
 
-        <h1 class="text-3xl font-bold text-gray-900 mb-12 text-center">
-            Edit News
-        </h1>
+        {{-- Page-load / reveal --}}
+        <style>
+            @media (prefers-reduced-motion: no-preference) {
+                .fade-up {
+                    opacity: 0;
+                    transform: translateY(12px);
+                    transition: opacity .6s ease, transform .6s ease
+                }
 
+                .loaded .fade-up {
+                    opacity: 1;
+                    transform: none
+                }
+            }
+        </style>
+
+        {{-- Header --}}
+        <div class="fade-up text-center sm:text-left">
+            <p class="uppercase tracking-[0.2em] text-xs text-red-600/80">Ziņas</p>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Rediģēt ziņu</h1>
+        </div>
+
+        {{-- Form Card --}}
         <form action="{{ route('news.update', $news) }}" method="POST" enctype="multipart/form-data"
-              class="bg-gray-50 shadow-md p-8 rounded-lg space-y-6 border border-gray-200"> {{-- Slightly darker background --}}
+            class="fade-up mt-8 bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm p-6 sm:p-8 space-y-6">
             @csrf
             @method('PUT')
 
-            <!-- Title -->
+            {{-- Nosaukums --}}
             <div>
-                <label for="title" class="block text-gray-700 font-semibold mb-2">Title</label>
+                <label for="title" class="block text-[12px] font-bold uppercase tracking-wider text-gray-700 mb-2">
+                    Nosaukums
+                </label>
                 <input type="text" name="title" id="title" value="{{ old('title', $news->title) }}" required
-                       class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-white">
+                    class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm
+                           focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition"
+                    placeholder="Ieraksti ziņas virsrakstu">
                 @error('title')
                     <p class="text-red-600 mt-1 text-sm">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- Content -->
+            {{-- Saturs --}}
             <div>
-                <label for="content" class="block text-gray-700 font-semibold mb-2">Content</label>
-                <textarea name="content" id="content" rows="8" required
-                          class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-white">{{ old('content', $news->content) }}</textarea>
+                <label for="content" class="block text-[12px] font-bold uppercase tracking-wider text-gray-700 mb-2">
+                    Saturs
+                </label>
+                <textarea name="content" id="content" rows="10" required
+                    class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 shadow-sm
+                           focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition resize-y"
+                    placeholder="Ziņas teksts…">{{ old('content', $news->content) }}</textarea>
+                <div class="mt-1 text-xs text-gray-500"><span id="charCount">0</span> rakstzīmes</div>
                 @error('content')
                     <p class="text-red-600 mt-1 text-sm">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- Current Image -->
-            @if($news->image)
+            {{-- Pašreizējais attēls --}}
+            @if ($news->image)
                 <div>
-                    <label class="block text-gray-700 font-semibold mb-2">Current Image</label>
-                    <img src="{{ Storage::url($news->image) }}" alt="{{ $news->title }}"
-                         class="w-full max-h-64 object-cover rounded-lg shadow-md mb-4">
+                    <span class="block text-[12px] font-bold uppercase tracking-wider text-gray-700 mb-2">
+                        Pašreizējais attēls
+                    </span>
+                    <div class="overflow-hidden rounded-xl border border-gray-200/70 shadow-sm">
+                        <img src="{{ Storage::url($news->image) }}" alt="{{ $news->title }}"
+                            class="w-full max-h-64 object-cover">
+                    </div>
                 </div>
             @endif
 
-            <!-- Upload New Image -->
+            {{-- Jauns attēls (drag & drop + preview) --}}
             <div>
-                <label class="block text-gray-700 font-semibold mb-2">Replace Image (optional)</label>
-                <label for="image"
-                       class="flex items-center justify-center space-x-2 cursor-pointer px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none"
-                         viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M4 12l4-4m0 0l4 4m-4-4v12"/>
-                    </svg>
-                    <span class="text-gray-700">Choose File</span>
+                <label class="block text-[12px] font-bold uppercase tracking-wider text-gray-700 mb-2">
+                    Nomainīt attēlu (pēc izvēles)
                 </label>
-                <input type="file" name="image" id="image" accept="image/*" class="hidden">
+
+                <div id="dropzone"
+                    class="relative rounded-xl border-2 border-dashed border-gray-300 hover:border-red-300 bg-white/70
+                            transition p-6 text-center cursor-pointer">
+                    <input type="file" name="image" id="image" accept="image/*"
+                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    <div class="space-y-1.5 pointer-events-none">
+                        <p class="font-semibold text-gray-800">Ievelc attēlu šeit vai izvēlies failu</p>
+                        <p class="text-xs text-gray-500">Atbalstītie formāti: JPG, PNG, WEBP</p>
+                    </div>
+                </div>
+
+                {{-- Live preview (hidden until file chosen) --}}
+                <div id="previewWrap" class="hidden mt-3">
+                    <div class="overflow-hidden rounded-xl border border-gray-200/70 shadow-sm">
+                        <img id="previewImg" src="#" alt="Priekšskatījums" class="w-full max-h-64 object-cover">
+                    </div>
+                </div>
+
                 @error('image')
                     <p class="text-red-600 mt-1 text-sm">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- Buttons -->
-            <div class="flex justify-end space-x-4 mt-6">
+            {{-- Darbības --}}
+            <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 pt-2">
                 <a href="{{ route('news.show', $news) }}"
-                   class="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-lg shadow transition">
-                    Cancel
+                    class="inline-flex items-center justify-center rounded-full border border-gray-300 text-gray-700
+                          hover:bg-gray-50 px-5 py-2.5 font-semibold transition">
+                    Atcelt
                 </a>
                 <button type="submit"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-2 rounded-lg shadow transition">
-                    Update News
+                    class="inline-flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700
+                               text-white px-6 py-2.5 font-semibold shadow-sm transition">
+                    Atjaunot ziņu
                 </button>
             </div>
-
         </form>
     </div>
+
+    {{-- Small helpers: page-load class, char counter, drag&drop with preview --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.documentElement.classList.add('loaded');
+
+            // Char counter for content
+            const content = document.getElementById('content');
+            const charCount = document.getElementById('charCount');
+            if (content && charCount) {
+                const updateCount = () => charCount.textContent = content.value.length.toString();
+                updateCount();
+                content.addEventListener('input', updateCount);
+            }
+
+            // Drag & drop + preview
+            const dz = document.getElementById('dropzone');
+            const fileInput = document.getElementById('image');
+            const previewWrap = document.getElementById('previewWrap');
+            const previewImg = document.getElementById('previewImg');
+
+            const setPreview = (file) => {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = e => {
+                    previewImg.src = e.target.result;
+                    previewWrap.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            };
+
+            ['dragenter', 'dragover'].forEach(evt =>
+                dz.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dz.classList.add('border-red-400', 'bg-red-50/40');
+                })
+            );
+            ['dragleave', 'drop'].forEach(evt =>
+                dz.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dz.classList.remove('border-red-400', 'bg-red-50/40');
+                })
+            );
+            dz.addEventListener('drop', (e) => {
+                const file = e.dataTransfer.files?.[0];
+                if (file) {
+                    fileInput.files = e.dataTransfer.files;
+                    setPreview(file);
+                }
+            });
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files?.[0];
+                setPreview(file);
+            });
+        });
+    </script>
 </x-app-layout>

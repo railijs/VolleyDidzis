@@ -6,7 +6,7 @@ use App\Models\Tournament;
 use App\Models\TournamentMatch;
 use Illuminate\Http\Request;
 
-class TournamentMatchController extends Controller
+class TournamentMatchController
 {
     public function updateScore(Request $request, Tournament $tournament, TournamentMatch $match)
     {
