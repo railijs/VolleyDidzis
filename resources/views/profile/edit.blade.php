@@ -153,10 +153,6 @@
                                 <h4>Turnīri</h4>
                                 <div class="v">{{ $totalCount }}</div>
                             </div>
-                            <div class="kpi p-3">
-                                <h4>Tuvākie</h4>
-                                <div class="v">{{ $upcomingCount }}</div>
-                            </div>
                         </div>
 
                         <div class="mt-6 grid grid-cols-2 gap-3">

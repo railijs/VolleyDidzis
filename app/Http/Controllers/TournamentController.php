@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 class TournamentController
 {
-    // List upcoming tournaments
+
     public function index()
     {
         $tournaments = Tournament::where('start_date', '>=', Carbon::today())
@@ -19,20 +19,20 @@ class TournamentController
         return view('tournaments.index', compact('tournaments'));
     }
 
-    // Show single tournament
+
     public function show(Tournament $tournament)
     {
         return view('tournaments.show', compact('tournament'));
     }
 
-    // Admin: create tournament form
+
     public function create()
     {
         $this->authorizeAdmin();
         return view('tournaments.create');
     }
 
-    // Admin: store tournament
+
     public function store(Request $request)
     {
         $this->authorizeAdmin();
@@ -42,104 +42,52 @@ class TournamentController
             'creator_id' => auth()->id(),
         ]));
 
-        return redirect()->route('dashboard')->with('success', 'Tournament successfully created!');
+        return redirect()->route('dashboard')->with('success', 'Turnīrs veiksmīgi izveidots!');
     }
 
-    // Admin: edit tournament form
+
     public function edit(Tournament $tournament)
     {
         $this->authorizeAdmin();
         return view('tournaments.edit', compact('tournament'));
     }
 
-    // Admin: update tournament
+
     public function update(Request $request, Tournament $tournament)
     {
         $this->authorizeAdmin();
 
-        $rules = [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:2000',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'location' => 'required|string|max:255',
-            'max_teams' => 'required|integer|min:2|max:100',
-            'team_size' => 'required|integer|min:2|max:9',
-            'gender_type' => 'required|in:men,women,mix',
-            'min_boys' => 'nullable|integer|min:0',
-            'min_girls' => 'nullable|integer|min:0',
-            'min_age' => 'nullable|integer|min:0|max:100',
-            'max_age' => 'nullable|integer|min:0|max:100',
-            'recommendations' => 'nullable|string|max:2000',
-        ];
 
-        if ($request->gender_type === 'mix') {
-            $rules['min_boys'] = 'required|integer|min:0|lte:team_size';
-            $rules['min_girls'] = 'required|integer|min:0|lte:team_size';
-        } else {
-            $request->merge(['min_boys' => null, 'min_girls' => null]);
-        }
-
-        $messages = [
-            'name.required' => 'Please give your tournament a name.',
-            'name.max' => 'Tournament name can’t be longer than 255 characters.',
-            'start_date.required' => 'A start date is required.',
-            'start_date.after_or_equal' => 'Start date must be today or later.',
-            'end_date.after_or_equal' => 'End date must be on or after the start date.',
-            'location.required' => 'Please provide a tournament location.',
-            'max_teams.required' => 'Please specify the maximum number of teams.',
-            'team_size.required' => 'Specify how many players per team.',
-            'gender_type.required' => 'Please select a gender type.',
-            'min_boys.required' => 'Please enter minimum boys count when mixed.',
-            'min_girls.required' => 'Please enter minimum girls count when mixed.',
-            'min_age.max' => 'Minimum age cannot exceed 100.',
-            'max_age.max' => 'Maximum age cannot exceed 100.',
-        ];
-
-        $validated = Validator::make($request->all(), $rules, $messages)
-            ->after(function ($validator) use ($request) {
-                if ($request->gender_type === 'mix') {
-                    $totalMin = ($request->min_boys ?? 0) + ($request->min_girls ?? 0);
-                    if ($totalMin > $request->team_size) {
-                        $validator->errors()->add('min_boys', 'Boys + Girls cannot exceed total team size.');
-                        $validator->errors()->add('min_girls', 'Boys + Girls cannot exceed total team size.');
-                    }
-                }
-                if ($request->min_age && $request->max_age && $request->max_age < $request->min_age) {
-                    $validator->errors()->add('max_age', 'Maximum age must be greater than or equal to minimum age.');
-                }
-            })
-            ->validate();
+        $validated = $this->validateTournament($request);
 
         $tournament->update($validated);
 
         return redirect()->route('tournaments.show', $tournament)
-            ->with('success', 'Tournament updated successfully!');
+            ->with('success', 'Turnīra informācija atjaunināta!');
     }
 
 
-    // Admin: delete tournament
     public function destroy(Tournament $tournament)
     {
         $this->authorizeAdmin();
         $tournament->delete();
 
-        return redirect()->route('dashboard')->with('success', 'Tournament deleted.');
+        return redirect()->route('dashboard')->with('success', 'Turnīrs izdzēsts.');
     }
 
-    // Calendar view
+
     public function calendar()
     {
         $events = Tournament::all()->map(function ($t) {
             return [
                 'title' => $t->name,
                 'start' => $t->start_date,
-                'end' => $t->end_date,
-                'url' => route('tournaments.show', $t),
+                'end'   => $t->end_date,
+                'url'   => route('tournaments.show', $t),
                 'color' => match ($t->gender_type) {
-                    'men' => '#3b82f6',
+                    'men'   => '#3b82f6',
                     'women' => '#ec4899',
-                    'mix' => '#f59e0b',
+                    'mix'   => '#f59e0b',
                     default => '#6b7280',
                 },
             ];
@@ -148,7 +96,7 @@ class TournamentController
         return view('tournaments.calendar', compact('events'));
     }
 
-    // Day-specific tournaments
+
     public function dayTournaments($date)
     {
         $dateObj = Carbon::parse($date);
@@ -160,7 +108,7 @@ class TournamentController
         return view('tournaments.day', ['tournaments' => $tournaments, 'date' => $dateObj]);
     }
 
-    // === Helpers ===
+
     private function authorizeAdmin()
     {
         if (!auth()->user()?->isAdmin()) abort(403, 'Unauthorized');
@@ -168,113 +116,111 @@ class TournamentController
 
     private function validateTournament(Request $request)
     {
+
         $rules = [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:2000',
-            'start_date' => 'required|date|after_or_equal:today',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'location' => [
-                'required',
-                'string',
-                'min:3',
-                'max:255',
-                'regex:/^(?!\d+$)[a-zA-Z0-9\s,\-]+$/', // NEW: not only numbers
-            ],
-            'max_teams' => 'required|integer|min:2|max:100',
-            'team_size' => 'required|integer|min:4|max:12', // UPDATED: realistic volleyball team sizes
-            'gender_type' => 'required|in:men,women,mix',
-            'min_boys' => 'nullable|integer|min:0',
-            'min_girls' => 'nullable|integer|min:0',
-            'min_age' => 'nullable|integer|min:0|max:100',
-            'max_age' => 'nullable|integer|min:0|max:100',
+            'name'           => 'required|string|max:255',
+            'description'    => 'nullable|string|max:2000',
+            'start_date'     => 'required|date|after_or_equal:today',
+            'end_date'       => 'required|date|after_or_equal:start_date',
+            'location'       => ['required', 'string', 'min:3', 'max:255', 'regex:/^(?!\d+$)[\p{L}\p{N}\s,\-\.]+$/u'],
+            'max_teams'      => 'required|integer|min:2|max:100',
+            'team_size'      => 'required|integer|min:4|max:12',
+            'gender_type'    => 'required|in:men,women,mix',
+            'min_boys'       => 'nullable|integer|min:0',
+            'min_girls'      => 'nullable|integer|min:0',
+            'min_age'        => 'nullable|integer|min:0|max:100',
+            'max_age'        => 'nullable|integer|min:0|max:100',
             'recommendations' => 'nullable|string|max:2000',
         ];
 
         if ($request->gender_type === 'mix') {
-            $rules['min_boys'] = 'required|integer|min:1|lte:team_size'; // UPDATED: must be at least 1
-            $rules['min_girls'] = 'required|integer|min:1|lte:team_size'; // UPDATED: must be at least 1
+            $rules['min_boys']  = 'required|integer|min:1|lte:team_size';
+            $rules['min_girls'] = 'required|integer|min:1|lte:team_size';
         } else {
+
             $request->merge(['min_boys' => null, 'min_girls' => null]);
         }
 
         $messages = [
-            // Name
-            'name.required' => 'Please give your tournament a name.',
-            'name.string' => 'Tournament name must be text.',
-            'name.max' => 'Tournament name can’t be longer than 255 characters.',
+            // Nosaukums
+            'name.required' => 'Lūdzu ievadi turnīra nosaukumu.',
+            'name.string'   => 'Nosaukumam jābūt tekstam.',
+            'name.max'      => 'Nosaukums nedrīkst pārsniegt 255 rakstzīmes.',
 
-            // Description
-            'description.string' => 'Description must be text.',
-            'description.max' => 'Description cannot exceed 2000 characters.',
+            // Apraksts
+            'description.string' => 'Aprakstam jābūt tekstam.',
+            'description.max'    => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
 
-            // Start Date
-            'start_date.required' => 'A start date is required.',
-            'start_date.date' => 'Start date must be a valid date.',
-            'start_date.after_or_equal' => 'The start date must be today or later.',
+            // Datumi
+            'start_date.required'       => 'Lūdzu izvēlies sākuma datumu.',
+            'start_date.date'           => 'Sākuma datumam jābūt derīgam datumam.',
+            'start_date.after_or_equal' => 'Sākuma datumam jābūt šodien vai vēlāk.',
+            'end_date.required'         => 'Lūdzu izvēlies beigu datumu.',
+            'end_date.date'             => 'Beigu datumam jābūt derīgam datumam.',
+            'end_date.after_or_equal'   => 'Beigu datumam jābūt ne agrākam par sākuma datumu.',
 
-            // End Date
-            'end_date.required' => 'An end date is required.',
-            'end_date.date' => 'End date must be a valid date.',
-            'end_date.after_or_equal' => 'The end date must be on or after the start date.',
+            // Vieta
+            'location.required' => 'Lūdzu norādi norises vietu.',
+            'location.string'   => 'Vietai jābūt tekstam.',
+            'location.min'      => 'Vietai jāsatur vismaz 3 rakstzīmes.',
+            'location.max'      => 'Vieta nedrīkst pārsniegt 255 rakstzīmes.',
+            'location.regex'    => 'Vietai jāizskatās pēc reālas vietas (ne tikai cipari).',
 
-            // Location
-            'location.required' => 'Please provide a tournament location.',
-            'location.string' => 'Location must be text.',
-            'location.min' => 'Location must be at least 3 characters long.',
-            'location.regex' => 'Location must look like a real place, not just numbers.',
-            'location.max' => 'Location can’t be longer than 255 characters.',
+            // Komandas
+            'max_teams.required' => 'Lūdzu norādi maksimālo komandu skaitu.',
+            'max_teams.integer'  => 'Maks. komandu skaitam jābūt veselam skaitlim.',
+            'max_teams.min'      => 'Komandu skaitam jābūt vismaz 2.',
+            'max_teams.max'      => 'Maksimālais komandu skaits nedrīkst pārsniegt 100.',
 
-            // Max Teams
-            'max_teams.required' => 'Please specify the maximum number of teams.',
-            'max_teams.integer' => 'Max teams must be a whole number.',
-            'max_teams.min' => 'There must be at least 2 teams.',
-            'max_teams.max' => 'Maximum teams cannot exceed 100.',
+            // Spēlētāji
+            'team_size.required' => 'Lūdzu norādi spēlētāju skaitu komandā.',
+            'team_size.integer'  => 'Spēlētāju skaitam jābūt veselam skaitlim.',
+            'team_size.min'      => 'Komandā jābūt vismaz 4 spēlētājiem.',
+            'team_size.max'      => 'Komandā nedrīkst būt vairāk par 12 spēlētājiem.',
 
-            // Team Size
-            'team_size.required' => 'Specify how many players per team.',
-            'team_size.integer' => 'Team size must be a whole number.',
-            'team_size.min' => 'A volleyball team must have at least 4 players.',
-            'team_size.max' => 'Teams cannot have more than 12 players.',
+            // Dzimums
+            'gender_type.required' => 'Lūdzu izvēlies dzimuma tipu.',
+            'gender_type.in'       => 'Dzimuma tips var būt: vīrieši, sievietes vai mix.',
 
-            // Gender
-            'gender_type.required' => 'Please select a gender type.',
-            'gender_type.in' => 'Gender type must be men, women, or mixed.',
+            // MIX
+            'min_boys.required' => 'Mix gadījumā jānorāda minimālais puišu skaits.',
+            'min_boys.integer'  => 'Min. puišu skaitam jābūt veselam skaitlim.',
+            'min_boys.min'      => 'Mix turnīrā jābūt vismaz 1 puisim.',
+            'min_boys.lte'      => 'Min. puišu skaits nedrīkst pārsniegt kopējo spēlētāju skaitu.',
+            'min_girls.required' => 'Mix gadījumā jānorāda minimālais meiteņu skaits.',
+            'min_girls.integer' => 'Min. meiteņu skaitam jābūt veselam skaitlim.',
+            'min_girls.min'     => 'Mix turnīrā jābūt vismaz 1 meitenei.',
+            'min_girls.lte'     => 'Min. meiteņu skaits nedrīkst pārsniegt kopējo spēlētāju skaitu.',
 
-            // Mix
-            'min_boys.required' => 'Please enter minimum boys count when mixed.',
-            'min_boys.integer' => 'Minimum boys must be a whole number.',
-            'min_boys.min' => 'Mixed tournaments must include at least 1 boy.',
-            'min_boys.lte' => 'Minimum boys cannot exceed total team size.',
-            'min_girls.required' => 'Please enter minimum girls count when mixed.',
-            'min_girls.integer' => 'Minimum girls must be a whole number.',
-            'min_girls.min' => 'Mixed tournaments must include at least 1 girl.',
-            'min_girls.lte' => 'Minimum girls cannot exceed total team size.',
+            // Vecums
+            'min_age.integer' => 'Minimālajam vecumam jābūt veselam skaitlim.',
+            'min_age.min'     => 'Minimālajam vecumam jābūt 0 vai lielākam.',
+            'min_age.max'     => 'Minimālais vecums nedrīkst pārsniegt 100.',
+            'max_age.integer' => 'Maksimālajam vecumam jābūt veselam skaitlim.',
+            'max_age.min'     => 'Maksimālajam vecumam jābūt 0 vai lielākam.',
+            'max_age.max'     => 'Maksimālais vecums nedrīkst pārsniegt 100.',
 
-            // Ages
-            'min_age.integer' => 'Minimum age must be a whole number.',
-            'min_age.min' => 'Minimum age must be zero or higher.',
-            'min_age.max' => 'Minimum age cannot exceed 100 years.',
-            'max_age.integer' => 'Maximum age must be a whole number.',
-            'max_age.min' => 'Maximum age must be zero or higher.',
-            'max_age.max' => 'Maximum age cannot exceed 100 years.',
-
-            // Recommendations
-            'recommendations.string' => 'Recommendations must be text.',
-            'recommendations.max' => 'Recommendations cannot exceed 2000 characters.',
+            // Ieteikumi
+            'recommendations.string' => 'Ieteikumiem jābūt tekstam.',
+            'recommendations.max'    => 'Ieteikumi nedrīkst pārsniegt 2000 rakstzīmes.',
         ];
 
         return Validator::make($request->all(), $rules, $messages)
             ->after(function ($validator) use ($request) {
                 if ($request->gender_type === 'mix') {
-                    $totalMin = ($request->min_boys ?? 0) + ($request->min_girls ?? 0);
-                    if ($totalMin > $request->team_size) {
-                        $validator->errors()->add('min_boys', 'Boys + Girls cannot be more than total team size.');
-                        $validator->errors()->add('min_girls', 'Boys + Girls cannot be more than total team size.');
+                    $boys = (int)($request->min_boys ?? 0);
+                    $girls = (int)($request->min_girls ?? 0);
+                    $size = (int)($request->team_size ?? 0);
+                    if ($boys + $girls > $size) {
+                        $msg = 'Minimālais puišu + meiteņu skaits nedrīkst pārsniegt spēlētāju skaitu komandā.';
+                        $validator->errors()->add('min_boys', $msg);
+                        $validator->errors()->add('min_girls', $msg);
                     }
                 }
-                if ($request->min_age && $request->max_age && $request->max_age < $request->min_age) {
-                    $validator->errors()->add('max_age', 'Maximum age must be greater than or equal to minimum age.');
+                if ($request->min_age && $request->max_age && (int)$request->max_age < (int)$request->min_age) {
+                    $validator->errors()->add('max_age', 'Maksimālajam vecumam jābūt lielākam vai vienādam ar minimālo.');
                 }
-            })->validate();
+            })
+            ->validate();
     }
 }

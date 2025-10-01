@@ -15,9 +15,9 @@ class TournamentMatch extends Model
         'team_b',
         'team_a_score',
         'team_b_score',
-        'winner',
+        'winner',          // 'team_a' | 'team_b' | null
         'round',
-        'next_match_id',
+        'next_match_id',   // points to the next TournamentMatch id
     ];
 
     public function tournament()

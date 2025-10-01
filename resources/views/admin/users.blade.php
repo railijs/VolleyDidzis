@@ -1,85 +1,9 @@
 <x-app-layout>
     <div class="relative min-h-screen pt-28 pb-16 bg-gradient-to-b from-white via-red-50 to-white">
-        <style>
-            /* Page-load reveal (no libs) */
-            @media (prefers-reduced-motion: no-preference) {
-                .fade-up {
-                    opacity: 0;
-                    transform: translateY(12px);
-                    transition: opacity .55s ease, transform .55s ease;
-                }
-
-                .loaded .fade-up {
-                    opacity: 1;
-                    transform: none;
-                }
-            }
-
-            /* Pills */
-            .pill {
-                @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold;
-            }
-
-            /* Badge */
-            .role-badge {
-                @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold;
-            }
-
-            .role-badge.admin {
-                @apply bg-red-100 text-red-700;
-            }
-
-            .role-badge.user {
-                @apply bg-gray-100 text-gray-700;
-            }
-
-            /* Table header sort indicator */
-            th.sortable {
-                position: relative;
-                cursor: pointer;
-                user-select: none;
-            }
-
-            th.sortable .indicator {
-                position: absolute;
-                right: .5rem;
-                opacity: .5;
-                font-size: .85em;
-            }
-
-            th.sortable[data-dir="asc"] .indicator::after {
-                content: "▲";
-            }
-
-            th.sortable[data-dir="desc"] .indicator::after {
-                content: "▼";
-            }
-
-            /* Sticky header container */
-            .table-wrap {
-                max-height: 70vh;
-                overflow: auto;
-            }
-
-            thead.sticky th {
-                position: sticky;
-                top: 0;
-                background: rgba(249, 250, 251, .9);
-                backdrop-filter: blur(4px);
-            }
-
-            /* Compact density toggle */
-            .compact td,
-            .compact th {
-                padding-top: .5rem !important;
-                padding-bottom: .5rem !important;
-            }
-        </style>
-
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
 
             <!-- Header -->
-            <header class="fade-up">
+            <header class="fade-up opacity-0 translate-y-3 transition duration-500 ease-out">
                 <div class="flex items-center gap-3 mb-2">
                     <span class="h-6 w-1.5 bg-red-600 rounded"></span>
                     <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Administrācijas panelis</h1>
@@ -91,7 +15,8 @@
                     @foreach (['success' => 'green', 'error' => 'red'] as $type => $color)
                         @if (session($type))
                             <div
-                                class="rounded-lg border border-{{ $color }}-200 bg-{{ $color }}-50 text-{{ $color }}-800 px-4 py-3">
+                                class="rounded-lg border px-4 py-3
+                          border-{{ $color }}-200 bg-{{ $color }}-50 text-{{ $color }}-800">
                                 {{ session($type) }}
                             </div>
                         @endif
@@ -100,7 +25,6 @@
             </header>
 
             @php
-                // Quick stats (safe defaults if models not present)
                 $totalUsers = $users->count();
                 $adminsCount = $users->where('role', 'admin')->count();
                 try {
@@ -116,7 +40,8 @@
             @endphp
 
             <!-- Quick Stats -->
-            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 fade-up">
+            <section
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 fade-up opacity-0 translate-y-3 transition duration-500 ease-out">
                 <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-sm p-5">
                     <div class="text-sm text-gray-600">Lietotāji</div>
                     <div class="mt-1 flex items-baseline gap-2">
@@ -148,7 +73,8 @@
             </section>
 
             <!-- Quick Actions -->
-            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 fade-up">
+            <section
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 fade-up opacity-0 translate-y-3 transition duration-500 ease-out">
                 @php
                     $cards = [
                         [
@@ -172,7 +98,8 @@
 
                 @foreach ($cards as $card)
                     <a href="{{ route($card['route']) }}"
-                        class="block bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-sm p-5 hover:shadow-lg hover:border-gray-300 transition">
+                        class="block bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-sm p-5
+                    hover:shadow-lg hover:border-gray-300 transition">
                         <div class="flex items-start justify-between gap-4">
                             <div>
                                 <h3 class="text-lg font-bold text-gray-900">{{ $card['title'] }}</h3>
@@ -186,7 +113,7 @@
             </section>
 
             <!-- Users -->
-            <section class="space-y-4 fade-up">
+            <section class="space-y-4 fade-up opacity-0 translate-y-3 transition duration-500 ease-out">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <h2 class="text-2xl font-extrabold text-gray-900">Lietotāji</h2>
 
@@ -194,15 +121,26 @@
                         <!-- Filters -->
                         <div class="flex items-center gap-2">
                             <button id="filterAll"
-                                class="pill border-gray-300 text-gray-700 hover:bg-gray-50">Visi</button>
+                                class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold
+                             border-gray-300 text-gray-700 hover:bg-gray-50">
+                                Visi
+                            </button>
                             <button id="filterAdmin"
-                                class="pill border-red-300 text-red-700 hover:bg-red-50">Admini</button>
+                                class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold
+                             border-gray-300 text-gray-700 hover:bg-gray-50">
+                                Admini
+                            </button>
                             <button id="filterUser"
-                                class="pill border-gray-300 text-gray-700 hover:bg-gray-50">Lietotāji</button>
+                                class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold
+                             border-gray-300 text-gray-700 hover:bg-gray-50">
+                                Lietotāji
+                            </button>
                         </div>
 
                         <!-- Density -->
-                        <button id="toggleDensity" class="pill border-gray-300 text-gray-700 hover:bg-gray-50">
+                        <button id="toggleDensity"
+                            class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold
+                           border-gray-300 text-gray-700 hover:bg-gray-50">
                             Kompakts
                         </button>
 
@@ -217,35 +155,43 @@
                 <!-- Search -->
                 <div class="relative">
                     <input id="userSearch" type="text" placeholder="Meklēt lietotājus…"
-                        class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-200">
+                        class="w-full rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-gray-900 shadow-sm
+                        focus:border-red-500 focus:ring-2 focus:ring-red-200">
                     <button id="clearSearch"
-                        class="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500 hover:text-gray-700 hidden">Notīrīt</button>
+                        class="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-500 hover:text-gray-700 hidden">
+                        Notīrīt
+                    </button>
                 </div>
 
                 <!-- Table -->
-                <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-md table-wrap">
+                <div
+                    class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200 shadow-md max-h-[70vh] overflow-auto">
                     <table id="usersTable" class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50 sticky">
+                        <thead class="bg-gray-50/90 backdrop-blur-sm sticky top-0 z-10">
                             <tr>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-sm font-semibold text-gray-700 sortable"
+                                    class="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer select-none"
                                     data-key="id">
-                                    ID <span class="indicator"></span>
+                                    <span class="align-middle">ID</span>
+                                    <span class="indicator ml-2 text-gray-500 text-xs"></span>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-sm font-semibold text-gray-700 sortable"
+                                    class="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer select-none"
                                     data-key="name">
-                                    Vārds <span class="indicator"></span>
+                                    <span class="align-middle">Vārds</span>
+                                    <span class="indicator ml-2 text-gray-500 text-xs"></span>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-sm font-semibold text-gray-700 sortable"
+                                    class="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer select-none"
                                     data-key="email">
-                                    E-pasts <span class="indicator"></span>
+                                    <span class="align-middle">E-pasts</span>
+                                    <span class="indicator ml-2 text-gray-500 text-xs"></span>
                                 </th>
                                 <th scope="col"
-                                    class="px-6 py-3 text-left text-sm font-semibold text-gray-700 sortable"
+                                    class="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer select-none"
                                     data-key="role">
-                                    Loma <span class="indicator"></span>
+                                    <span class="align-middle">Loma</span>
+                                    <span class="indicator ml-2 text-gray-500 text-xs"></span>
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-right text-sm font-semibold text-gray-700">
                                     Darbības
@@ -279,18 +225,30 @@
                                                 @csrf
                                                 @method('PATCH')
 
-                                                <select name="role" onchange="this.form.submit()"
-                                                    class="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900
-               focus:border-red-500 focus:ring-1 focus:ring-red-200">
-                                                    <option value="user"
-                                                        {{ $user->role === 'user' ? 'selected' : '' }}>User</option>
-                                                    <option value="admin"
-                                                        {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
-                                                </select>
+                                                <div class="relative inline-block">
+                                                    <!-- Uzlabots selects -->
+                                                    <select name="role" onchange="this.form.submit()"
+                                                        aria-label="Mainīt {{ $user->name }} lomu"
+                                                        class="appearance-none pr-10 pl-3 py-2 text-sm leading-tight rounded-lg bg-white border border-gray-300 shadow-sm
+                 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-500
+                 hover:border-gray-400 transition">
+                                                        <option value="user" @selected($user->role === 'user')>User
+                                                        </option>
+                                                        <option value="admin" @selected($user->role === 'admin')>Admin
+                                                        </option>
+                                                    </select>
+
+                                                    <!-- Chevron ikona (neklikšķināma) -->
+
+                                                </div>
                                             </form>
                                         @else
                                             <span
-                                                class="role-badge {{ $user->role }}">{{ ucfirst($user->role) }}</span>
+                                                class="{{ $user->role === 'admin'
+                                                    ? 'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-red-100 text-red-700'
+                                                    : 'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-gray-100 text-gray-700' }}">
+                                                {{ ucfirst($user->role) }}
+                                            </span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-right text-sm">
@@ -300,7 +258,8 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit"
-                                                    class="rounded-md bg-red-600 px-4 py-2 text-white transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+                                                    class="rounded-md bg-red-600 px-4 py-2 text-white transition hover:bg-red-700
+                                       focus:outline-none focus:ring-2 focus:ring-red-500">
                                                     Dzēst
                                                 </button>
                                             </form>
@@ -323,9 +282,15 @@
     </div>
 
     <script>
-        // Page-load animation
+        // Page-load reveal (no CSS <style>): remove opacity/translate classes
         document.addEventListener('DOMContentLoaded', () => {
-            document.documentElement.classList.add('loaded');
+            document.querySelectorAll('.fade-up').forEach((el, i) => {
+                // neliels “stagger”
+                const delay = 80 * i;
+                setTimeout(() => {
+                    el.classList.remove('opacity-0', 'translate-y-3');
+                }, delay);
+            });
         });
 
         // Helpers
@@ -339,17 +304,15 @@
         const tbody = table.tBodies[0];
         const rows = $$('tbody tr', table);
         const infoShown = $('#shownCount');
-        const totalCount = rows.length;
         const filterBtns = {
             all: $('#filterAll'),
             admin: $('#filterAdmin'),
             user: $('#filterUser')
         };
         let activeRoleFilter = 'all';
-        let compactOn = false;
 
         function updateTableVisibility() {
-            const q = (searchInput.value || '').trim().toLowerCase();
+            const q = (searchInput?.value || '').trim().toLowerCase();
             let shown = 0;
 
             rows.forEach(row => {
@@ -357,19 +320,19 @@
                 const text = row.innerText.toLowerCase();
                 const matchRole = (activeRoleFilter === 'all') || (role === activeRoleFilter);
                 const matchText = q === '' || text.includes(q);
-
                 const show = matchRole && matchText;
                 row.style.display = show ? '' : 'none';
                 if (show) shown++;
             });
 
-            infoShown.textContent = shown;
-            clearSearch.classList.toggle('hidden', !q);
+            if (infoShown) infoShown.textContent = shown;
+            if (clearSearch) clearSearch.classList.toggle('hidden', !q);
         }
 
         function setRoleFilter(which) {
             activeRoleFilter = which;
             Object.entries(filterBtns).forEach(([k, btn]) => {
+                if (!btn) return;
                 if (k === which) {
                     btn.classList.add('border-red-300', 'text-red-700', 'bg-red-50');
                     btn.classList.remove('border-gray-300', 'text-gray-700');
@@ -381,35 +344,41 @@
             updateTableVisibility();
         }
 
-        filterBtns.all.addEventListener('click', () => setRoleFilter('all'));
-        filterBtns.admin.addEventListener('click', () => setRoleFilter('admin'));
-        filterBtns.user.addEventListener('click', () => setRoleFilter('user'));
+        if (filterBtns.all) filterBtns.all.addEventListener('click', () => setRoleFilter('all'));
+        if (filterBtns.admin) filterBtns.admin.addEventListener('click', () => setRoleFilter('admin'));
+        if (filterBtns.user) filterBtns.user.addEventListener('click', () => setRoleFilter('user'));
 
         // Debounced search
         let t;
-        searchInput.addEventListener('input', () => {
-            clearTimeout(t);
-            t = setTimeout(updateTableVisibility, 120);
-        });
-        clearSearch.addEventListener('click', () => {
-            searchInput.value = '';
-            updateTableVisibility();
-        });
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                clearTimeout(t);
+                t = setTimeout(updateTableVisibility, 120);
+            });
+        }
+        if (clearSearch) {
+            clearSearch.addEventListener('click', () => {
+                searchInput.value = '';
+                updateTableVisibility();
+            });
+        }
 
         // Copy email to clipboard
-        tbody.addEventListener('click', (e) => {
-            const btn = e.target.closest('.copy-email');
-            if (!btn) return;
-            const email = btn.dataset.addr;
-            navigator.clipboard?.writeText(email).then(() => {
-                const old = btn.textContent;
-                btn.textContent = 'Nokopēts!';
-                setTimeout(() => btn.textContent = old, 900);
+        if (tbody) {
+            tbody.addEventListener('click', (e) => {
+                const btn = e.target.closest('.copy-email');
+                if (!btn) return;
+                const email = btn.dataset.addr;
+                navigator.clipboard?.writeText(email).then(() => {
+                    const old = btn.textContent;
+                    btn.textContent = 'Nokopēts!';
+                    setTimeout(() => btn.textContent = old, 900);
+                });
             });
-        });
+        }
 
-        // Column sorting
-        const headers = $$('thead th.sortable', table);
+        // Column sorting (with inline indicator spans)
+        const headers = $$('thead th[data-key]', table);
         let sortState = {
             key: null,
             dir: 'asc'
@@ -431,14 +400,18 @@
         }
 
         function sortBy(key) {
-            // toggle dir
             sortState.dir = (sortState.key === key && sortState.dir === 'asc') ? 'desc' : 'asc';
             sortState.key = key;
 
-            // visual indicators
-            headers.forEach(h => h.removeAttribute('data-dir'));
+            headers.forEach(h => {
+                const ind = h.querySelector('.indicator');
+                if (ind) ind.textContent = '';
+            });
             const activeHeader = headers.find(h => h.dataset.key === key);
-            if (activeHeader) activeHeader.setAttribute('data-dir', sortState.dir);
+            if (activeHeader) {
+                const ind = activeHeader.querySelector('.indicator');
+                if (ind) ind.textContent = sortState.dir === 'asc' ? '▲' : '▼';
+            }
 
             const visible = rows.filter(r => r.style.display !== 'none');
             const hidden = rows.filter(r => r.style.display === 'none');
@@ -451,54 +424,72 @@
                 return 0;
             });
 
-            // re-append
             visible.forEach(r => tbody.appendChild(r));
             hidden.forEach(r => tbody.appendChild(r));
         }
 
         headers.forEach(h => h.addEventListener('click', () => sortBy(h.dataset.key)));
 
-        // Export CSV
-        $('#exportCsv').addEventListener('click', () => {
-            const data = [
-                ['ID', 'Vārds', 'E-pasts', 'Loma']
-            ];
-            $$('tbody tr', table).forEach(tr => {
-                if (tr.style.display === 'none') return; // export only visible
-                const id = tr.querySelector('[data-id]').textContent.trim();
-                const name = tr.querySelector('[data-name]').innerText.trim();
-                const email = tr.querySelector('[data-email]').innerText.trim();
-                const role = tr.getAttribute('data-role');
-                data.push([id, name, email, role]);
+        // Export CSV (only visible rows)
+        const exportBtn = $('#exportCsv');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                const data = [
+                    ['ID', 'Vārds', 'E-pasts', 'Loma']
+                ];
+                $$('#usersTable tbody tr').forEach(tr => {
+                    if (tr.style.display === 'none') return;
+                    const id = tr.querySelector('[data-id]').textContent.trim();
+                    const name = tr.querySelector('[data-name]').innerText.trim();
+                    const email = tr.querySelector('[data-email]').innerText.trim();
+                    const role = tr.getAttribute('data-role');
+                    data.push([id, name, email, role]);
+                });
+                const csv = data.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+                const blob = new Blob([csv], {
+                    type: 'text/csv;charset=utf-8;'
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'lietotaji.csv';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
             });
-            const csv = data.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-            const blob = new Blob([csv], {
-                type: 'text/csv;charset=utf-8;'
-            });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'lietotaji.csv';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-        });
+        }
 
-        // Density toggle
-        $('#toggleDensity').addEventListener('click', (e) => {
-            compactOn = !compactOn;
-            if (compactOn) {
-                table.classList.add('compact');
-                e.currentTarget.classList.add('bg-gray-50');
-            } else {
-                table.classList.remove('compact');
-                e.currentTarget.classList.remove('bg-gray-50');
-            }
-        });
+        // Density toggle (bez CSS selektoriem: mainām py-* klasēs visiem th/td)
+        const toggleDensity = $('#toggleDensity');
+        let compactOn = false;
+
+        function setDensity(compact) {
+            const ths = $$('thead th', table);
+            const tds = $$('tbody td', table);
+
+            const applyPad = (els, normal, compactCls) => {
+                els.forEach(el => {
+                    el.classList.remove(normal, compactCls);
+                    el.classList.add(compact ? compactCls : normal);
+                });
+            };
+
+            applyPad(ths, 'py-3', 'py-2');
+            applyPad(tds, 'py-4', 'py-2');
+        }
+
+        if (toggleDensity) {
+            toggleDensity.addEventListener('click', (e) => {
+                compactOn = !compactOn;
+                setDensity(compactOn);
+                e.currentTarget.classList.toggle('bg-gray-50', compactOn);
+            });
+        }
 
         // Initial state
         setRoleFilter('all');
         updateTableVisibility();
+        setDensity(false); // default spacing
     </script>
 </x-app-layout>

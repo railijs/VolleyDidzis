@@ -141,8 +141,6 @@
                             </div>
                         </aside>
                     </div>
-
-                    <!-- NOTE: quick-action SVG rail removed per request -->
                 </section>
 
                 <!-- ===================== GRID (LEFT/RIGHT) ===================== -->
@@ -291,54 +289,113 @@
         </div>
     </div>
 
-    <!-- Pieteikties -->
-    @guest
-        <section class="bg-gradient-to-r from-red-600 to-red-700 text-white py-16 mt-12 fade-up">
-            <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
-                <div>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Pieteikties</h2>
-                    <p class="text-lg text-red-100 leading-relaxed">
-                        Izveido kontu un pievienojies turnīriem vieglāk un ātrāk! Reģistrējoties tu varēsi sekot līdzi
-                        turnīru grafikam, pieteikt komandu un iegūt pilnu piekļuvi visām VolleyLV iespējām.
-                    </p>
-                    <p class="mt-6 text-red-100">
-                        Jau ir konts? <a href="{{ route('login') }}"
-                            class="underline font-semibold hover:text-white">Pieslēgties</a>
-                    </p>
+    <!-- ========= COMBINED REGISTER + CONTACTS FOOTER ========= -->
+    <footer class="bg-gradient-to-r from-red-600 to-red-700 text-white mt-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {{-- Pieteikties (only for guests) --}}
+            @guest
+                <section class="py-16 fade-up">
+                    <div class="max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Pieteikties</h2>
+                            <p class="text-lg text-red-100 leading-relaxed">
+                                Izveido kontu un pievienojies turnīriem vieglāk un ātrāk! Reģistrējoties tu varēsi sekot
+                                līdzi
+                                turnīru grafikam, pieteikt komandu un iegūt pilnu piekļuvi visām VolleyLV iespējām.
+                            </p>
+                            <p class="mt-6 text-red-100">
+                                Jau ir konts? <a href="{{ route('login') }}"
+                                    class="underline font-semibold hover:text-white">Pieslēgties</a>
+                            </p>
+                        </div>
+
+                        <form method="POST" action="{{ route('register') }}"
+                            class="bg-white rounded-2xl shadow-lg p-8 text-left text-gray-900">
+                            @csrf
+                            <div class="mb-4">
+                                <label for="name" class="block text-sm font-medium text-gray-700">Vārds</label>
+                                <input id="name" name="name" type="text" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" />
+                            </div>
+                            <div class="mb-4">
+                                <label for="email" class="block text-sm font-medium text-gray-700">E-pasts</label>
+                                <input id="email" name="email" type="email" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" />
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="block text-sm font-medium text-gray-700">Parole</label>
+                                <input id="password" name="password" type="password" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" />
+                            </div>
+                            <div class="mb-6">
+                                <label for="password_confirmation"
+                                    class="block text-sm font-medium text-gray-700">Apstiprināt paroli</label>
+                                <input id="password_confirmation" name="password_confirmation" type="password" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" />
+                            </div>
+                            <button type="submit"
+                                class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow transition">
+                                Reģistrēties
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                {{-- subtle divider to separate from contacts while keeping same element/background --}}
+                <div class="h-px bg-white/10"></div>
+            @endguest
+
+            {{-- Contacts --}}
+            <div class="py-10">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <p class="uppercase tracking-[0.2em] text-[11px] text-red-100/90 font-bold">Kontakti</p>
+                        <h3 class="text-2xl sm:text-3xl font-extrabold mt-1">Sazinies ar VolleyLV</h3>
+                        <p class="mt-2 text-red-100">
+                            Jautājumi par turnīriem, sadarbības piedāvājumi vai atbalsts — droši raksti vai zvani.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <a href="tel:+37120001234"
+                            class="group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3 hover:bg-white/15 hover:border-white/30 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 text-white/90 group-hover:scale-110 transition" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M6.62 10.79a15.05 15.05 0 006.59 6.59l1.82-1.82a1 1 0 011.01-.24c1.1.37 2.28.57 3.5.57a1 1 0 011 1V21a1 1 0 01-1 1C10.07 22 2 13.93 2 3a1 1 0 011-1h3.11a1 1 0 011 1c0 1.22.2 2.4.57 3.5a1 1 0 01-.24 1.01l-1.82 1.82z" />
+                            </svg>
+                            <span class="font-semibold">+371 20001234</span>
+                        </a>
+
+                        <a href="mailto:info@volleylv.example"
+                            class="group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3 hover:bg-white/15 hover:border-white/30 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 text-white/90 group-hover:scale-110 transition" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 2v.01L12 13 4 6.01V6h16zM4 18V8.236l7.386 5.74a1 1 0 001.228 0L20 8.236V18H4z" />
+                            </svg>
+                            <span class="font-semibold">info@volleylv.example</span>
+                        </a>
+
+                        <div class="flex items-center gap-3 pt-1 text-sm text-red-100">
+                            <span class="inline-flex items-center gap-1">
+                                <span class="h-2 w-2 rounded-full bg-green-300"></span> Atbildam darba dienās
+                                09:00–18:00
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
-                <form method="POST" action="{{ route('register') }}"
-                    class="bg-white rounded-2xl shadow-lg p-8 text-left text-gray-900">
-                    @csrf
-                    <div class="mb-4">
-                        <label for="name" class="block text-sm font-medium text-gray-700">Vārds</label>
-                        <input id="name" name="name" type="text" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" />
-                    </div>
-                    <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium text-gray-700">E-pasts</label>
-                        <input id="email" name="email" type="email" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" />
-                    </div>
-                    <div class="mb-4">
-                        <label for="password" class="block text-sm font-medium text-gray-700">Parole</label>
-                        <input id="password" name="password" type="password" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" />
-                    </div>
-                    <div class="mb-6">
-                        <label for="password_confirmation" class="block text-sm font-medium text-gray-700">Apstiprināt
-                            paroli</label>
-                        <input id="password_confirmation" name="password_confirmation" type="password" required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm" />
-                    </div>
-                    <button type="submit"
-                        class="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow transition">
-                        Reģistrēties
-                    </button>
-                </form>
+                <div class="text-center text-xs text-red-100 mt-6">
+                    © {{ date('Y') }} VolleyLV. Visas tiesības aizsargātas.
+                </div>
             </div>
-        </section>
-    @endguest
+        </div>
+    </footer>
+
 
     <!-- JS: page-load class + calendar -->
     <script>

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tournament;
 
-class TournamentStatsController extends Controller
+class TournamentStatsController
 {
     public function stats(Tournament $tournament)
     {

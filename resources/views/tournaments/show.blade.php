@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="max-w-6xl mx-auto mt-24 mb-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto mt-24 mb-24 px-4 sm:px-6 lg:px-8">
 
         {{-- ===== Styles (local) ===== --}}
         <style>
@@ -368,7 +368,7 @@
         @endif
 
         {{-- ===== Bottom Actions ===== --}}
-        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 fade-up">
+        <div class="mt-8 mb-16 flex flex-col sm:flex-row items-center justify-center gap-3 fade-up">
             <a href="{{ route('tournaments.stats', $tournament) }}"
                 class="inline-flex items-center justify-center rounded-full bg-white text-red-700 border border-red-200 px-5 py-2 font-semibold hover:bg-red-50 transition">
                 Turnīra statistika →
@@ -378,6 +378,9 @@
                 ← Atpakaļ uz turnīriem
             </a>
         </div>
+
+        {{-- Extra spacer to ensure breathing room at the very bottom --}}
+        <div class="h-8"></div>
 
         {{-- ===== Delete Modal ===== --}}
         @if (auth()->user()?->isAdmin())

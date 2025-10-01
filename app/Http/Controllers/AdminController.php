@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    // Admin panel dashboard
+
     public function dashboard()
     {
         $totalUsers = User::count();
@@ -28,7 +28,7 @@ class AdminController extends Controller
         ));
     }
 
-    // Show all users
+
     public function users()
     {
         $users = User::orderBy('created_at', 'desc')->get();
@@ -47,7 +47,7 @@ class AdminController extends Controller
         return back()->with('success', 'User deleted successfully.');
     }
 
-    // Update user role
+
     public function updateRole(Request $request, User $user)
     {
         if (!auth()->user()->isAdmin()) {

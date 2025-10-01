@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto mt-28 mb-20 px-4 sm:px-6 lg:px-8" x-data="newsCreateForm()">
+    <div class="max-w-4xl mx-auto mt-28 mb-28 px-4 sm:px-6 lg:px-8" x-data="newsCreateForm()">
 
         {{-- Header (unchanged) --}}
         <div class="fade-up text-center sm:text-left">
@@ -93,6 +93,9 @@
                 </button>
             </div>
         </form>
+
+        {{-- Spacer so the page doesn’t end right at the buttons --}}
+        <div class="h-10 sm:h-14"></div>
     </div>
 
     <script>

@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="max-w-4xl mx-auto mt-28 mb-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto mt-28 mb-28 px-4 sm:px-6 lg:px-8">
 
         {{-- Page-load / reveal --}}
         <style>
@@ -114,6 +114,9 @@
                 </button>
             </div>
         </form>
+
+        {{-- Spacer so the page doesn’t end right at the buttons --}}
+        <div class="h-10 sm:h-14"></div>
     </div>
 
     {{-- Small helpers: page-load class, char counter, drag&drop with preview --}}

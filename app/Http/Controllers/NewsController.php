@@ -5,21 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\News;
 use Illuminate\Http\Request;
 
-class NewsController extends Controller
+class NewsController
 {
-    /**
-     * Display a paginated list of news.
-     */
-    public function index()
-    {
-        $news = News::latest()->paginate(10);
 
-        return view('news.index', compact('news'));
+    public function index(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+
+        $news = News::query()
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('title', 'like', "%{$q}%")
+                        ->orWhere('content', 'like', "%{$q}%");
+                });
+            })
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('news.index', compact('news', 'q'));
     }
 
-    /**
-     * Show the form for creating news (admin only).
-     */
+
     public function create()
     {
         if (!auth()->user() || !auth()->user()->isAdmin()) {
@@ -29,9 +36,7 @@ class NewsController extends Controller
         return view('news.create');
     }
 
-    /**
-     * Store a newly created news entry.
-     */
+
     public function store(Request $request)
     {
         if (!auth()->user() || !auth()->user()->isAdmin()) {
@@ -62,17 +67,13 @@ class NewsController extends Controller
             ->with('success', 'Ziņa veiksmīgi pievienota.');
     }
 
-    /**
-     * Display a single news entry.
-     */
+
     public function show(News $news)
     {
         return view('news.show', compact('news'));
     }
 
-    /**
-     * Show the form for editing news (admin only).
-     */
+
     public function edit(News $news)
     {
         if (!auth()->user() || !auth()->user()->isAdmin()) {
@@ -82,9 +83,7 @@ class NewsController extends Controller
         return view('news.edit', compact('news'));
     }
 
-    /**
-     * Update an existing news entry.
-     */
+
     public function update(Request $request, News $news)
     {
         if (!auth()->user() || !auth()->user()->isAdmin()) {
@@ -115,9 +114,7 @@ class NewsController extends Controller
             ->with('success', 'Ziņa veiksmīgi atjaunināta.');
     }
 
-    /**
-     * Delete a news entry (admin only).
-     */
+
     public function destroy(News $news)
     {
         if (!auth()->user() || !auth()->user()->isAdmin()) {

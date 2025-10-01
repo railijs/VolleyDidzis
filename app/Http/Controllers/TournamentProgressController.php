@@ -17,9 +17,10 @@ class TournamentProgressController extends Controller
 
         $tournament->update(['status' => 'active']);
         $participants = $tournament->applications()->inRandomOrder()->get();
+        $participantsCount = $participants->count();
 
         $matches = [];
-        for ($i = 0; $i < $participants->count(); $i += 2) {
+        for ($i = 0; $i < $participantsCount; $i += 2) {
             $teamA = $participants[$i]->team_name;
             $teamB = $participants[$i + 1]->team_name ?? 'BYE';
 
@@ -31,8 +32,8 @@ class TournamentProgressController extends Controller
             ]);
         }
 
-        // Create placeholders for next rounds
-        $totalRounds = ceil(log(count($participants), 2));
+        // Ensure at least 1 round; use log base 2 safely
+        $totalRounds = max(1, (int) ceil(log(max(1, $participantsCount), 2)));
         $previousRoundMatches = $matches;
 
         for ($round = 2; $round <= $totalRounds; $round++) {
@@ -47,7 +48,7 @@ class TournamentProgressController extends Controller
             }
 
             foreach ($previousRoundMatches as $idx => $match) {
-                $nextMatchIdx = floor($idx / 2);
+                $nextMatchIdx = (int) floor($idx / 2);
                 $match->update(['next_match_id' => $newRoundMatches[$nextMatchIdx]->id]);
             }
 

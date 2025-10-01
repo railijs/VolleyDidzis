@@ -6,60 +6,84 @@ use App\Models\Tournament;
 use App\Models\TournamentMatch;
 use Illuminate\Http\Request;
 
-class TournamentMatchController
+class TournamentMatchController extends Controller
 {
     public function updateScore(Request $request, Tournament $tournament, TournamentMatch $match)
     {
-        if (auth()->id() !== $tournament->creator_id && !auth()->user()->isAdmin()) {
-            abort(403, 'Unauthorized.');
+        // Authz: creator or admin can update
+        if (auth()->id() !== $tournament->creator_id && !(auth()->user() && auth()->user()->isAdmin())) {
+            abort(403);
         }
 
-        $request->validate([
-            'team_a_score' => 'required|integer|min:0',
-            'team_b_score' => 'required|integer|min:0',
+        // Basic validation
+        $data = $request->validate([
+            'team_a_score' => ['required', 'integer', 'min:0'],
+            'team_b_score' => ['required', 'integer', 'min:0'],
         ]);
 
-        $teamAScore = $request->team_a_score;
-        $teamBScore = $request->team_b_score;
+        $a = (int) $data['team_a_score'];
+        $b = (int) $data['team_b_score'];
 
-        // Volleyball scoring rules
-        if ($teamAScore >= 24 && $teamBScore >= 24 && abs($teamAScore - $teamBScore) < 2) {
-            return back()->with('error', 'Winner must lead by at least 2 points after 24-24.');
-        }
-
-        $teamAScore = min($teamAScore, 25);
-        $teamBScore = min($teamBScore, 25);
-
-        // Determine winner
         $winner = null;
-        $winnerName = null;
-        if ((($teamAScore >= 25 || $teamBScore >= 25) && abs($teamAScore - $teamBScore) >= 2)) {
-            if ($teamAScore > $teamBScore) {
-                $winner = 'team_a';
-                $winnerName = $match->team_a;
-            } else {
-                $winner = 'team_b';
-                $winnerName = $match->team_b;
-            }
-        } else {
-            return back()->with('error', 'Cannot set a winner until rules are satisfied.');
-        }
+        if ($a > $b) $winner = 'team_a';
+        if ($b > $a) $winner = 'team_b';
 
+        // Update current match
         $match->update([
-            'team_a_score' => $teamAScore,
-            'team_b_score' => $teamBScore,
-            'winner' => $winner,
+            'team_a_score' => $a,
+            'team_b_score' => $b,
+            'winner'       => $winner,
         ]);
 
-        // Assign winner to next round
-        if ($winnerName && $match->next_match_id) {
-            $nextMatch = TournamentMatch::find($match->next_match_id);
-            if ($nextMatch) {
-                if ($nextMatch->team_a === 'BYE') $nextMatch->update(['team_a' => $winnerName]);
-                elseif ($nextMatch->team_b === 'BYE') $nextMatch->update(['team_b' => $winnerName]);
+        // Propagate to next match if we have a winner
+        if ($winner && $match->next_match_id) {
+            $next = TournamentMatch::find($match->next_match_id);
+            if ($next) {
+                $winnerName = $winner === 'team_a' ? $match->team_a : $match->team_b;
+
+                // Choose the slot in the next match
+                $slot = (empty($next->team_a) || $next->team_a === 'BYE') ? 'team_a' : 'team_b';
+
+                // If changing results later, we simply overwrite the slot we control
+                $next->update([
+                    $slot => $winnerName ?: 'BYE',
+                ]);
+
+                // Auto-advance BYE if applicable
+                $resolvedWinner = null;
+                if (($next->team_a === 'BYE' && $next->team_b && $next->team_b !== 'BYE') ||
+                    ($next->team_b === 'BYE' && $next->team_a && $next->team_a !== 'BYE')
+                ) {
+                    $resolvedWinner = $next->team_a === 'BYE' ? 'team_b' : 'team_a';
+                }
+
+                if ($resolvedWinner) {
+                    $next->update([
+                        'winner' => $resolvedWinner,
+                        'team_a_score' => $next->team_a === 'BYE' ? 0 : ($next->team_a_score ?? 0),
+                        'team_b_score' => $next->team_b === 'BYE' ? 0 : ($next->team_b_score ?? 0),
+                    ]);
+
+                    // One-step propagate BYE advancement
+                    if ($next->next_match_id) {
+                        $afterNext = TournamentMatch::find($next->next_match_id);
+                        if ($afterNext) {
+                            $winnerName2 = $resolvedWinner === 'team_a' ? $next->team_a : $next->team_b;
+                            $slot2 = (empty($afterNext->team_a) || $afterNext->team_a === 'BYE') ? 'team_a' : 'team_b';
+                            $afterNext->update([$slot2 => $winnerName2 ?: 'BYE']);
+                        }
+                    }
+                } else {
+                    // Clear prior automatic winner if now both teams are present and equal scores
+                    if ($next->team_a && $next->team_b && $next->team_a !== 'BYE' && $next->team_b !== 'BYE') {
+                        $next->update(['winner' => null]);
+                    }
+                }
             }
         }
 
-        return back()->with('success', 'Match score updated and next round generated!');
+        return redirect()
+            ->route('tournaments.stats', $tournament)
+            ->with('success', 'Score updated.');
     }
 }

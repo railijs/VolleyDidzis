@@ -5,7 +5,7 @@
                 .fade-up {
                     opacity: 0;
                     transform: translateY(12px);
-                    transition: opacity .55s ease, transform .55s ease;
+                    transition: opacity .55s, transform .55s;
                 }
 
                 .loaded .fade-up {
@@ -15,11 +15,11 @@
             }
 
             .glass {
-                background: rgba(255, 255, 255, .85);
+                background: rgba(255, 255, 255, .88);
                 backdrop-filter: blur(10px);
                 border: 1px solid rgba(148, 163, 184, .35);
                 border-radius: 1rem;
-                box-shadow: 0 10px 20px rgba(0, 0, 0, .05);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, .06);
                 transition: border-color .25s, box-shadow .25s, transform .25s;
             }
 
@@ -28,48 +28,225 @@
                 box-shadow: 0 16px 32px rgba(0, 0, 0, .08);
                 transform: translateY(-2px);
             }
+
+            .chip {
+                display: inline-flex;
+                align-items: center;
+                white-space: nowrap;
+                border-radius: 9999px;
+                font-weight: 700;
+                font-size: .72rem;
+                padding: .15rem .55rem;
+                color: #fff;
+                max-width: 100%;
+                transition: transform .15s ease, box-shadow .2s ease, opacity .15s ease;
+            }
+
+            .chip-men {
+                background: #3b82f6;
+            }
+
+            .chip-women {
+                background: #ec4899;
+            }
+
+            .chip-mix {
+                background: #8b5cf6;
+            }
+
+            .chip-generic {
+                background: #ef4444;
+            }
+
+            /* Make only interactive chips show pointer + hover */
+            .chip.clickable {
+                cursor: pointer;
+            }
+
+            .chip.clickable:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 16px rgba(0, 0, 0, .12);
+            }
+
+            .chip:focus {
+                outline: 2px solid rgba(239, 68, 68, .6);
+                outline-offset: 2px;
+            }
+
+            .btn-red {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 9999px;
+                background: #dc2626;
+                color: #fff;
+                font-weight: 700;
+                padding: .5rem 1rem;
+                box-shadow: 0 8px 16px rgba(220, 38, 38, .18);
+                transition: transform .15s, box-shadow .2s, background .2s;
+            }
+
+            .btn-red:hover {
+                background: #b91c1c;
+                box-shadow: 0 10px 18px rgba(185, 28, 28, .22);
+                transform: translateY(-1px);
+            }
+
+            .btn-muted {
+                border: 1px solid #e5e7eb;
+                border-radius: 9999px;
+                background: #fff;
+                color: #374151;
+                padding: .5rem 1rem;
+            }
+
+            .btn-muted:hover {
+                background: #f9fafb;
+            }
+
+            .wk-pill {
+                padding: .35rem .75rem;
+                border-radius: .75rem;
+                font-weight: 800;
+                text-align: center;
+            }
+
+            .wk-work {
+                background: #fee2e2;
+                color: #991b1b;
+            }
+
+            /* red-100/700 */
+            .wk-weekend {
+                background: #fecaca;
+                color: #7f1d1d;
+            }
+
+            /* red-200/800 */
+
+            .cell {
+                border: 1px solid #e5e7eb;
+                border-radius: 1rem;
+                background: #fff;
+                min-height: 6.25rem;
+                display: flex;
+                flex-direction: column;
+                padding: .5rem .6rem;
+                transition: box-shadow .2s, border-color .2s;
+            }
+
+            .cell:hover {
+                box-shadow: 0 8px 16px rgba(0, 0, 0, .06);
+                border-color: #fecaca;
+            }
+
+            .cell-today {
+                box-shadow: inset 0 0 0 2px rgba(252, 165, 165, .8);
+                background: #fff1f2;
+            }
+
+            .cell-weekend {
+                background: #fff5f5;
+            }
+
+            .cell-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: .5rem;
+            }
+
+            .day-num {
+                font-weight: 800;
+                color: #111827;
+            }
+
+            .badge-count {
+                font-size: .65rem;
+                font-weight: 800;
+                color: #991b1b;
+                background: #fee2e2;
+                border: 1px solid #fecaca;
+                border-radius: 9999px;
+                padding: .05rem .4rem;
+            }
+
+            .chip-row {
+                display: flex;
+                flex-direction: column;
+                gap: .25rem;
+                margin-top: .25rem;
+            }
+
+            .chip-row .chip {
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .chip-more {
+                margin-top: auto;
+                font-size: .72rem;
+                font-weight: 800;
+                color: #b91c1c;
+            }
+
+            .chip-more:hover {
+                color: #7f1d1d;
+                text-decoration: underline;
+            }
         </style>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
-            <div class="fade-up mb-6 sm:mb-8 flex items-center justify-center gap-3">
-                <span class="h-6 w-1.5 bg-red-600 rounded"></span>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Turnīru kalendārs</h1>
+            <!-- Title -->
+            <div class="fade-up mb-6 sm:mb-8 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="h-6 w-1.5 bg-red-600 rounded"></span>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Turnīru kalendārs</h1>
+                </div>
+                <div class="hidden md:flex items-center gap-2">
+                    <button id="prevMonth" class="btn-muted" aria-label="Iepriekšējais mēnesis">←</button>
+                    <button id="todayBtn" class="btn-red" aria-label="Šodien">Šodien</button>
+                    <button id="nextMonth" class="btn-muted" aria-label="Nākamais mēnesis">→</button>
+                </div>
             </div>
 
             <section class="glass p-5 sm:p-6 fade-up">
-                <!-- Nav -->
-                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                    <div class="flex items-center gap-2">
-                        <button id="prevMonth"
-                            class="inline-flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 shadow transition"
-                            aria-label="Iepriekšējais mēnesis">←</button>
-                        <button id="todayBtn"
-                            class="inline-flex items-center justify-center rounded-full border border-red-200 text-red-700 hover:bg-red-50 font-semibold px-4 py-2 transition"
-                            aria-label="Šodien">Šodien</button>
-                    </div>
-                    <h2 id="monthYear" class="text-2xl sm:text-3xl font-extrabold text-gray-900 text-center flex-1">
-                    </h2>
-                    <div class="flex items-center">
-                        <button id="nextMonth"
-                            class="inline-flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 shadow transition"
-                            aria-label="Nākamais mēnesis">→</button>
-                    </div>
+                <!-- Mobile nav -->
+                <div class="md:hidden flex items-center justify-between mb-3">
+                    <button id="prevMonth_m" class="btn-muted" aria-label="Iepriekšējais mēnesis">←</button>
+                    <button id="todayBtn_m" class="btn-red" aria-label="Šodien">Šodien</button>
+                    <button id="nextMonth_m" class="btn-muted" aria-label="Nākamais mēnesis">→</button>
+                </div>
+
+                <!-- Month label -->
+                <div class="flex items-center justify-center mb-3">
+                    <h2 id="monthYear" class="text-2xl sm:text-3xl font-extrabold text-gray-900 text-center"></h2>
+                </div>
+
+                <!-- Legend -->
+                <div class="flex flex-wrap items-center justify-center gap-2 text-xs mb-4">
+                    <span class="chip chip-generic">Turnīrs</span>
                 </div>
 
                 <!-- Week header (Mon-first) -->
                 <div class="grid grid-cols-7 gap-3 text-xs sm:text-sm mb-2">
                     @php $wd = ['Pr','Ot','Tr','Ce','Pk','Se','Sv']; @endphp
                     @foreach ($wd as $i => $d)
-                        <div
-                            class="font-bold text-center p-2 rounded-md
-                            {{ $i >= 5 ? 'bg-red-200 text-red-900' : 'bg-red-100' }}">
-                            {{ $d }}
-                        </div>
+                        <div class="wk-pill {{ $i >= 5 ? 'wk-weekend' : 'wk-work' }}">{{ $d }}</div>
                     @endforeach
                 </div>
 
                 <!-- Grid -->
                 <div id="calendarGrid" class="grid grid-cols-7 gap-3 text-sm"></div>
+
+                <!-- Footer actions -->
+                <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
+                    <div class="text-xs text-gray-500">Padoms: klikšķini “+N” lai redzētu visas dienas sacensības.</div>
+                    <div class="hidden sm:flex items-center gap-2">
+                        <button id="prevMonth_btm" class="btn-muted">← Iepriekšējais</button>
+                        <button id="nextMonth_btm" class="btn-muted">Nākamais →</button>
+                    </div>
+                </div>
             </section>
         </div>
     </div>
@@ -85,25 +262,34 @@
     </div>
 
     <script>
-        const events = @json($events); // {title, start, end?, gender_type?, url?}
-        let currentDate = new Date();
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        // ---- Data ----
+        const events = @json($events); // [{title, start, end?, gender_type?, url?}]
 
-        const monthNames = ["Janvāris", "Februāris", "Marts", "Aprīlis", "Maijs", "Jūnijs", "Jūlijs", "Augusts",
-            "Septembris", "Oktobris", "Novembris", "Decembris"
-        ];
-
+        // ---- DOM refs ----
         const monthYearEl = document.getElementById('monthYear');
         const calendarGrid = document.getElementById('calendarGrid');
         const prevMonthBtn = document.getElementById('prevMonth');
         const nextMonthBtn = document.getElementById('nextMonth');
         const todayBtn = document.getElementById('todayBtn');
+        // Mobile + bottom
+        const prevMonth_m = document.getElementById('prevMonth_m');
+        const nextMonth_m = document.getElementById('nextMonth_m');
+        const todayBtn_m = document.getElementById('todayBtn_m');
+        const prevMonth_btm = document.getElementById('prevMonth_btm');
+        const nextMonth_btm = document.getElementById('nextMonth_btm');
 
         const modalOverlay = document.getElementById('modalOverlay');
         const modalTournaments = document.getElementById('modalTournaments');
         const modalDate = document.getElementById('modalDate');
         const closeModal = document.getElementById('closeModal');
+
+        // ---- Date helpers ----
+        const monthNames = ["Janvāris", "Februāris", "Marts", "Aprīlis", "Maijs", "Jūnijs", "Jūlijs", "Augusts",
+            "Septembris", "Oktobris", "Novembris", "Decembris"
+        ];
+        let currentDate = new Date();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         function parseDate(d) {
             if (!d) return null;
@@ -113,29 +299,53 @@
             if (p.length === 3) return new Date(p[0], p[1] - 1, p[2]);
             return null;
         }
+        const monIndex = (jsDow) => (jsDow + 6) % 7; // 0..6, Mon-first index
+        const isWeekend = (date) => [6, 0].includes(date.getDay());
 
-        // Monday-first helpers
-        function getMondayIndex(d) {
-            return (d + 6) % 7;
-        } // JS: 0=Sun -> 6, 1=Mon -> 0...
-        function isWeekend(date) {
-            const gd = date.getDay();
-            return gd === 6 || gd === 0;
-        } // Sat/Sun
+        // ---- Efficient per-month mapping ----
+        function buildMonthMap(year, month) {
+            const first = new Date(year, month, 1);
+            const last = new Date(year, month + 1, 0);
+            const map = Object.create(null);
+
+            const clampToMonth = (d) => {
+                if (d < first) return first;
+                if (d > last) return last;
+                return d;
+            };
+
+            for (const ev of events) {
+                const sRaw = parseDate(ev.start);
+                if (!sRaw) continue;
+                const eRaw = parseDate(ev.end || ev.start) || sRaw;
+
+                if (eRaw < first || sRaw > last) continue;
+
+                const s = clampToMonth(new Date(sRaw));
+                const e = clampToMonth(new Date(eRaw));
+
+                for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+                    const key = d.toISOString().slice(0, 10);
+                    (map[key] ||= []).push(ev);
+                }
+            }
+            return map;
+        }
 
         function renderCalendar(date) {
             calendarGrid.innerHTML = '';
+
             const y = date.getFullYear();
             const m = date.getMonth();
-
             monthYearEl.textContent = `${monthNames[m]} ${y}`;
 
-            // Monday-first leading blanks
-            const jsDowFirst = new Date(y, m, 1).getDay(); // 0..6 (Sun..Sat)
-            const lead = getMondayIndex(jsDowFirst); // 0..6 (Mon..Sun)
+            const firstDow = new Date(y, m, 1).getDay(); // 0..6 (Sun..Sat)
+            const lead = monIndex(firstDow);
             const lastDate = new Date(y, m + 1, 0).getDate();
 
-            // Fill blanks before the 1st (Mon-first grid)
+            const monthMap = buildMonthMap(y, m);
+
+            // Leading blanks
             for (let i = 0; i < lead; i++) {
                 const spacer = document.createElement('div');
                 spacer.className = 'p-2';
@@ -144,62 +354,86 @@
 
             for (let d = 1; d <= lastDate; d++) {
                 const cellDate = new Date(y, m, d);
-                const cell = document.createElement('div');
+                const key = cellDate.toISOString().slice(0, 10);
+                const dayEvents = monthMap[key] || [];
                 const weekend = isWeekend(cellDate);
 
-                cell.className = [
-                    'border p-2 h-24 rounded-xl bg-white flex flex-col text-xs transition',
-                    'hover:shadow-md hover:ring-1 hover:ring-red-200',
-                    weekend ? 'bg-red-50/60' : ''
-                ].join(' ');
+                const cell = document.createElement('div');
+                cell.className = `cell ${weekend ? 'cell-weekend' : ''}`;
 
-                const label = document.createElement('div');
-                label.className = 'font-semibold text-gray-900';
-                label.textContent = d;
-                cell.appendChild(label);
+                // Header
+                const header = document.createElement('div');
+                header.className = 'cell-header';
 
-                // Events overlapping this date (range-aware)
-                const dayEvents = events.filter(ev => {
-                    const s = parseDate(ev.start);
-                    const e = parseDate(ev.end || ev.start) || s;
-                    if (!s) return false;
-                    return cellDate >= s && cellDate <= e;
-                });
+                const dn = document.createElement('div');
+                dn.className = 'day-num';
+                dn.textContent = d;
 
-                if (dayEvents.length > 0) {
-                    // Show up to 2 badges; if more, show "+3 turnīri" (fixed label) opening modal
-                    const maxInline = 2;
+                header.appendChild(dn);
+
+                if (dayEvents.length > 3) {
+                    const ct = document.createElement('span');
+                    ct.className = 'badge-count';
+                    ct.textContent = dayEvents.length;
+                    header.appendChild(ct);
+                }
+                cell.appendChild(header);
+
+                // Chips (max 2), then "+N"
+                const maxInline = 2;
+                if (dayEvents.length) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'chip-row';
+
                     dayEvents.slice(0, maxInline).forEach(ev => {
-                        const badge = document.createElement('span');
-                        badge.textContent = ev.title;
-                        badge.title = ev.title;
-                        badge.className = 'mt-1 px-2 py-0.5 rounded-full text-white truncate cursor-pointer';
-                        const g = (ev.gender_type || '').toLowerCase();
-                        if (g === 'men') badge.classList.add('bg-blue-500');
-                        else if (g === 'women') badge.classList.add('bg-pink-500');
-                        else if (g === 'mix') badge.classList.add('bg-purple-500');
-                        else badge.classList.add('bg-red-500');
-                        badge.onclick = () => ev.url && (window.location.href = ev.url);
-                        cell.appendChild(badge);
+                        const chip = document.createElement('span');
+                        chip.className = 'chip ' + chipClass(ev.gender_type);
+                        // Make it feel clickable
+                        chip.classList.add('clickable');
+                        chip.setAttribute('tabindex', '0');
+                        chip.setAttribute('role', 'button');
+                        chip.setAttribute('aria-label', ev.title);
+
+                        chip.textContent = ev.title;
+                        chip.title = ev.title;
+
+                        chip.onclick = () => ev.url && (window.location.href = ev.url);
+                        chip.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                if (ev.url) window.location.href = ev.url;
+                            }
+                        });
+
+                        wrap.appendChild(chip);
                     });
 
                     if (dayEvents.length > maxInline) {
                         const more = document.createElement('button');
                         more.type = 'button';
-                        more.textContent = '+3 turnīri';
-                        more.className = 'mt-auto text-xs font-semibold text-red-700 hover:text-red-900';
+                        more.className = 'chip-more';
+                        const extra = dayEvents.length - maxInline;
+                        more.textContent = `+${extra} turnīr${extra === 1 ? 's' : 'i'}`;
                         more.onclick = () => openModalFor(cellDate, dayEvents);
-                        cell.appendChild(more);
+                        wrap.appendChild(more);
                     }
+                    cell.appendChild(wrap);
                 }
 
-                // Today highlight
                 if (cellDate.getTime() === today.getTime()) {
-                    cell.classList.add('ring-2', 'ring-red-300', 'bg-red-50');
+                    cell.classList.add('cell-today');
                 }
 
                 calendarGrid.appendChild(cell);
             }
+        }
+
+        function chipClass(gender) {
+            const g = (gender || '').toLowerCase();
+            if (g === 'men') return 'chip-men';
+            if (g === 'women') return 'chip-women';
+            if (g === 'mix') return 'chip-mix';
+            return 'chip-generic';
         }
 
         function openModalFor(dateObj, items) {
@@ -211,27 +445,22 @@
                 const li = document.createElement('li');
                 li.className =
                     'p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 flex items-center justify-between gap-3 border border-gray-200';
+                li.setAttribute('tabindex', '0');
+                li.setAttribute('role', 'button');
+                li.addEventListener('keydown', (e) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && ev.url) {
+                        e.preventDefault();
+                        window.location.href = ev.url;
+                    }
+                });
 
                 const title = document.createElement('span');
                 title.className = 'font-medium text-gray-800 truncate';
                 title.textContent = ev.title;
 
                 const badge = document.createElement('span');
-                badge.className = 'text-[11px] font-semibold px-2 py-0.5 rounded-full text-white';
-                const g = (ev.gender_type || '').toLowerCase();
-                if (g === 'men') {
-                    badge.textContent = 'Vīrieši';
-                    badge.classList.add('bg-blue-500');
-                } else if (g === 'women') {
-                    badge.textContent = 'Sievietes';
-                    badge.classList.add('bg-pink-500');
-                } else if (g === 'mix') {
-                    badge.textContent = 'Mix';
-                    badge.classList.add('bg-purple-500');
-                } else {
-                    badge.textContent = 'Turnīrs';
-                    badge.classList.add('bg-gray-600');
-                }
+                badge.className = 'chip ' + chipClass(ev.gender_type);
+                badge.textContent = labelFromGender(ev.gender_type);
 
                 li.appendChild(title);
                 li.appendChild(badge);
@@ -244,28 +473,50 @@
             modalOverlay.classList.add('flex');
         }
 
+        function labelFromGender(g) {
+            const v = (g || '').toLowerCase();
+            if (v === 'men') return 'Vīrieši';
+            if (v === 'women') return 'Sievietes';
+            if (v === 'mix') return 'Mix';
+            return 'Turnīrs';
+        }
+
         function closeTheModal() {
             modalOverlay.classList.add('hidden');
             modalOverlay.classList.remove('flex');
         }
 
+        // ---- Init & events ----
         document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.classList.add('loaded');
             renderCalendar(currentDate);
         });
 
-        prevMonthBtn.addEventListener('click', () => {
+        function prevMonth() {
             currentDate.setMonth(currentDate.getMonth() - 1);
             renderCalendar(currentDate);
-        });
-        nextMonthBtn.addEventListener('click', () => {
+        }
+
+        function nextMonth() {
             currentDate.setMonth(currentDate.getMonth() + 1);
             renderCalendar(currentDate);
-        });
-        todayBtn.addEventListener('click', () => {
+        }
+
+        function goToday() {
             currentDate = new Date();
             renderCalendar(currentDate);
-        });
+        }
+
+        prevMonthBtn?.addEventListener('click', prevMonth);
+        nextMonthBtn?.addEventListener('click', nextMonth);
+        todayBtn?.addEventListener('click', goToday);
+
+        prevMonth_m?.addEventListener('click', prevMonth);
+        nextMonth_m?.addEventListener('click', nextMonth);
+        todayBtn_m?.addEventListener('click', goToday);
+
+        prevMonth_btm?.addEventListener('click', prevMonth);
+        nextMonth_btm?.addEventListener('click', nextMonth);
 
         closeModal.addEventListener('click', closeTheModal);
         modalOverlay.addEventListener('click', (e) => {
@@ -273,14 +524,8 @@
         });
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeTheModal();
-            if (e.key === 'ArrowLeft') {
-                currentDate.setMonth(currentDate.getMonth() - 1);
-                renderCalendar(currentDate);
-            }
-            if (e.key === 'ArrowRight') {
-                currentDate.setMonth(currentDate.getMonth() + 1);
-                renderCalendar(currentDate);
-            }
+            if (e.key === 'ArrowLeft') prevMonth();
+            if (e.key === 'ArrowRight') nextMonth();
         }, {
             passive: true
         });
