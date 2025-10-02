@@ -47,21 +47,17 @@
                 border: 1px solid #fed7aa
             }
 
-            /* amber */
             .chip-status-active {
                 background: #ecfdf5;
                 color: #065f46;
                 border: 1px solid #a7f3d0
             }
 
-            /* green */
             .chip-status-completed {
                 background: #f3f4f6;
                 color: #374151;
                 border: 1px solid #e5e7eb
             }
-
-            /* gray */
 
             .pill-red {
                 background: #dc2626;
@@ -94,6 +90,84 @@
                 height: 100%;
                 background: linear-gradient(90deg, #22c55e, #16a34a)
             }
+
+            .progress-fill.warning {
+                background: linear-gradient(90deg, #f59e0b, #d97706)
+            }
+
+            .progress-fill.danger {
+                background: linear-gradient(90deg, #ef4444, #dc2626)
+            }
+
+            /* Big champion banner */
+            .champion {
+                position: relative;
+                overflow: hidden;
+                border-radius: 1.25rem;
+                border: 1px solid rgba(250, 204, 21, .45);
+                background: radial-gradient(120% 120% at 0% 0%, rgba(250, 204, 21, .25), transparent 40%),
+                    radial-gradient(120% 120% at 100% 0%, rgba(217, 119, 6, .2), transparent 45%),
+                    linear-gradient(135deg, #fef3c7, #fffbeb);
+                box-shadow: 0 12px 28px rgba(250, 204, 21, .15);
+            }
+
+            .champion .title {
+                font-weight: 900;
+                letter-spacing: .02em;
+                text-transform: uppercase;
+                color: #78350f;
+            }
+
+            .champion .name {
+                font-weight: 900;
+                color: #92400e;
+                text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+            }
+
+            /* details/summary styling */
+            details.card {
+                border-radius: 1rem;
+                border: 1px solid rgba(148, 163, 184, .35);
+                background: rgba(255, 255, 255, .85);
+                box-shadow: 0 10px 20px rgba(0, 0, 0, .05);
+                overflow: hidden;
+            }
+
+            details.card>summary {
+                list-style: none;
+                cursor: pointer;
+                padding: .9rem 1.1rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-weight: 800;
+                color: #111827;
+                background: rgba(249, 250, 251, .8);
+            }
+
+            details.card>summary::-webkit-details-marker {
+                display: none;
+            }
+
+            .summary-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: .4rem;
+                padding: .25rem .6rem;
+                border-radius: 9999px;
+                background: #ef4444;
+                color: #fff;
+                font-weight: 700;
+                font-size: .75rem;
+            }
+
+            .summary-icon {
+                transition: transform .25s ease;
+            }
+
+            details[open] .summary-icon {
+                transform: rotate(180deg);
+            }
         </style>
 
         @php
@@ -103,9 +177,19 @@
 
             $apps = $tournament->applications->count();
             $max = $tournament->max_teams;
-            $pct = $max ? min(100, round(($apps / max(1, $max)) * 100)) : null;
+            $remaining = $max ? max(0, $max - $apps) : null;
+            $isFull = $max ? $apps >= $max : false;
 
-            // Gender chip
+            $pct = $max ? min(100, round(($apps / max(1, $max)) * 100)) : null;
+            $barClass = 'progress-fill';
+            if (!is_null($pct)) {
+                if ($pct >= 100) {
+                    $barClass .= ' danger';
+                } elseif ($pct >= 80) {
+                    $barClass .= ' warning';
+                }
+            }
+
             $gender = $tournament->gender_type;
             $genderClass = match ($gender) {
                 'men' => 'pill-blue',
@@ -120,7 +204,6 @@
                 default => 'Turnīrs',
             };
 
-            // Status chip
             $status = $tournament->status; // pending / active / completed
             $statusClass = match ($status) {
                 'active' => 'chip chip-status-active',
@@ -164,6 +247,9 @@
                         <div class="mt-3 flex flex-wrap items-center gap-2">
                             <span class="{{ $statusClass }}">{{ $statusLabel }}</span>
                             <span class="chip {{ $genderClass }}">{{ $genderLabel }}</span>
+                            @if ($isFull)
+                                <span class="chip pill-red" title="Maksimālais komandu skaits sasniegts">Pilns</span>
+                            @endif
                         </div>
                     </div>
 
@@ -185,6 +271,19 @@
                 </div>
             </div>
         </section>
+
+        {{-- ===== BIG CHAMPION BANNER ===== --}}
+        @if (!empty($winnerName))
+            <section class="champion p-6 sm:p-8 mb-8 fade-up">
+                <div class="flex items-center gap-4">
+                    <div class="flex-shrink-0 text-4xl sm:text-5xl">🏆</div>
+                    <div>
+                        <div class="title text-sm tracking-widest">TURNĪRA UZVARĒTĀJS</div>
+                        <div class="name text-2xl sm:text-4xl mt-1">{{ $winnerName }}</div>
+                    </div>
+                </div>
+            </section>
+        @endif
 
         {{-- ===== Start / Stop controls (creator or admin) ===== --}}
         @if ($tournament->status === 'pending' && (auth()->id() === $tournament->creator_id || auth()->user()?->isAdmin()))
@@ -220,7 +319,15 @@
 
                     <div class="mt-5 grid gap-3 sm:grid-cols-2 text-sm text-gray-800">
                         <p><strong>Atrašanās vieta:</strong> {{ $tournament->location ?? 'TBA' }}</p>
-                        <p><strong>Pieteikumi:</strong> {{ $apps }} / {{ $max ?? 'Bez ierobežojuma' }}</p>
+                        <p>
+                            <strong>Pieteikumi:</strong>
+                            {{ $apps }} / {{ $max ?? 'Bez ierobežojuma' }}
+                            @if ($remaining !== null && $remaining > 0)
+                                (brīvas {{ $remaining }})
+                            @elseif($isFull)
+                                — <span class="font-semibold text-red-600">PILNS</span>
+                            @endif
+                        </p>
                         <p>
                             <strong>Dzimums:</strong>
                             @if ($tournament->gender_type === 'men')
@@ -258,14 +365,22 @@
                     </div>
 
                     @if (!is_null($pct))
-                        {{-- Capacity bar --}}
                         <div class="mt-5 max-w-md">
-                            <div class="progress-track">
-                                <div class="progress-fill" style="width: {{ $pct }}%"></div>
+                            <div class="progress-track" aria-hidden="true">
+                                <div class="{{ $barClass }}" style="width: {{ $pct }}%"></div>
                             </div>
                             <p class="mt-1 text-xs text-gray-500">
                                 Aizpildījums: {{ $apps }}/{{ $max }} ({{ $pct }}%)
+                                @if ($isFull)
+                                    — <span class="text-red-600 font-semibold">Maksimālais skaits sasniegts</span>
+                                @endif
                             </p>
+                        </div>
+                    @endif
+
+                    @if ($isFull && $tournament->status === 'pending')
+                        <div class="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                            Pieteikumi ir <strong>slēgti</strong>: sasniegts maksimālais komandu skaits.
                         </div>
                     @endif
                 </div>
@@ -286,6 +401,12 @@
                             <span>Statuss</span>
                             <span class="font-semibold">{{ $statusLabel }}</span>
                         </li>
+                        @if (!empty($winnerName))
+                            <li class="flex items-center justify-between">
+                                <span>Uzvarētājs</span>
+                                <span class="font-semibold">{{ $winnerName }}</span>
+                            </li>
+                        @endif
                         <li class="flex items-center justify-between">
                             <span>Dzimums</span>
                             <span class="font-semibold">{{ $genderLabel }}</span>
@@ -298,32 +419,56 @@
                         @endif
                         <li class="flex items-center justify-between">
                             <span>Komandas</span>
-                            <span class="font-semibold">{{ $apps }} / {{ $max ?? '∞' }}</span>
+                            <span class="font-semibold">
+                                {{ $apps }} / {{ $max ?? '∞' }}
+                                @if ($isFull)
+                                    <span class="ml-2 chip pill-red">Pilns</span>
+                                @endif
+                            </span>
                         </li>
                     </ul>
                 </aside>
             </div>
         </div>
 
-        {{-- ===== Applicants ===== --}}
+        {{-- ===== Applicants (collapsible) ===== --}}
         @if ($tournament->applications->count())
-            <div class="glass p-5 sm:p-7 mb-6 fade-up">
-                <h2 class="text-lg font-extrabold text-gray-900 mb-3">Pieteikušās komandas</h2>
-                <ul class="divide-y divide-gray-200 text-sm">
-                    @foreach ($tournament->applications as $applicant)
-                        <li class="py-3 flex items-center justify-between">
-                            <div class="min-w-0">
-                                <p class="font-semibold text-gray-900 truncate">{{ $applicant->team_name }}</p>
-                                <p class="text-xs text-gray-500">Kapteinis: {{ $applicant->captain_name }}</p>
-                            </div>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
+            @php
+                // Ja turnīrs pabeigts -> noklusēti aizvērts; citādi atvērts
+                $openAttr = $tournament->status === 'completed' ? '' : 'open';
+            @endphp
+            <details class="card mb-6 fade-up" {{ $openAttr }}>
+                <summary>
+                    <span>Pieteikušās komandas</span>
+                    <span class="flex items-center gap-2">
+                        <span class="summary-pill">{{ $tournament->applications->count() }}</span>
+                        <svg class="summary-icon w-4 h-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor"
+                            aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M5.23 7.21a.75.75 0 011.06.02L10 10.939l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.25 8.29a.75.75 0 01-.02-1.08z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                </summary>
+
+                <div class="p-5 sm:p-7">
+                    <ul class="divide-y divide-gray-200 text-sm">
+                        @foreach ($tournament->applications as $applicant)
+                            <li class="py-3 flex items-center justify-between">
+                                <div class="min-w-0">
+                                    <p class="font-semibold text-gray-900 truncate">{{ $applicant->team_name }}</p>
+                                    <p class="text-xs text-gray-500">Kapteinis: {{ $applicant->captain_name }}</p>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </details>
         @endif
 
-        {{-- ===== Join Form (only when pending) ===== --}}
-        @if ($tournament->status === 'pending')
+        {{-- ===== Join Form (only when pending AND NOT full) ===== --}}
+        @php $isFull = $max ? $apps >= $max : false; @endphp
+        @if ($tournament->status === 'pending' && !$isFull)
             <div class="glass p-5 sm:p-7 mb-6 border-red-200 fade-up" style="border-color: rgba(248,113,113,.55);">
                 <h2 class="text-lg font-extrabold text-gray-900 mb-3">Pieteikties</h2>
 
@@ -349,7 +494,8 @@
                             class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-red-500 focus:ring-2 focus:ring-red-200">
                     </div>
                     <div>
-                        <label for="email" class="block text-sm font-semibold text-gray-800">E-pasts saziņai</label>
+                        <label for="email" class="block text-sm font-semibold text-gray-800">E-pasts
+                            saziņai</label>
                         <input id="email" name="email" type="email" required
                             class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-red-500 focus:ring-2 focus:ring-red-200">
                     </div>
@@ -360,6 +506,10 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        @elseif ($tournament->status === 'pending' && $isFull)
+            <div class="glass p-5 sm:p-7 mb-6 fade-up bg-yellow-50/80 border border-yellow-300 text-yellow-900">
+                Maksimālais komandu skaits ir sasniegts — pieteikumi <strong>slēgti</strong>.
             </div>
         @else
             <div class="glass p-5 sm:p-7 mb-6 fade-up bg-yellow-50/80 border border-yellow-300 text-yellow-900">
@@ -379,7 +529,6 @@
             </a>
         </div>
 
-        {{-- Extra spacer to ensure breathing room at the very bottom --}}
         <div class="h-8"></div>
 
         {{-- ===== Delete Modal ===== --}}
@@ -391,9 +540,8 @@
                     <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
                         <div class="p-6">
                             <h2 class="text-xl font-extrabold text-red-700 mb-2">Apstiprināt dzēšanu</h2>
-                            <p class="text-gray-700 text-sm">
-                                Vai tiešām dzēst <strong>{{ $tournament->name }}</strong>? Šī darbība ir
-                                neatgriezeniska.
+                            <p class="text-gray-700 text-sm">Vai tiešām dzēst
+                                <strong>{{ $tournament->name }}</strong>? Šī darbība ir neatgriezeniska.
                             </p>
                             <div class="mt-5 flex items-center justify-end gap-2">
                                 <button type="button"
@@ -424,9 +572,9 @@
                     <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
                         <div class="p-6">
                             <h2 class="text-xl font-extrabold text-red-700 mb-2">Apstiprināt apturēšanu</h2>
-                            <p class="text-gray-700 text-sm">
-                                Vai tiešām apturēt <strong>{{ $tournament->name }}</strong>? Pēc apturēšanas turnīrs
-                                tiks atzīmēts kā <strong>pabeigts</strong>.
+                            <p class="text-gray-700 text-sm">Vai tiešām apturēt
+                                <strong>{{ $tournament->name }}</strong>? Pēc apturēšanas turnīrs tiks atzīmēts kā
+                                <strong>pabeigts</strong>.
                             </p>
                             <div class="mt-5 flex items-center justify-end gap-2">
                                 <button type="button"

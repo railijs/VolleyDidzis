@@ -5,41 +5,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reģistrēties - VolleyLV</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Performance: preconnect + preload critical assets -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preload" as="image" href="{{ asset('images/volleylv-logo.png') }}">
+
+    <!-- Prefetch opposite page -->
+    <link rel="prefetch" href="{{ route('login') }}" as="document">
+
+    <script src="https://cdn.tailwindcss.com" defer></script>
+
+    <style>
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 200ms;
+        }
+    </style>
 </head>
 
 <body class="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-red-700/90">
-
     <!-- BG soft glows -->
-    <div class="pointer-events-none fixed inset-0">
-        <div class="absolute -top-32 -left-24 h-96 w-96 rounded-full blur-3xl opacity-25 bg-red-500"></div>
-        <div class="absolute -bottom-40 -right-24 h-[28rem] w-[28rem] rounded-full blur-[90px] opacity-20 bg-red-400">
+    <div class="pointer-events-none fixed inset-0 select-none" aria-hidden="true">
+        <div class="absolute -top-32 -left-24 h-96 w-96 rounded-full blur-3xl opacity-20 bg-red-500"></div>
+        <div class="absolute -bottom-40 -right-24 h-[28rem] w-[28rem] rounded-full blur-[90px] opacity-15 bg-red-400">
         </div>
     </div>
 
-    <main id="pageRoot"
-        class="relative z-10 transition-all duration-500 ease-out will-change-transform opacity-0 -translate-x-8">
-
+    <main id="pageRoot" class="relative z-10 transition-opacity duration-200 ease-out opacity-0">
         <div class="max-w-7xl mx-auto px-6 lg:px-10 py-16 lg:py-20">
             <div class="grid lg:grid-cols-2 gap-10 items-start">
-
                 <!-- LEFT: Logo + Heading + Copy -->
                 <section class="text-white">
                     <div class="flex items-center gap-5">
                         <img src="{{ asset('images/volleylv-logo.png') }}" alt="VolleyLV"
-                            class="h-14 w-14 sm:h-16 sm:w-16 object-contain" />
+                            class="h-14 w-14 sm:h-16 sm:w-16 object-contain" decoding="async" fetchpriority="high" />
                         <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight">Reģistrēties</h1>
                     </div>
 
                     <p class="mt-4 text-lg text-red-100 leading-relaxed max-w-xl">
-                        Izveido kontu un pievienojies turnīriem vieglāk un ātrāk. Seko grafikam,
-                        pārvaldi komandas un izmanto pilnu VolleyLV funkcionalitāti.
+                        Izveido kontu un pievienojies turnīriem vieglāk un ātrāk. Seko grafikam, pārvaldi komandas un
+                        izmanto pilnu VolleyLV funkcionalitāti.
                     </p>
 
                     <p class="mt-6 text-red-100">
                         Jau ir konts?
-                        <a href="{{ route('login') }}" data-transition="right"
-                            class="underline font-semibold hover:text-white">Pieslēgties</a>
+                        <a href="{{ route('login') }}" data-transition class="underline font-semibold hover:text-white"
+                            data-prefetch>Pieslēgties</a>
                     </p>
 
                     <div class="mt-10 h-px w-full bg-white/10"></div>
@@ -110,8 +121,9 @@
                                 </div>
 
                                 <div class="flex items-center justify-between">
-                                    <a href="{{ route('login') }}" data-transition="right"
-                                        class="text-sm text-neutral-600 hover:text-neutral-800 underline underline-offset-4">
+                                    <a href="{{ route('login') }}" data-transition
+                                        class="text-sm text-neutral-600 hover:text-neutral-800 underline underline-offset-4"
+                                        data-prefetch>
                                         Jau esi reģistrējies?
                                     </a>
 
@@ -144,10 +156,9 @@
 
                     <div class="flex flex-col gap-3">
                         <a href="tel:+37120001234"
-                            class="group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3
-                      hover:bg-white/15 hover:border-white/30 transition">
+                            class="group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3 hover:bg-white/15 hover:border-white/30 transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" viewBox="0 0 24 24"
-                                fill="currentColor">
+                                fill="currentColor" aria-hidden="true">
                                 <path
                                     d="M6.62 10.79a15.05 15.05 0 006.59 6.59l1.82-1.82a1 1 0 011.01-.24c1.1.37 2.28.57 3.5.57a1 1 0 011 1V21a1 1 0 01-1 1C10.07 22 2 13.93 2 3a1 1 0 011-1h3.11a1 1 0 011 1c0 1.22.2 2.4.57 3.5a1 1 0 01-.24 1.01l-1.82 1.82z" />
                             </svg>
@@ -155,10 +166,9 @@
                         </a>
 
                         <a href="mailto:info@volleylv.example"
-                            class="group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3
-                      hover:bg-white/15 hover:border-white/30 transition">
+                            class="group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3 hover:bg-white/15 hover:border-white/30 transition">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" viewBox="0 0 24 24"
-                                fill="currentColor">
+                                fill="currentColor" aria-hidden="true">
                                 <path
                                     d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 2v.01L12 13 4 6.01V6h16zM4 18V8.236l7.386 5.74a1 1 0 001.228 0L20 8.236V18H4z" />
                             </svg>
@@ -181,45 +191,41 @@
         </div>
     </main>
 
-    <!-- Page Transition Script (slide out/in) -->
     <script>
-        // Slide IN on load
+        // Fade-in
         const root = document.getElementById('pageRoot');
-        requestAnimationFrame(() => {
-            root.classList.remove('opacity-0', '-translate-x-8');
-            root.classList.add('opacity-100', 'translate-x-0');
+        requestAnimationFrame(() => root.classList.remove('opacity-0'));
+
+        // Prefetch on hover/touch
+        document.addEventListener('mouseover', prefetchHandler, {
+            passive: true
+        });
+        document.addEventListener('touchstart', prefetchHandler, {
+            passive: true
         });
 
-        // Slide OUT when clicking a link with data-transition
+        function prefetchHandler(e) {
+            const a = e.target.closest('a[data-prefetch]');
+            if (!a || a.dataset.prefetched) return;
+            const l = document.createElement('link');
+            l.rel = 'prefetch';
+            l.as = 'document';
+            l.href = a.href;
+            document.head.appendChild(l);
+            a.dataset.prefetched = '1';
+        }
+
+        // View Transitions navigation
         document.addEventListener('click', (e) => {
             const a = e.target.closest('a[data-transition]');
             if (!a) return;
+            if (!document.startViewTransition) return;
             e.preventDefault();
-            const dir = a.getAttribute('data-transition'); // "left" or "right"
-            const href = a.getAttribute('href');
-
-            sessionStorage.setItem('slideInFrom', dir === 'left' ? 'left' : 'right');
-
-            root.classList.remove('translate-x-0', 'opacity-100');
-            if (dir === 'left') { // go left
-                root.classList.add('-translate-x-10', 'opacity-0');
-            } else { // go right
-                root.classList.add('translate-x-10', 'opacity-0');
-            }
-            setTimeout(() => window.location.assign(href), 320);
-        });
-
-        // Respect preferred slide direction when arriving here
-        const saved = sessionStorage.getItem('slideInFrom');
-        if (saved) {
-            root.classList.remove('translate-x-0', 'opacity-100');
-            root.classList.add(saved === 'left' ? 'translate-x-10' : '-translate-x-10', 'opacity-0');
-            requestAnimationFrame(() => {
-                root.classList.remove('translate-x-10', '-translate-x-10', 'opacity-0');
-                root.classList.add('translate-x-0', 'opacity-100');
+            const href = a.href;
+            document.startViewTransition(() => {
+                window.location.href = href;
             });
-            sessionStorage.removeItem('slideInFrom');
-        }
+        });
     </script>
 </body>
 

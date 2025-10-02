@@ -1,89 +1,101 @@
 <?php
 
+// app/Models/TournamentMatch.php
+// app/Http/Controllers/TournamentMatchController.php
 namespace App\Http\Controllers;
 
 use App\Models\Tournament;
 use App\Models\TournamentMatch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TournamentMatchController extends Controller
 {
     public function updateScore(Request $request, Tournament $tournament, TournamentMatch $match)
     {
-        // Authz: creator or admin can update
-        if (auth()->id() !== $tournament->creator_id && !(auth()->user() && auth()->user()->isAdmin())) {
-            abort(403);
+        if (auth()->id() !== $tournament->creator_id && !auth()->user()?->isAdmin()) abort(403);
+
+        $data = $request->validate([
+            'score_a' => ['required', 'integer', 'min:0'],
+            'score_b' => ['required', 'integer', 'min:0'],
+        ]);
+
+        DB::transaction(function () use ($match, $data) {
+            $this->recomputeFrom($match->id, (int)$data['score_a'], (int)$data['score_b']);
+        });
+
+        return redirect()->route('tournaments.stats', $tournament)->with('success', 'Rezultāts atjaunots.');
+    }
+
+    private function recomputeFrom(int $matchId, int $a, int $b): void
+    {
+        /** @var TournamentMatch $m */
+        $m = TournamentMatch::whereKey($matchId)->lockForUpdate()->firstOrFail();
+
+        $updates = ['score_a' => $a, 'score_b' => $b];
+
+        if ($a === $b) {
+            // No winner: clear downstream we own
+            $updates['winner_slot'] = null;
+            $updates['status'] = ($m->participant_a_application_id || $m->participant_b_application_id) ? 'in_progress' : 'pending';
+            $this->clearDownstream($m);
+            $m->update($updates);
+            return;
         }
 
-        // Basic validation
-        $data = $request->validate([
-            'team_a_score' => ['required', 'integer', 'min:0'],
-            'team_b_score' => ['required', 'integer', 'min:0'],
-        ]);
+        $updates['winner_slot'] = $a > $b ? 'A' : 'B';
+        $updates['status'] = 'completed';
+        $m->update($updates);
 
-        $a = (int) $data['team_a_score'];
-        $b = (int) $data['team_b_score'];
+        $this->pushForward($m);
+    }
 
-        $winner = null;
-        if ($a > $b) $winner = 'team_a';
-        if ($b > $a) $winner = 'team_b';
+    private function clearDownstream(TournamentMatch $m): void
+    {
+        if (!$m->next_match_id) return;
+        $next = TournamentMatch::whereKey($m->next_match_id)->lockForUpdate()->first();
+        if (!$next) return;
 
-        // Update current match
-        $match->update([
-            'team_a_score' => $a,
-            'team_b_score' => $b,
-            'winner'       => $winner,
-        ]);
+        $slotField = $m->next_slot === 'A' ? 'participant_a_application_id' : 'participant_b_application_id';
 
-        // Propagate to next match if we have a winner
-        if ($winner && $match->next_match_id) {
-            $next = TournamentMatch::find($match->next_match_id);
-            if ($next) {
-                $winnerName = $winner === 'team_a' ? $match->team_a : $match->team_b;
+        if ($next->$slotField !== null) {
+            $next->update([$slotField => null]);
 
-                // Choose the slot in the next match
-                $slot = (empty($next->team_a) || $next->team_a === 'BYE') ? 'team_a' : 'team_b';
-
-                // If changing results later, we simply overwrite the slot we control
+            if ($next->winner_slot !== null) {
                 $next->update([
-                    $slot => $winnerName ?: 'BYE',
+                    'winner_slot' => null,
+                    'status' => ($next->participant_a_application_id || $next->participant_b_application_id) ? 'in_progress' : 'pending'
                 ]);
-
-                // Auto-advance BYE if applicable
-                $resolvedWinner = null;
-                if (($next->team_a === 'BYE' && $next->team_b && $next->team_b !== 'BYE') ||
-                    ($next->team_b === 'BYE' && $next->team_a && $next->team_a !== 'BYE')
-                ) {
-                    $resolvedWinner = $next->team_a === 'BYE' ? 'team_b' : 'team_a';
-                }
-
-                if ($resolvedWinner) {
-                    $next->update([
-                        'winner' => $resolvedWinner,
-                        'team_a_score' => $next->team_a === 'BYE' ? 0 : ($next->team_a_score ?? 0),
-                        'team_b_score' => $next->team_b === 'BYE' ? 0 : ($next->team_b_score ?? 0),
-                    ]);
-
-                    // One-step propagate BYE advancement
-                    if ($next->next_match_id) {
-                        $afterNext = TournamentMatch::find($next->next_match_id);
-                        if ($afterNext) {
-                            $winnerName2 = $resolvedWinner === 'team_a' ? $next->team_a : $next->team_b;
-                            $slot2 = (empty($afterNext->team_a) || $afterNext->team_a === 'BYE') ? 'team_a' : 'team_b';
-                            $afterNext->update([$slot2 => $winnerName2 ?: 'BYE']);
-                        }
-                    }
-                } else {
-                    // Clear prior automatic winner if now both teams are present and equal scores
-                    if ($next->team_a && $next->team_b && $next->team_a !== 'BYE' && $next->team_b !== 'BYE') {
-                        $next->update(['winner' => null]);
-                    }
-                }
+                $this->clearDownstream($next);
             }
         }
+    }
 
-        return redirect()
-            ->route('tournaments.stats', $tournament)
-            ->with('success', 'Score updated.');
+    private function pushForward(TournamentMatch $m): void
+    {
+        if (!$m->next_match_id || !$m->winner_slot) return;
+
+        $winnerId = $m->winner_slot === 'A' ? $m->participant_a_application_id : $m->participant_b_application_id;
+        if (!$winnerId) return;
+
+        $next = TournamentMatch::whereKey($m->next_match_id)->lockForUpdate()->first();
+        $slotField = $m->next_slot === 'A' ? 'participant_a_application_id' : 'participant_b_application_id';
+
+        $next->update([$slotField => $winnerId]);
+
+        if (($next->participant_a_application_id && !$next->participant_b_application_id) ||
+            (!$next->participant_a_application_id && $next->participant_b_application_id)
+        ) {
+            // Auto advance BYE
+            $next->update([
+                'winner_slot' => $next->participant_a_application_id ? 'A' : 'B',
+                'status'      => 'completed',
+                'score_a'     => $next->score_a ?? 0,
+                'score_b'     => $next->score_b ?? 0,
+            ]);
+            $this->pushForward($next);
+        } else {
+            $next->update(['winner_slot' => null, 'status' => 'in_progress']);
+        }
     }
 }

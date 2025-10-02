@@ -10,9 +10,21 @@ class Tournament extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name','description','start_date','end_date','location',
-        'max_teams','team_size','gender_type','min_boys','min_girls',
-        'min_age','max_age','recommendations','status','creator_id'
+        'name',
+        'description',
+        'start_date',
+        'end_date',
+        'location',
+        'max_teams',
+        'team_size',
+        'gender_type',
+        'min_boys',
+        'min_girls',
+        'min_age',
+        'max_age',
+        'recommendations',
+        'status',
+        'creator_id'
     ];
 
     public function creator()

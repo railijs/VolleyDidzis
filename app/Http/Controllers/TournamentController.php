@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Validator;
 
 class TournamentController
 {
-
     public function index()
     {
         $tournaments = Tournament::where('start_date', '>=', Carbon::today())
@@ -19,19 +18,31 @@ class TournamentController
         return view('tournaments.index', compact('tournaments'));
     }
 
-
     public function show(Tournament $tournament)
     {
-        return view('tournaments.show', compact('tournament'));
-    }
+        // Eager-load relations needed to compute/display the winner
+        $tournament->load([
+            'applications',
+            'matches' => fn($q) => $q->orderBy('round')->orderBy('index_in_round'),
+            'matches.participantA',
+            'matches.participantB',
+        ]);
 
+        // Highest round match is the final; winnerApplication() gives us the team
+        $finalMatch = $tournament->matches->sortByDesc('round')->first();
+        $winnerName = optional($finalMatch?->winnerApplication())->team_name;
+
+        return view('tournaments.show', [
+            'tournament' => $tournament,
+            'winnerName' => $winnerName,
+        ]);
+    }
 
     public function create()
     {
         $this->authorizeAdmin();
         return view('tournaments.create');
     }
-
 
     public function store(Request $request)
     {
@@ -45,27 +56,22 @@ class TournamentController
         return redirect()->route('dashboard')->with('success', 'Turnīrs veiksmīgi izveidots!');
     }
 
-
     public function edit(Tournament $tournament)
     {
         $this->authorizeAdmin();
         return view('tournaments.edit', compact('tournament'));
     }
 
-
     public function update(Request $request, Tournament $tournament)
     {
         $this->authorizeAdmin();
 
-
         $validated = $this->validateTournament($request);
-
         $tournament->update($validated);
 
         return redirect()->route('tournaments.show', $tournament)
             ->with('success', 'Turnīra informācija atjaunināta!');
     }
-
 
     public function destroy(Tournament $tournament)
     {
@@ -74,7 +80,6 @@ class TournamentController
 
         return redirect()->route('dashboard')->with('success', 'Turnīrs izdzēsts.');
     }
-
 
     public function calendar()
     {
@@ -96,7 +101,6 @@ class TournamentController
         return view('tournaments.calendar', compact('events'));
     }
 
-
     public function dayTournaments($date)
     {
         $dateObj = Carbon::parse($date);
@@ -108,7 +112,6 @@ class TournamentController
         return view('tournaments.day', ['tournaments' => $tournaments, 'date' => $dateObj]);
     }
 
-
     private function authorizeAdmin()
     {
         if (!auth()->user()?->isAdmin()) abort(403, 'Unauthorized');
@@ -116,7 +119,6 @@ class TournamentController
 
     private function validateTournament(Request $request)
     {
-
         $rules = [
             'name'           => 'required|string|max:255',
             'description'    => 'nullable|string|max:2000',
@@ -137,21 +139,17 @@ class TournamentController
             $rules['min_boys']  = 'required|integer|min:1|lte:team_size';
             $rules['min_girls'] = 'required|integer|min:1|lte:team_size';
         } else {
-
             $request->merge(['min_boys' => null, 'min_girls' => null]);
         }
 
         $messages = [
-            // Nosaukums
             'name.required' => 'Lūdzu ievadi turnīra nosaukumu.',
             'name.string'   => 'Nosaukumam jābūt tekstam.',
             'name.max'      => 'Nosaukums nedrīkst pārsniegt 255 rakstzīmes.',
 
-            // Apraksts
             'description.string' => 'Aprakstam jābūt tekstam.',
             'description.max'    => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
 
-            // Datumi
             'start_date.required'       => 'Lūdzu izvēlies sākuma datumu.',
             'start_date.date'           => 'Sākuma datumam jābūt derīgam datumam.',
             'start_date.after_or_equal' => 'Sākuma datumam jābūt šodien vai vēlāk.',
@@ -159,30 +157,25 @@ class TournamentController
             'end_date.date'             => 'Beigu datumam jābūt derīgam datumam.',
             'end_date.after_or_equal'   => 'Beigu datumam jābūt ne agrākam par sākuma datumu.',
 
-            // Vieta
             'location.required' => 'Lūdzu norādi norises vietu.',
             'location.string'   => 'Vietai jābūt tekstam.',
             'location.min'      => 'Vietai jāsatur vismaz 3 rakstzīmes.',
             'location.max'      => 'Vieta nedrīkst pārsniegt 255 rakstzīmes.',
             'location.regex'    => 'Vietai jāizskatās pēc reālas vietas (ne tikai cipari).',
 
-            // Komandas
             'max_teams.required' => 'Lūdzu norādi maksimālo komandu skaitu.',
             'max_teams.integer'  => 'Maks. komandu skaitam jābūt veselam skaitlim.',
             'max_teams.min'      => 'Komandu skaitam jābūt vismaz 2.',
             'max_teams.max'      => 'Maksimālais komandu skaits nedrīkst pārsniegt 100.',
 
-            // Spēlētāji
             'team_size.required' => 'Lūdzu norādi spēlētāju skaitu komandā.',
             'team_size.integer'  => 'Spēlētāju skaitam jābūt veselam skaitlim.',
             'team_size.min'      => 'Komandā jābūt vismaz 4 spēlētājiem.',
             'team_size.max'      => 'Komandā nedrīkst būt vairāk par 12 spēlētājiem.',
 
-            // Dzimums
             'gender_type.required' => 'Lūdzu izvēlies dzimuma tipu.',
             'gender_type.in'       => 'Dzimuma tips var būt: vīrieši, sievietes vai mix.',
 
-            // MIX
             'min_boys.required' => 'Mix gadījumā jānorāda minimālais puišu skaits.',
             'min_boys.integer'  => 'Min. puišu skaitam jābūt veselam skaitlim.',
             'min_boys.min'      => 'Mix turnīrā jābūt vismaz 1 puisim.',
@@ -192,15 +185,12 @@ class TournamentController
             'min_girls.min'     => 'Mix turnīrā jābūt vismaz 1 meitenei.',
             'min_girls.lte'     => 'Min. meiteņu skaits nedrīkst pārsniegt kopējo spēlētāju skaitu.',
 
-            // Vecums
             'min_age.integer' => 'Minimālajam vecumam jābūt veselam skaitlim.',
             'min_age.min'     => 'Minimālajam vecumam jābūt 0 vai lielākam.',
             'min_age.max'     => 'Minimālais vecums nedrīkst pārsniegt 100.',
             'max_age.integer' => 'Maksimālajam vecumam jābūt veselam skaitlim.',
             'max_age.min'     => 'Maksimālajam vecumam jābūt 0 vai lielākam.',
             'max_age.max'     => 'Maksimālais vecums nedrīkst pārsniegt 100.',
-
-            // Ieteikumi
             'recommendations.string' => 'Ieteikumiem jābūt tekstam.',
             'recommendations.max'    => 'Ieteikumi nedrīkst pārsniegt 2000 rakstzīmes.',
         ];
