@@ -17,13 +17,11 @@ class TournamentApplication extends Model
         'email',
     ];
 
-/*************  ✨ Windsurf Command ⭐  *************/
     /**
      * Get the tournament that owns the TournamentApplication
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-/*******  5e86edd5-bbad-4674-a70d-97aacf307541  *******/
     public function tournament()
     {
         return $this->belongsTo(Tournament::class);

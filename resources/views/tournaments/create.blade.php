@@ -314,7 +314,7 @@
                         Atcelt
                     </a>
                     <button type="submit" :disabled="submitting"
-                        class="inline-flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 shadow transition">
+                        class="submit inline-flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 shadow transition">
                         <span x-show="!submitting">Izveidot turnīru</span>
                         <span x-show="submitting" class="inline-flex items-center gap-2">
                             <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">

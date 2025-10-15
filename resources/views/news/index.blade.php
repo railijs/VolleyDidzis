@@ -1,60 +1,10 @@
 <x-app-layout>
     <div class="relative min-h-screen pt-24 pb-16 bg-gradient-to-b from-white via-red-50 to-white">
-        <style>
-            /* Ielādes / ritināšanas animācijas */
-            @media (prefers-reduced-motion: no-preference) {
-                .fade-up {
-                    opacity: 0;
-                    transform: translateY(14px);
-                    transition: opacity .6s ease, transform .6s ease
-                }
-
-                .loaded .fade-up {
-                    opacity: 1;
-                    transform: none
-                }
-
-                .stagger>* {
-                    opacity: 0;
-                    transform: translateY(14px)
-                }
-
-                .loaded .stagger>* {
-                    animation: staggerIn .6s ease forwards
-                }
-
-                .loaded .stagger>*:nth-child(2) {
-                    animation-delay: .06s
-                }
-
-                .loaded .stagger>*:nth-child(3) {
-                    animation-delay: .12s
-                }
-
-                .loaded .stagger>*:nth-child(4) {
-                    animation-delay: .18s
-                }
-
-                .loaded .stagger>*:nth-child(5) {
-                    animation-delay: .24s
-                }
-
-                @keyframes staggerIn {
-                    to {
-                        opacity: 1;
-                        transform: none
-                    }
-                }
-            }
-        </style>
-
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             @php
-                // $q comes from controller; keep fallback for safety
                 $q = isset($q) ? trim($q) : trim(request('q', ''));
 
-                // Normalize items from paginator/collection
                 if ($news instanceof \Illuminate\Pagination\AbstractPaginator) {
                     $items = $news->getCollection();
                     $totalNews = $news->total();
@@ -70,7 +20,12 @@
             @endphp
 
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6 fade-up">
+            <div data-animate data-stagger="0"
+                class="opacity-0 translate-y-3
+                       motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                       motion-reduce:transition-none motion-reduce:transform-none
+                       data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0
+                       flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
                 <div>
                     <p class="uppercase tracking-[0.2em] text-xs text-red-600/80">Ziņas</p>
                     <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Visas ziņas</h1>
@@ -91,7 +46,11 @@
             </div>
 
             <!-- Search -->
-            <div class="fade-up">
+            <div data-animate data-stagger="1"
+                class="opacity-0 translate-y-3
+                       motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                       motion-reduce:transition-none motion-reduce:transform-none
+                       data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0">
                 <form method="GET" action="{{ route('news.index') }}" class="relative group">
                     <input type="search" name="q" value="{{ $q }}"
                         placeholder="Meklēt ziņas vai atslēgvārdus…"
@@ -114,12 +73,18 @@
                 <!-- Featured -->
                 @php $featured = $items->first(); @endphp
                 @if ($featured)
-                    <section class="relative overflow-hidden rounded-2xl shadow-xl mt-8 mb-8 group fade-up">
+                    <section data-animate data-stagger="2"
+                        class="opacity-0 translate-y-3
+                               motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                               motion-reduce:transition-none motion-reduce:transform-none
+                               data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0
+                               relative overflow-hidden rounded-2xl shadow-xl mt-8 mb-8 group">
                         <div class="absolute inset-0">
-                            @if ($featured->image)
+                            @if ($featured->image_url)
                                 <a href="{{ route('news.show', $featured) }}">
-                                    <img src="{{ Storage::url($featured->image) }}" alt="{{ $featured->title }}"
-                                        class="w-full h-[18rem] sm:h-[22rem] object-cover transition duration-700 ease-out group-hover:scale-[1.03]">
+                                    <img src="{{ $featured->image_url }}" alt="{{ $featured->title }}"
+                                        class="w-full h-[18rem] sm:h-[22rem] object-cover transition duration-700 ease-out group-hover:scale-[1.03]"
+                                        onerror="this.style.display='none'">
                                 </a>
                             @else
                                 <img src="https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1600&auto=format&fit=crop"
@@ -134,9 +99,7 @@
                                     {{ $featured->title }}
                                 </a>
                             </h2>
-                            <p class="text-white/80 text-xs mt-1">
-                                {{ $featured->created_at->format('d.m.Y') }}
-                            </p>
+                            <p class="text-white/80 text-xs mt-1">{{ $featured->created_at->format('d.m.Y') }}</p>
                             <p class="mt-3 text-white/90 text-sm sm:text-base max-w-2xl">
                                 {{ Str::limit(strip_tags($featured->content), 180) }}
                             </p>
@@ -153,15 +116,20 @@
                 <!-- Grid -->
                 @php $rest = $items->slice(1); @endphp
                 @if ($rest->count())
-                    <section class="stagger">
+                    <section>
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
                             @foreach ($rest as $item)
-                                <article
-                                    class="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-sm overflow-hidden transition hover:shadow-lg hover:border-gray-300">
-                                    @if ($item->image)
+                                <article data-animate data-stagger="{{ 3 + $loop->index }}"
+                                    class="opacity-0 translate-y-3
+                                           motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                                           motion-reduce:transition-none motion-reduce:transform-none
+                                           data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0
+                                           bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-sm overflow-hidden transition hover:shadow-lg hover:border-gray-300">
+                                    @if ($item->image_url)
                                         <a href="{{ route('news.show', $item) }}" class="block overflow-hidden">
-                                            <img src="{{ Storage::url($item->image) }}" alt="{{ $item->title }}"
-                                                class="w-full h-40 sm:h-44 object-cover transition duration-500 hover:scale-[1.03]">
+                                            <img src="{{ $item->image_url }}" alt="{{ $item->title }}"
+                                                class="w-full h-40 sm:h-44 object-cover transition duration-500 hover:scale-[1.03]"
+                                                onerror="this.style.display='none'">
                                         </a>
                                     @endif
 
@@ -195,13 +163,21 @@
                 @endif
 
                 <!-- Pagination -->
-                <div class="mt-8 fade-up">
+                <div data-animate data-stagger="{{ 3 + max(0, $rest->count()) + 1 }}"
+                    class="opacity-0 translate-y-3
+                           motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                           motion-reduce:transition-none motion-reduce:transform-none
+                           data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0 mt-8">
                     {{ $news->links() }}
                 </div>
             @else
                 <!-- Empty state -->
-                <div
-                    class="mt-8 fade-up bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl p-8 text-center">
+                <div data-animate data-stagger="2"
+                    class="opacity-0 translate-y-3
+                           motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                           motion-reduce:transition-none motion-reduce:transform-none
+                           data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0
+                           mt-8 bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl p-8 text-center">
                     <h3 class="text-xl font-extrabold text-gray-900">Nav atrastu ziņu</h3>
                     @if ($q !== '')
                         <p class="mt-1 text-gray-600">Meklējām pēc “{{ $q }}”, bet rezultātu nav.</p>
@@ -220,9 +196,14 @@
     </div>
 
     <script>
-        // Ielādes animācijas + Notīrīt
         document.addEventListener('DOMContentLoaded', () => {
-            document.documentElement.classList.add('loaded');
+            const els = Array.from(document.querySelectorAll('[data-animate]'));
+            els.forEach(el => {
+                const idx = parseInt(el.getAttribute('data-stagger') || '0', 10);
+                const delay = Math.max(0, idx) * 80;
+                setTimeout(() => el.setAttribute('data-animate', 'in'), delay);
+            });
+
             const clearBtn = document.getElementById('clearSearch');
             if (clearBtn) {
                 clearBtn.addEventListener('click', () => {

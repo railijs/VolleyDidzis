@@ -15,15 +15,15 @@ class ProfileController extends Controller
      * Display the user's profile form.
      */
     public function edit(Request $request)
-{
-    $user = $request->user();
-    $appliedTournaments = $user->appliedTournaments()->get();
+    {
+        $user = $request->user();
+        $appliedTournaments = $user->appliedTournaments()->get();
 
-    return view('profile.edit', [
-        'user' => $user,
-        'appliedTournaments' => $appliedTournaments,
-    ]);
-}
+        return view('profile.edit', [
+            'user' => $user,
+            'appliedTournaments' => $appliedTournaments,
+        ]);
+    }
 
 
     /**
@@ -62,6 +62,4 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
-
-    
 }

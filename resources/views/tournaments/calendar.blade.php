@@ -58,7 +58,7 @@
                 background: #ef4444;
             }
 
-            /* Make only interactive chips show pointer + hover */
+            /* Only interactive chips show pointer + hover */
             .chip.clickable {
                 cursor: pointer;
             }
@@ -124,6 +124,7 @@
 
             /* red-200/800 */
 
+            /* Desktop month grid cells */
             .cell {
                 border: 1px solid #e5e7eb;
                 border-radius: 1rem;
@@ -194,6 +195,83 @@
                 color: #7f1d1d;
                 text-decoration: underline;
             }
+
+            /* --- Dedicated Mobile Agenda (<= md) --- */
+            .m-day {
+                display: flex;
+                gap: .75rem;
+                border: 1px solid #e5e7eb;
+                border-radius: 1rem;
+                background: #fff;
+                padding: .6rem .75rem;
+                align-items: flex-start;
+                transition: box-shadow .2s, border-color .2s;
+            }
+
+            .m-day:hover {
+                border-color: #fecaca;
+                box-shadow: 0 8px 16px rgba(0, 0, 0, .06);
+            }
+
+            .m-left {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-width: 3rem;
+                /* fits 320px nicely */
+            }
+
+            .m-dow {
+                font-size: .7rem;
+                font-weight: 800;
+                color: #7f1d1d;
+                line-height: 1;
+            }
+
+            .m-num {
+                font-size: 1.05rem;
+                font-weight: 900;
+                color: #111827;
+                line-height: 1.15;
+            }
+
+            .m-right {
+                display: flex;
+                flex-direction: column;
+                gap: .35rem;
+                width: 100%;
+                min-width: 0;
+            }
+
+            .m-day.today {
+                box-shadow: inset 0 0 0 2px rgba(252, 165, 165, .8);
+                background: #fff1f2;
+            }
+
+            .m-day.weekend {
+                background: #fff5f5;
+            }
+
+            .m-title {
+                font-size: .82rem;
+                font-weight: 800;
+                color: #374151;
+                margin-bottom: .15rem;
+            }
+
+            .m-chips {
+                display: flex;
+                flex-wrap: wrap;
+                gap: .3rem .4rem;
+            }
+
+            .m-empty {
+                text-align: center;
+                font-size: .85rem;
+                color: #6b7280;
+                padding: .75rem 0;
+            }
         </style>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
@@ -228,16 +306,19 @@
                     <span class="chip chip-generic">Turnīrs</span>
                 </div>
 
-                <!-- Week header (Mon-first) -->
-                <div class="grid grid-cols-7 gap-3 text-xs sm:text-sm mb-2">
+                <!-- Week header (Mon-first) – desktop only -->
+                <div class="hidden md:grid grid-cols-7 gap-3 text-xs sm:text-sm mb-2">
                     @php $wd = ['Pr','Ot','Tr','Ce','Pk','Se','Sv']; @endphp
                     @foreach ($wd as $i => $d)
                         <div class="wk-pill {{ $i >= 5 ? 'wk-weekend' : 'wk-work' }}">{{ $d }}</div>
                     @endforeach
                 </div>
 
-                <!-- Grid -->
-                <div id="calendarGrid" class="grid grid-cols-7 gap-3 text-sm"></div>
+                <!-- Desktop Month Grid -->
+                <div id="calendarGrid" class="hidden md:grid grid-cols-7 gap-3 text-sm"></div>
+
+                <!-- Mobile Agenda (true mobile UX) -->
+                <div id="mobileAgenda" class="md:hidden space-y-3"></div>
 
                 <!-- Footer actions -->
                 <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
@@ -251,7 +332,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal (desktop "+N") -->
     <div id="modalOverlay" class="fixed inset-0 bg-black/40 hidden justify-center items-center z-50">
         <div class="bg-white rounded-2xl p-6 max-w-lg w-full relative shadow-2xl border border-gray-200">
             <button id="closeModal" class="absolute top-3 right-3 text-gray-600 font-bold text-xl"
@@ -268,13 +349,16 @@
         // ---- DOM refs ----
         const monthYearEl = document.getElementById('monthYear');
         const calendarGrid = document.getElementById('calendarGrid');
+        const mobileAgenda = document.getElementById('mobileAgenda');
+
         const prevMonthBtn = document.getElementById('prevMonth');
         const nextMonthBtn = document.getElementById('nextMonth');
         const todayBtn = document.getElementById('todayBtn');
-        // Mobile + bottom
+
         const prevMonth_m = document.getElementById('prevMonth_m');
         const nextMonth_m = document.getElementById('nextMonth_m');
         const todayBtn_m = document.getElementById('todayBtn_m');
+
         const prevMonth_btm = document.getElementById('prevMonth_btm');
         const nextMonth_btm = document.getElementById('nextMonth_btm');
 
@@ -287,6 +371,7 @@
         const monthNames = ["Janvāris", "Februāris", "Marts", "Aprīlis", "Maijs", "Jūnijs", "Jūlijs", "Augusts",
             "Septembris", "Oktobris", "Novembris", "Decembris"
         ];
+        const wdShort = ["Sv", "Pr", "Ot", "Tr", "Ce", "Pk", "Se"]; // JS dow indexing
         let currentDate = new Date();
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -332,7 +417,9 @@
             return map;
         }
 
+        // ---- Desktop Month Grid ----
         function renderCalendar(date) {
+            if (!calendarGrid) return;
             calendarGrid.innerHTML = '';
 
             const y = date.getFullYear();
@@ -368,7 +455,6 @@
                 const dn = document.createElement('div');
                 dn.className = 'day-num';
                 dn.textContent = d;
-
                 header.appendChild(dn);
 
                 if (dayEvents.length > 3) {
@@ -388,7 +474,6 @@
                     dayEvents.slice(0, maxInline).forEach(ev => {
                         const chip = document.createElement('span');
                         chip.className = 'chip ' + chipClass(ev.gender_type);
-                        // Make it feel clickable
                         chip.classList.add('clickable');
                         chip.setAttribute('tabindex', '0');
                         chip.setAttribute('role', 'button');
@@ -425,6 +510,95 @@
                 }
 
                 calendarGrid.appendChild(cell);
+            }
+        }
+
+        // ---- Mobile Agenda (true mobile UX) ----
+        function renderMobileAgenda(date) {
+            if (!mobileAgenda) return;
+            mobileAgenda.innerHTML = '';
+
+            const y = date.getFullYear();
+            const m = date.getMonth();
+            // keep label in sync
+            monthYearEl.textContent = `${monthNames[m]} ${y}`;
+
+            const lastDate = new Date(y, m + 1, 0).getDate();
+            const monthMap = buildMonthMap(y, m);
+
+            let hasAny = false;
+            for (let d = 1; d <= lastDate; d++) {
+                const dayDate = new Date(y, m, d);
+                const key = dayDate.toISOString().slice(0, 10);
+                const dayEvents = monthMap[key] || [];
+                if (!dayEvents.length) continue; // Agenda shows event days only
+                hasAny = true;
+
+                const isToday = dayDate.getTime() === today.getTime();
+                const weekend = isWeekend(dayDate);
+
+                const wrap = document.createElement('div');
+                wrap.className = `m-day ${isToday ? 'today' : ''} ${weekend ? 'weekend' : ''}`;
+                wrap.setAttribute('aria-label', `Diena ${d}. ${monthNames[m]} ${y}`);
+
+                // Left (weekday + date)
+                const left = document.createElement('div');
+                left.className = 'm-left';
+                const dow = document.createElement('div');
+                dow.className = 'm-dow';
+                dow.textContent = wdShort[dayDate.getDay()];
+                const num = document.createElement('div');
+                num.className = 'm-num';
+                num.textContent = String(d).padStart(2, '0');
+                left.appendChild(dow);
+                left.appendChild(num);
+
+                // Right (title + chips)
+                const right = document.createElement('div');
+                right.className = 'm-right';
+
+                const title = document.createElement('div');
+                title.className = 'm-title';
+                title.textContent = `${monthNames[m]} ${String(d).padStart(2,'0')}, ${y}`;
+                right.appendChild(title);
+
+                const chips = document.createElement('div');
+                chips.className = 'm-chips';
+
+                dayEvents.forEach(ev => {
+                    const chip = document.createElement('span');
+                    chip.className = 'chip ' + chipClass(ev.gender_type);
+                    chip.classList.add('clickable');
+                    chip.setAttribute('tabindex', '0');
+                    chip.setAttribute('role', 'button');
+                    chip.setAttribute('aria-label', ev.title);
+
+                    chip.textContent = ev.title;
+                    chip.title = ev.title;
+
+                    chip.onclick = () => ev.url && (window.location.href = ev.url);
+                    chip.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            if (ev.url) window.location.href = ev.url;
+                        }
+                    });
+
+                    chips.appendChild(chip);
+                });
+
+                right.appendChild(chips);
+                wrap.appendChild(left);
+                wrap.appendChild(right);
+
+                mobileAgenda.appendChild(wrap);
+            }
+
+            if (!hasAny) {
+                const empty = document.createElement('div');
+                empty.className = 'm-empty';
+                empty.textContent = 'Šajā mēnesī nav turnīru.';
+                mobileAgenda.appendChild(empty);
             }
         }
 
@@ -486,27 +660,35 @@
             modalOverlay.classList.remove('flex');
         }
 
+        // ---- Render helpers ----
+        function renderAll() {
+            // render both; CSS controls which one is visible for current viewport
+            renderCalendar(currentDate);
+            renderMobileAgenda(currentDate);
+        }
+
         // ---- Init & events ----
         document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.classList.add('loaded');
-            renderCalendar(currentDate);
+            renderAll();
         });
 
         function prevMonth() {
             currentDate.setMonth(currentDate.getMonth() - 1);
-            renderCalendar(currentDate);
+            renderAll();
         }
 
         function nextMonth() {
             currentDate.setMonth(currentDate.getMonth() + 1);
-            renderCalendar(currentDate);
+            renderAll();
         }
 
         function goToday() {
             currentDate = new Date();
-            renderCalendar(currentDate);
+            renderAll();
         }
 
+        // Controls
         prevMonthBtn?.addEventListener('click', prevMonth);
         nextMonthBtn?.addEventListener('click', nextMonth);
         todayBtn?.addEventListener('click', goToday);
@@ -518,6 +700,7 @@
         prevMonth_btm?.addEventListener('click', prevMonth);
         nextMonth_btm?.addEventListener('click', nextMonth);
 
+        // Modal + keyboard
         closeModal.addEventListener('click', closeTheModal);
         modalOverlay.addEventListener('click', (e) => {
             if (e.target === modalOverlay) closeTheModal();
@@ -528,6 +711,13 @@
             if (e.key === 'ArrowRight') nextMonth();
         }, {
             passive: true
+        });
+
+        // Keep in sync on resize (e.g., rotate phone)
+        let resizeTO;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTO);
+            resizeTO = setTimeout(renderAll, 120);
         });
     </script>
 </x-app-layout>

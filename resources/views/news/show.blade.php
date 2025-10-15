@@ -1,38 +1,26 @@
 <x-app-layout>
     <div class="max-w-5xl mx-auto mt-24 mb-12 px-4 sm:px-6 lg:px-8">
 
-        {{-- ========== Page-load / reveal (no libs) ========== --}}
-        <style>
-            @media (prefers-reduced-motion: no-preference) {
-                .fade-up {
-                    opacity: 0;
-                    transform: translateY(12px);
-                    transition: opacity .6s ease, transform .6s ease
-                }
-
-                .loaded .fade-up {
-                    opacity: 1;
-                    transform: none
-                }
-            }
-        </style>
-
         {{-- ========== HERO ========== --}}
-        <section class="relative overflow-hidden rounded-2xl shadow-2xl mb-8 fade-up">
-            @if ($news->image)
-                <img src="{{ Storage::url($news->image) }}" alt="{{ $news->title }}"
-                    class="absolute inset-0 w-full h-full object-cover pointer-events-none"><!-- no click capture -->
+        <section data-animate data-stagger="0"
+            class="opacity-0 translate-y-3
+                   motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                   motion-reduce:transition-none motion-reduce:transform-none
+                   data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0
+                   relative overflow-hidden rounded-2xl shadow-2xl mb-8">
+            @if ($news->image_url)
+                <img src="{{ $news->image_url }}" alt="{{ $news->title }}"
+                    class="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                    onerror="this.style.display='none'">
             @else
                 <div class="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-600 pointer-events-none"></div>
             @endif
 
-            {{-- Overlay (now NON-interactive) --}}
             <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-transparent pointer-events-none">
             </div>
 
-            {{-- Floating admin toolbar (top-right) --}}
             @if (auth()->user()?->isAdmin())
-                <div class="absolute top-4 right-4 z-20 flex gap-2"> <!-- z-20 to ensure topmost -->
+                <div class="absolute top-4 right-4 z-20 flex gap-2">
                     <a href="{{ route('news.edit', $news) }}"
                         class="rounded-full bg-white/90 hover:bg-white text-gray-900 px-3 py-1.5 text-xs font-semibold shadow">
                         Rediģēt
@@ -48,7 +36,6 @@
                 </div>
             @endif
 
-            {{-- Content --}}
             <div class="relative z-10 p-6 sm:p-10">
                 <div class="max-w-3xl">
                     <p class="text-red-300/90 text-[11px] tracking-[0.18em] font-bold uppercase">Ziņa</p>
@@ -63,9 +50,12 @@
         </section>
 
         {{-- ========== ARTICLE CARD ========== --}}
-        <article
-            class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm p-6 sm:p-10 fade-up">
-            {{-- If you store HTML in content, render it; if plain text, keep nl2br(e()) --}}
+        <article data-animate data-stagger="1"
+            class="opacity-0 translate-y-3
+                   motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                   motion-reduce:transition-none motion-reduce:transform-none
+                   data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0
+                   bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm p-6 sm:p-10">
             <div class="prose prose-sm sm:prose lg:prose-lg max-w-none text-gray-900">
                 {!! nl2br(e($news->content)) !!}
             </div>
@@ -88,7 +78,12 @@
 
         {{-- ========== “Vēl ziņas” (compact) ========== --}}
         @if (isset($more) && $more->count())
-            <section class="mt-10 fade-up">
+            <section data-animate data-stagger="2"
+                class="opacity-0 translate-y-3
+                       motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                       motion-reduce:transition-none motion-reduce:transform-none
+                       data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0
+                       mt-10">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900">Vēl ziņas</h2>
                     <a href="{{ route('news.index') }}"
@@ -96,11 +91,15 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     @foreach ($more as $n)
-                        <a href="{{ route('news.show', $n) }}"
-                            class="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-sm overflow-hidden hover:shadow-lg hover:border-gray-300 transition">
-                            @if ($n->image)
-                                <img src="{{ Storage::url($n->image) }}" alt="{{ $n->title }}"
-                                    class="w-full h-36 object-cover">
+                        <a href="{{ route('news.show', $n) }}" data-animate data-stagger="{{ 3 + $loop->index }}"
+                            class="opacity-0 translate-y-3
+                                  motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                                  motion-reduce:transition-none motion-reduce:transform-none
+                                  data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0
+                                  bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-sm overflow-hidden hover:shadow-lg hover:border-gray-300 transition">
+                            @if ($n->image_url)
+                                <img src="{{ $n->image_url }}" alt="{{ $n->title }}"
+                                    class="w-full h-36 object-cover" onerror="this.style.display='none'">
                             @endif
                             <div class="p-4">
                                 <h3 class="text-base font-semibold text-gray-900 line-clamp-2 hover:text-red-600">
@@ -116,10 +115,14 @@
 
     </div>
 
-    {{-- Page-load trigger --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            document.documentElement.classList.add('loaded');
+            const els = Array.from(document.querySelectorAll('[data-animate]'));
+            els.forEach(el => {
+                const idx = parseInt(el.getAttribute('data-stagger') || '0', 10);
+                const delay = Math.max(0, idx) * 90;
+                setTimeout(() => el.setAttribute('data-animate', 'in'), delay);
+            });
         });
     </script>
 </x-app-layout>

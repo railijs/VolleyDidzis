@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\TournamentApplicationController;
 use App\Http\Controllers\TournamentMatchController;
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\TournamentProgressController;
 use App\Http\Controllers\TournamentStatsController;
 use App\Http\Controllers\DashboardController;
@@ -52,6 +53,7 @@ Route::middleware('auth')->group(function () {
 
     // Join tournament
     Route::post('/tournaments/{tournament}/join', [TournamentApplicationController::class, 'join'])->name('tournaments.join');
+    Route::delete('/tournaments/{tournament}/applications/{application}', [TournamentApplicationController::class, 'destroy'])->name('tournaments.applications.destroy');
 
     // Tournament progress
     Route::post('/tournaments/{tournament}/start', [TournamentProgressController::class, 'start'])->name('tournaments.start');
@@ -59,6 +61,11 @@ Route::middleware('auth')->group(function () {
 
     // Tournament stats
     Route::get('/tournaments/{tournament}/stats', [TournamentStatsController::class, 'stats'])->name('tournaments.stats');
+    // routes/web.php
+    Route::get('/tournaments/{tournament}/statistics', [TournamentController::class, 'statistics'])
+        ->name('tournaments.statistics');
+    Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard');
+
 
     // Match scoring
     Route::patch(

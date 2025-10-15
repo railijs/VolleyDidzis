@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tournament;
+use App\Models\TournamentMatch;
+use App\Models\TournamentApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 
-class TournamentController
+class TournamentController extends Controller
 {
     public function index()
     {
@@ -46,12 +48,14 @@ class TournamentController
 
     public function store(Request $request)
     {
+
         $this->authorizeAdmin();
         $validated = $this->validateTournament($request);
 
         $tournament = Tournament::create(array_merge($validated, [
             'creator_id' => auth()->id(),
         ]));
+
 
         return redirect()->route('dashboard')->with('success', 'Turnīrs veiksmīgi izveidots!');
     }
@@ -212,5 +216,115 @@ class TournamentController
                 }
             })
             ->validate();
+    }
+
+    public function statistics(Tournament $tournament)
+    {
+        // Load matches with ONLY real Eloquent relations
+        $matches = \App\Models\TournamentMatch::with(['participantA', 'participantB', 'nextMatch'])
+            ->where('tournament_id', $tournament->id)
+            ->orderBy('round')
+            ->orderBy('index_in_round')
+            ->get();
+
+        $totalMatches     = $matches->count();
+        $completed        = $matches->where('status', 'completed');
+        $completedMatches = $completed->count();
+        $completionPct    = $totalMatches ? round(($completedMatches / $totalMatches) * 100) : 0;
+
+        // Totals & averages (completed only)
+        $totPoints = $completed->sum(function ($m) {
+            return (int) ($m->score_a ?? 0) + (int) ($m->score_b ?? 0);
+        });
+        $avgPoints = $completedMatches ? round($totPoints / $completedMatches, 1) : 0;
+
+        // Highest scoring game (by combined points)
+        $highestScoring = $completed
+            ->filter(fn($m) => $m->score_a !== null && $m->score_b !== null)
+            ->sortByDesc(fn($m) => (int) $m->score_a + (int) $m->score_b)
+            ->first();
+
+        // Biggest win by absolute point difference
+        $biggestWin = $completed
+            ->filter(fn($m) => $m->score_a !== null && $m->score_b !== null)
+            ->sortByDesc(fn($m) => abs((int) $m->score_a - (int) $m->score_b))
+            ->first();
+
+        // Wins per application id
+        $winsByAppId = [];
+        foreach ($completed as $m) {
+            if ($m->winner_slot === 'A' && $m->participant_a_application_id) {
+                $winsByAppId[$m->participant_a_application_id] = ($winsByAppId[$m->participant_a_application_id] ?? 0) + 1;
+            } elseif ($m->winner_slot === 'B' && $m->participant_b_application_id) {
+                $winsByAppId[$m->participant_b_application_id] = ($winsByAppId[$m->participant_b_application_id] ?? 0) + 1;
+            }
+        }
+
+        // Build wins table (team name + wins), sorted desc
+        $winsTable = collect($winsByAppId)
+            ->map(function ($wins, $appId) {
+                $app = \App\Models\TournamentApplication::find($appId);
+                return [
+                    'team'            => $app?->team_name ?? '—',
+                    'wins'            => $wins,
+                    'application_id'  => (int) $appId,
+                ];
+            })
+            ->sortByDesc('wins')
+            ->values();
+
+        // Top 3 teams by wins (for podium)
+        $topThree = $winsTable->take(3);
+
+        // Champion (determine explicitly, not via eager-loading a non-relation)
+        $finalRound = $matches->max('round');
+        $finalMatch = $matches->firstWhere('round', $finalRound);
+
+        $champion = null;
+        if ($finalMatch && $finalMatch->winner_slot) {
+            $winnerId = $finalMatch->winner_slot === 'A'
+                ? $finalMatch->participant_a_application_id
+                : $finalMatch->participant_b_application_id;
+
+            $champion = $winnerId ? \App\Models\TournamentApplication::find($winnerId) : null;
+        }
+
+        // Champion path (matches they won from earliest to final)
+        $championPath = collect();
+        if ($champion && $finalMatch) {
+            $current = $finalMatch;
+            $appId   = (int) $champion->id;
+
+            while ($current) {
+                $championPath->prepend($current);
+
+                $prev = $matches->first(function ($m) use ($current, $appId) {
+                    if ((int) $m->next_match_id !== (int) $current->id) return false;
+
+                    $wonA = $m->winner_slot === 'A' && (int) $m->participant_a_application_id === $appId;
+                    $wonB = $m->winner_slot === 'B' && (int) $m->participant_b_application_id === $appId;
+
+                    return $wonA || $wonB;
+                });
+
+                if (!$prev) break;
+                $current = $prev;
+            }
+        }
+
+        return view('tournaments.statistics', [
+            'tournament'       => $tournament,
+            'totalMatches'     => $totalMatches,
+            'completedMatches' => $completedMatches,
+            'completionPct'    => $completionPct,
+            'totPoints'        => $totPoints,
+            'avgPoints'        => $avgPoints,
+            'highestScoring'   => $highestScoring,
+            'biggestWin'       => $biggestWin,
+            'winsTable'        => $winsTable,
+            'champion'         => $champion,
+            'championPath'     => $championPath,
+            'topThree'         => $topThree,
+        ]);
     }
 }

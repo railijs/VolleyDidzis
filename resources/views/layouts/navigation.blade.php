@@ -3,18 +3,15 @@
     <!-- Bar -->
     <div class="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
         <div class="h-16 flex items-center justify-between">
-            <!-- Logo (no white background; logo itself is white) -->
+            <!-- Logo -->
             <a href="{{ route('dashboard') }}" class="flex items-center h-16">
-                <!-- Fixed-size box controls layout; image can overflow visually without changing nav height -->
                 <span class="relative block h-12 w-12 overflow-visible">
                     <img src="{{ asset('images/volleylv-logo.png') }}" alt="VolleyLV"
                         class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
-             h-auto w-auto max-h-16 max-w-16 object-contain
-             drop-shadow select-none pointer-events-none" />
+                                h-auto w-auto max-h-16 max-w-16 object-contain
+                                drop-shadow select-none pointer-events-none" />
                 </span>
             </a>
-
-
 
             <!-- Desktop nav -->
             <div class="hidden sm:flex items-center gap-6">
@@ -54,6 +51,16 @@
                     Par mums
                 </a>
 
+                {{-- Leaderboard (matches other link styles) --}}
+                <a href="{{ route('leaderboard') }}"
+                    class="relative inline-flex items-center h-full text-sm font-medium px-0.5
+                   {{ request()->routeIs('leaderboard') ? 'text-white' : 'text-white/80 hover:text-white' }}
+                   after:content-[''] after:absolute after:left-0 after:-bottom-1 after:h-0.5 after:rounded-full
+                   {{ request()->routeIs('leaderboard') ? 'after:w-full' : 'after:w-0 hover:after:w-full' }}
+                   after:bg-gradient-to-r after:from-red-300 after:to-red-500 after:transition-all after:duration-200">
+                    Leaderboard
+                </a>
+
                 @auth
                     @if (auth()->user()->isAdmin())
                         <a href="{{ route('admin.users') }}"
@@ -69,7 +76,7 @@
             </div>
 
             <!-- Right (auth) -->
-            <div class="hidden sm:flex items-center gap-3">
+            <div class="profile hidden sm:flex items-center gap-3">
                 @guest
                     <a href="{{ route('login') }}" class="text-white/85 hover:text-white transition font-medium">
                         Pieslēgties
@@ -83,8 +90,9 @@
                 @auth
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
-                            <button
-                                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg白/15 text-white transition ring-1 ring-white/15">
+
+                            <button data-testid="profile-button"
+                                class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 text-white transition ring-1 ring-white/15">
                                 <span class="text-sm font-semibold">{{ Auth::user()->name }}</span>
                                 <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd"
@@ -97,7 +105,7 @@
                             <x-dropdown-link :href="route('profile.edit')">
                                 Profils
                             </x-dropdown-link>
-                            <form method="POST" action="{{ route('logout') }}">
+                            <form method="POST" action="{{ route('logout') }}" data-testid="logout-link">
                                 @csrf
                                 <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault(); this.closest('form').submit();">
@@ -141,6 +149,12 @@
             <a href="{{ route('about') }}"
                 class="block px-2 py-2 rounded-md {{ request()->routeIs('about') ? 'bg-white/10 text-white ring-1 ring-white/15' : 'hover:bg-white/5' }}">
                 Par mums
+            </a>
+
+            {{-- Leaderboard (mobile) --}}
+            <a href="{{ route('leaderboard') }}"
+                class="block px-2 py-2 rounded-md {{ request()->routeIs('leaderboard') ? 'bg-white/10 text-white ring-1 ring-white/15' : 'hover:bg-white/5' }}">
+                Leaderboard
             </a>
 
             @auth

@@ -120,11 +120,11 @@
                                     </a>
 
                                     <button type="submit"
-                                        class="inline-flex items-center justify-center rounded-lg
+                                        class="login-button inline-flex items-center justify-center rounded-lg
                                  bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold
                                  px-6 py-3 shadow-lg shadow-red-700/20 hover:to-red-800
                                  focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition">
-                                        Ienākt
+                                        Ienāc
                                     </button>
                                 </div>
                             </form>

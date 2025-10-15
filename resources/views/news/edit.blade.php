@@ -1,31 +1,24 @@
 <x-app-layout>
     <div class="max-w-4xl mx-auto mt-28 mb-28 px-4 sm:px-6 lg:px-8">
 
-        {{-- Page-load / reveal --}}
-        <style>
-            @media (prefers-reduced-motion: no-preference) {
-                .fade-up {
-                    opacity: 0;
-                    transform: translateY(12px);
-                    transition: opacity .6s ease, transform .6s ease
-                }
-
-                .loaded .fade-up {
-                    opacity: 1;
-                    transform: none
-                }
-            }
-        </style>
-
         {{-- Header --}}
-        <div class="fade-up text-center sm:text-left">
+        <div data-animate
+            class="opacity-0 translate-y-3
+                   motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                   motion-reduce:transition-none motion-reduce:transform-none
+                   data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0
+                   text-center sm:text-left">
             <p class="uppercase tracking-[0.2em] text-xs text-red-600/80">Ziņas</p>
             <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Rediģēt ziņu</h1>
         </div>
 
         {{-- Form Card --}}
-        <form action="{{ route('news.update', $news) }}" method="POST" enctype="multipart/form-data"
-            class="fade-up mt-8 bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm p-6 sm:p-8 space-y-6">
+        <form action="{{ route('news.update', $news) }}" method="POST" enctype="multipart/form-data" data-animate
+            class="opacity-0 translate-y-3
+                   motion-safe:transition-all motion-safe:duration-700 motion-safe:ease-out
+                   motion-reduce:transition-none motion-reduce:transform-none
+                   data-[animate=in]:opacity-100 data-[animate=in]:translate-y-0
+                   mt-8 bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm p-6 sm:p-8 space-y-6">
             @csrf
             @method('PUT')
 
@@ -119,10 +112,14 @@
         <div class="h-10 sm:h-14"></div>
     </div>
 
-    {{-- Small helpers: page-load class, char counter, drag&drop with preview --}}
+    {{-- Helpers: fade-in trigger, char counter, drag&drop with preview --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            document.documentElement.classList.add('loaded');
+            // Fade-ins (Tailwind-only; no <style> tag)
+            document.querySelectorAll('[data-animate]').forEach((el, i) => {
+                // stagger a bit
+                setTimeout(() => el.setAttribute('data-animate', 'in'), i * 90);
+            });
 
             // Char counter for content
             const content = document.getElementById('content');

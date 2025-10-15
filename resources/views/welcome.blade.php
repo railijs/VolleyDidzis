@@ -11,26 +11,22 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        /* Viegli pielāgojami mainīgie ātrumam */
         :root {
             --slide-duration: 1.6s;
-            /* bija ~0.9s */
             --slide-delay: .12s;
             --content-duration: 1.05s;
-            /* bija ~0.75s */
             --easing-soft: cubic-bezier(.22, .55, .15, 1);
         }
 
-        /* --- Keyframes --- */
         @keyframes fadeUp {
             0% {
                 opacity: 0;
-                transform: translateY(24px) scale(.985);
+                transform: translateY(24px) scale(.985)
             }
 
             100% {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: translateY(0) scale(1)
             }
         }
 
@@ -38,13 +34,13 @@
             0% {
                 opacity: 0;
                 transform: translateX(-8%) scale(1.02);
-                filter: blur(2px);
+                filter: blur(2px)
             }
 
             100% {
                 opacity: 1;
                 transform: translateX(0) scale(1);
-                filter: blur(0);
+                filter: blur(0)
             }
         }
 
@@ -52,120 +48,153 @@
             0% {
                 opacity: 0;
                 transform: translateX(8%) scale(1.02);
-                filter: blur(2px);
+                filter: blur(2px)
             }
 
             100% {
                 opacity: 1;
                 transform: translateX(0) scale(1);
-                filter: blur(0);
+                filter: blur(0)
             }
         }
 
         @keyframes scrollBg {
             from {
-                background-position: 0 0;
+                background-position: 0 0
             }
 
             to {
-                background-position: 180px 0;
+                background-position: 180px 0
             }
         }
 
-        /* Diagonālie klipi dinamiskākai kompozīcijai */
-        @media (min-width: 768px) {
-            .clip-left {
-                clip-path: polygon(0 0, 66% 0, 54% 100%, 0% 100%);
-            }
-
-            .clip-right {
-                clip-path: polygon(46% 0, 100% 0, 100% 100%, 34% 100%);
+        /* Wider image slice so the photo dominates on large screens */
+        @media (min-width:1024px) {
+            .hero-slice {
+                clip-path: polygon(30% 0, 100% 0, 100% 100%, 16% 100%)
             }
         }
 
-        @media (max-width: 767px) {
-            .clip-top {
-                clip-path: polygon(0 0, 100% 0, 100% 60%, 0 75%);
-            }
-
-            .clip-bottom {
-                clip-path: polygon(0 40%, 100% 25%, 100% 100%, 0 100%);
-            }
+        /* Watermark: translucent fill + faint stroke for legibility */
+        .watermark {
+            pointer-events: none;
+            user-select: none;
+            line-height: .8;
+            letter-spacing: -.04em;
+            white-space: nowrap;
+            color: rgba(255, 255, 255, .06);
+            -webkit-text-stroke: 1px rgba(255, 255, 255, .12);
+            text-shadow: 0 2px 18px rgba(0, 0, 0, .20);
         }
 
-        /* Reduced motion */
         @media (prefers-reduced-motion: reduce) {
-            .rm\\:no-anim {
+            .rm\:no-anim {
                 animation: none !important;
-                transition: none !important;
+                transition: none !important
             }
         }
     </style>
 </head>
 
-<body class="antialiased bg-gradient-to-b from-white via-red-50 to-white text-gray-900">
+<body class="antialiased bg-neutral-950 text-white selection:bg-red-600/40 selection:text-white">
 
-    <!-- HERO -->
-    <section id="hero" class="relative h-screen flex items-center justify-center overflow-hidden select-none">
+    <!-- ===== HERO ===== -->
+    <section id="hero" class="relative min-h-svh overflow-hidden">
 
-        <!-- Fona slāņi: katrs ieslīd lēnāk no savas puses un paliek -->
-        <div class="absolute inset-0">
-            <!-- Labā bilde (ieslīd no labās) -->
-            <div class="absolute inset-0 md:inset-auto md:right-0 md:top-0 md:bottom-0 md:w-2/3 bg-cover bg-center will-change-transform clip-right clip-top rm:no-anim"
-                style="
-          background-image:url('https://faili.liepaja.lv/Bildes/Sports/1DX29498-20.jpg');
-          animation: slideInRight var(--slide-duration) var(--easing-soft) var(--slide-delay) both;
-        ">
-            </div>
-
-            <!-- Kreisā bilde (ieslīd no kreisās) -->
-            <div class="absolute inset-0 md:inset-auto md:left-0 md:top-0 md:bottom-0 md:w-2/3 bg-cover bg-center will-change-transform clip-left clip-bottom rm:no-anim"
-                style="
-          background-image:url('https://static.lsm.lv/media/2025/06/large/1/qmth.jpg');
-          animation: slideInLeft var(--slide-duration) var(--easing-soft) calc(var(--slide-delay) + .05s) both;
-        ">
-            </div>
-
-            <!-- Viegla vignete + gaisma -->
-            <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/35 to-black/60"></div>
-            <div class="absolute -inset-24"
-                style="pointer-events:none; mix-blend-mode:screen; background: radial-gradient(800px 700px at 60% 35%, rgba(239,68,68,.33), transparent 60%);">
-            </div>
-
-            <!-- Lielvārdes josta (smalka tekstūra) -->
-            <div class="absolute inset-0 opacity-15 bg-repeat rm:no-anim"
-                style="background-image:url('https://upload.wikimedia.org/wikipedia/commons/f/fc/Lielvardes_josta_pattern.svg'); background-size:180px; animation: scrollBg 28s linear infinite;">
-            </div>
+        <!-- Background image (dominant on desktop) -->
+        <div class="absolute inset-0 lg:inset-y-0 lg:right-0 lg:w-[78%] hero-slice bg-cover bg-center will-change-transform rm:no-anim z-0"
+            style="background-image:url('https://faili.liepaja.lv/Bildes/Sports/1DX29498-20.jpg'); animation: slideInRight var(--slide-duration) var(--easing-soft) var(--slide-delay) both;">
         </div>
 
-        <!-- Saturs -->
-        <div class="relative z-10 max-w-3xl w-[92%] sm:w-auto px-6 sm:px-10 py-8 sm:py-10 bg-white/5 backdrop-blur-md rounded-3xl border border-white/15 shadow-2xl ring-1 ring-black/10 text-center"
-            style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .1s) both;">
-            <img src="{{ asset('images/volleylv-logo.png') }}" alt="VolleyLV Logo"
-                class="mx-auto w-28 sm:w-36 mb-4 drop-shadow"
-                style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .2s) both;">
-            <p class="text-xl sm:text-2xl text-white/90 mb-6 font-semibold tracking-tight"
-                style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .3s) both;">
-                Mēs spēlējam kā viens.
-            </p>
+        <!-- Subtle Latvian pattern (between image and overlays) -->
+        <div class="absolute inset-0 opacity-[0.10] bg-repeat rm:no-anim z-[12]"
+            style="background-image:url('https://upload.wikimedia.org/wikipedia/commons/f/fc/Lielvardes_josta_pattern.svg'); background-size:180px; animation:scrollBg 28s linear infinite;">
+        </div>
 
-            <div class="flex flex-col sm:flex-row justify-center gap-4"
-                style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .4s) both;">
-                <a href="{{ route('register') }}"
-                    class="inline-flex items-center justify-center bg-red-700 hover:bg-red-800 text-white px-7 py-3 rounded-xl text-lg font-semibold shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
-                    Pievienojies spēlei
-                </a>
-                <a href="{{ route('login') }}"
-                    class="inline-flex items-center justify-center bg-white/15 hover:bg-white/25 text-white px-7 py-3 rounded-xl text-lg font-semibold shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
-                    Esmu spēlētājs
-                </a>
-                <a href="{{ route('dashboard') }}"
-                    class="inline-flex items-center justify-center border border-white/50 hover:bg-white/10 text-white px-7 py-3 rounded-xl text-lg font-semibold shadow-lg transition-transform duration-300 hover:-translate-y-0.5">
-                    Sākumlapa
-                </a>
+        <!-- Overlays for drama & readability -->
+        <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/70 z-20"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent z-20"></div>
+        <div class="absolute inset-0 mix-blend-screen pointer-events-none z-20"
+            style="background: radial-gradient(900px 700px at 75% 45%, rgba(239,68,68,.33), transparent 60%)"></div>
+
+        <!-- Watermark (big background label) -->
+        <div class="absolute -left-6 bottom-8 lg:bottom-10 z-10 watermark"
+            style="font-weight:700; font-size: clamp(3.5rem, 9vw, 8rem);">
+            VolleyLV
+        </div>
+
+        <!-- Content -->
+        <div class="relative z-30 container mx-auto px-6 md:px-10 lg:px-14">
+            <div class="grid lg:grid-cols-12 gap-8 lg:gap-10 min-h-svh items-center">
+
+                <!-- Left column -->
+                <div class="lg:col-span-6 py-20 md:py-24 lg:py-0 will-change-transform"
+                    style="animation: slideInLeft var(--slide-duration) var(--easing-soft) calc(var(--slide-delay) + .05s) both;">
+
+                    <!-- Small label (your “p-style” tag) -->
+                    <p class="uppercase tracking-[0.2em] text-[11px] text-red-300/90 font-bold"
+                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .10s) both;">
+                        Ziņas & Turnīri
+                    </p>
+
+                    <!-- Headline -->
+                    <h1 class="mt-1 font-bold tracking-tight text-white"
+                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .15s) both; font-size: clamp(2.6rem, 5.2vw, 4.75rem);">
+                        VolleyLV
+                    </h1>
+
+                    <!-- Subcopy -->
+                    <p class="mt-5 text-white/85 text-lg leading-relaxed max-w-xl"
+                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .25s) both;">
+                        Mēs spēlējam kā viens.
+                    </p>
+
+                    <!-- Quick chips (secondary labels in your p-style spirit) -->
+                    <div class="mt-4 flex flex-wrap gap-2"
+                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .30s) both;">
+                        <span
+                            class="inline-flex items-center rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1 text-xs font-semibold">
+                            <span class="uppercase tracking-[0.2em] text-[10px] text-white/80">Kalendārs</span>
+                        </span>
+                        <span
+                            class="inline-flex items-center rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1 text-xs font-semibold">
+                            <span class="uppercase tracking-[0.2em] text-[10px] text-white/80">Rezultāti</span>
+                        </span>
+                        <span
+                            class="inline-flex items-center rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1 text-xs font-semibold">
+                            <span class="uppercase tracking-[0.2em] text-[10px] text-white/80">Statistika</span>
+                        </span>
+                    </div>
+
+                    <!-- CTAs -->
+                    <div class="mt-8 flex flex-col sm:flex-row gap-4"
+                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .35s) both;">
+                        <a href="{{ route('register') }}"
+                            class="inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-neutral-950 shadow-lg shadow-red-900/30 transition-transform duration-300 hover:-translate-y-0.5">
+                            Pievienojies spēlei
+                        </a>
+                        <a href="{{ route('login') }}"
+                            class="inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold bg-white/10 hover:bg-white/20 ring-1 ring-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 focus:ring-offset-neutral-950 transition-transform duration-300 hover:-translate-y-0.5">
+                            Esmu spēlētājs
+                        </a>
+                        <a href="{{ route('dashboard') }}"
+                            class="inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold bg-transparent hover:bg-white/10 ring-1 ring-white/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 focus:ring-offset-neutral-950 transition-transform duration-300 hover:-translate-y-0.5">
+                            Sākumlapa
+                        </a>
+                    </div>
+
+                    <!-- Micro caption under CTAs with p-style -->
+                    <p class="mt-4 uppercase tracking-[0.2em] text-[10px] text-white/60">
+                        Reģistrācija • Pieslēgšanās • Pārskats
+                    </p>
+                </div>
+
+
+
             </div>
         </div>
     </section>
+
 </body>
 
 </html>
