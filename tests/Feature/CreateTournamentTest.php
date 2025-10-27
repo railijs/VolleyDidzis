@@ -1,19 +1,75 @@
 <?php
 
 use App\Models\User;
+use App\Models\Tournament;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Event;
-use App\Models\Tournament;
 use Pest\Browser\Support\Screenshot;
 
-it('Lietotājs var izveidot turnīru', function () {
+/**
+ * Testu mērķis: sadalīt “turnīra izveides” plūsmu vairākos, fokusētos testos,
+ * saglabājot to pašu “visit → click → fill → select → press” loģiku.
+ */
+
+// 1) Admins var atvērt turnīra izveides formu
+test('Admins var atvērt turnīra izveides formu', function () {
     User::factory()->create([
         'email' => 'railijsgrieznis@gmail.com',
         'password' => Hash::make('phoenix21'),
         'role' => 'admin',
     ]);
 
-    Event::fake();
+    $this->artisan('db:seed');
+
+    $page = visit('/login');
+
+    $page->click('Ienākt')
+        ->assertPathIs('/login')
+        ->assertSee('Laipni lūdzam atpakaļ')
+        ->fill('email', 'railijsgrieznis@gmail.com')
+        ->fill('password', 'phoenix21')
+        ->click('Ienāc')
+        ->assertSee('Sākums')
+        ->click('Admin panelis')
+        ->click('Izveidot turnīru')
+        ->assertSee('Izveidot turnīru'); // virsraksts/formas indikators
+});
+
+// 2) Validācija: neļauj iesniegt tukšu formu (obligātie lauki)
+test('Neļauj izveidot turnīru ar tukšiem obligātajiem laukiem', function () {
+    User::factory()->create([
+        'email' => 'railijsgrieznis@gmail.com',
+        'password' => Hash::make('phoenix21'),
+        'role' => 'admin',
+    ]);
+
+    $this->artisan('db:seed');
+
+    $page = visit('/login');
+
+    $page->click('Ienākt')
+        ->assertPathIs('/login')
+        ->fill('email', 'railijsgrieznis@gmail.com')
+        ->fill('password', 'phoenix21')
+        ->click('Ienāc')
+        ->click('Admin panelis')
+        ->click('Izveidot turnīru');
+
+    $countBefore = Tournament::count();
+
+    $page->press('.submit'); // sūtām tukšu formu
+
+    // Paliekam formā un DB neparādās jauns turnīrs
+    expect(Tournament::count())->toBe($countBefore);
+});
+
+// 3) Veiksmīga turnīra izveide ar derīgiem datiem
+test('Izveido turnīru ar derīgiem datiem', function () {
+    User::factory()->create([
+        'email' => 'railijsgrieznis@gmail.com',
+        'password' => Hash::make('phoenix21'),
+        'role' => 'admin',
+    ]);
 
     $this->artisan('db:seed');
 
@@ -45,4 +101,29 @@ it('Lietotājs var izveidot turnīru', function () {
 
         ->press('.submit')
         ->screenshot(filename: 'create-tournament');
+
+    expect(
+        Tournament::where('name', 'Valmieyiufytfras Meža Kauss')->exists()
+    )->toBeTrue();
+});
+
+// 4) Autorizācija: parasts lietotājs neredz admin funkcijas
+test('Parasts lietotājs neredz admin paneļa darbības', function () {
+    User::factory()->create([
+        'email' => 'user@example.com',
+        'password' => Hash::make('password123'),
+        'role' => 'user', // ne-admin
+    ]);
+
+    $this->artisan('db:seed');
+
+    $page = visit('/login');
+
+    $page->click('Ienākt')
+        ->assertPathIs('/login')
+        ->fill('email', 'user@example.com')
+        ->fill('password', 'password123')
+        ->click('Ienāc')
+        ->assertSee('Sākums')
+        ->assertDontSee('Admin panelis'); // nav pieejas administrēšanai
 });

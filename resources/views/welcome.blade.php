@@ -11,17 +11,26 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        /* ===== Theme & Motion ===== */
         :root {
-            --slide-duration: 1.6s;
-            --slide-delay: .12s;
-            --content-duration: 1.05s;
+            --accent: #ef4444;
+            /* red-500 */
+            --accent-600: #dc2626;
+            --chip-bg: rgba(255, 255, 255, .10);
+            --chip-ring: rgba(255, 255, 255, .15);
+
+            --slide-duration: 1.4s;
+            --slide-delay: .10s;
+            --content-duration: .95s;
             --easing-soft: cubic-bezier(.22, .55, .15, 1);
+
+            --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/ filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
         }
 
         @keyframes fadeUp {
             0% {
                 opacity: 0;
-                transform: translateY(24px) scale(.985)
+                transform: translateY(22px) scale(.985)
             }
 
             100% {
@@ -68,14 +77,93 @@
             }
         }
 
-        /* Wider image slice so the photo dominates on large screens */
-        @media (min-width:1024px) {
-            .hero-slice {
-                clip-path: polygon(30% 0, 100% 0, 100% 100%, 16% 100%)
+        /* ===== Accessibility toggles ===== */
+        @media (prefers-reduced-motion: reduce) {
+
+            .rm\:no-anim,
+            #hero * {
+                animation: none !important;
+                transition: none !important;
             }
         }
 
-        /* Watermark: translucent fill + faint stroke for legibility */
+        @media (prefers-contrast: more) {
+            .chip {
+                border-color: rgba(255, 255, 255, .45) !important;
+            }
+
+            .btn-ghost {
+                border-color: rgba(255, 255, 255, .6) !important;
+            }
+        }
+
+        /* ===== Typography polish ===== */
+        body {
+            font-feature-settings: "ss01", "ss02", "case", "cpsp";
+        }
+
+        h1 {
+            text-wrap: balance;
+        }
+
+        /* ===== Hero image slice: wider on desktop, feathered edge ===== */
+        .hero-slice {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            will-change: transform;
+        }
+
+        @media (min-width:1024px) {
+            .hero-slice {
+                /* geometric wedge */
+                clip-path: polygon(30% 0, 100% 0, 100% 100%, 16% 100%);
+                /* soft feather on the left edge (so text reads cleanly) */
+                -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 0) 98%);
+                mask-image: linear-gradient(to left, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 0) 98%);
+            }
+        }
+
+        /* On tiny screens: no clip-path, keep image full-bleed but darken more */
+        @media (max-width: 360px) {
+            .hero-slice {
+                -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .92), rgba(0, 0, 0, .92));
+                mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .92), rgba(0, 0, 0, .92));
+            }
+        }
+
+        /* ===== Pattern & noise overlays (Latvian spirit, subtle) ===== */
+        .pattern {
+            opacity: .10;
+            background-repeat: repeat;
+            background-size: 180px;
+            animation: scrollBg 28s linear infinite;
+        }
+
+        .noise {
+            pointer-events: none;
+            background-image: var(--noise);
+            mix-blend-mode: overlay;
+            opacity: .9;
+        }
+
+        /* ===== Hero gradient layers ===== */
+        .gloom-b {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, .70), rgba(0, 0, 0, .40), rgba(0, 0, 0, .70));
+        }
+
+        .gloom-r {
+            background: linear-gradient(to right, rgba(0, 0, 0, .70), rgba(0, 0, 0, .30), transparent);
+        }
+
+        .glow {
+            mix-blend-mode: screen;
+            pointer-events: none;
+            background: radial-gradient(900px 700px at 75% 45%, rgba(239, 68, 68, .33), transparent 60%);
+        }
+
+        /* ===== Watermark ===== */
         .watermark {
             pointer-events: none;
             user-select: none;
@@ -85,12 +173,163 @@
             color: rgba(255, 255, 255, .06);
             -webkit-text-stroke: 1px rgba(255, 255, 255, .12);
             text-shadow: 0 2px 18px rgba(0, 0, 0, .20);
+            font-weight: 700;
+            font-size: clamp(3.5rem, 9vw, 8rem);
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            .rm\:no-anim {
-                animation: none !important;
-                transition: none !important
+        @media (max-width: 360px) {
+            .watermark {
+                opacity: .04;
+                transform: translateX(-4px);
+            }
+        }
+
+        /* ===== Chips & CTA tactile tweaks (no markup change) ===== */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .45rem .75rem;
+            border-radius: 999px;
+            background: var(--chip-bg);
+            border: 1px solid var(--chip-ring);
+            backdrop-filter: blur(4px);
+        }
+
+        .chip>.upcase {
+            text-transform: uppercase;
+            letter-spacing: .2em;
+            font-size: 10px;
+            opacity: .85;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .75rem 1.1rem;
+            border-radius: .9rem;
+            font-weight: 600;
+            transition: transform .25s var(--easing-soft), box-shadow .25s var(--easing-soft), background-color .2s, border-color .2s, color .2s;
+            outline: none;
+        }
+
+        .btn:focus-visible {
+            box-shadow: 0 0 0 2px #111827, 0 0 0 4px rgba(255, 255, 255, .8);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            box-shadow: 0 12px 24px -12px rgba(239, 68, 68, .45);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-600);
+            transform: translateY(-2px);
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, .10);
+            border: 1px solid rgba(255, 255, 255, .20);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, .18);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            border: 1px solid rgba(255, 255, 255, .30);
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, .10);
+            transform: translateY(-2px);
+        }
+
+        /* Bind our button skins to the existing Tailwind buttons (no markup change) */
+        #hero .btn-primary-link {
+            composes: btn btn-primary;
+        }
+
+        #hero .btn-ghost-link {
+            composes: btn btn-ghost;
+        }
+
+        #hero .btn-outline-link {
+            composes: btn btn-outline;
+        }
+
+        /* If your build doesn't support `composes`, fallback: */
+        #hero .btn-primary-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .75rem 1.1rem;
+            border-radius: .9rem;
+            font-weight: 600;
+            background: var(--accent);
+            box-shadow: 0 12px 24px -12px rgba(239, 68, 68, .45);
+        }
+
+        #hero .btn-primary-link:hover {
+            background: var(--accent-600);
+            transform: translateY(-2px);
+        }
+
+        #hero .btn-ghost-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .75rem 1.1rem;
+            border-radius: .9rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, .10);
+            border: 1px solid rgba(255, 255, 255, .20);
+        }
+
+        #hero .btn-ghost-link:hover {
+            background: rgba(255, 255, 255, .18);
+            transform: translateY(-2px);
+        }
+
+        #hero .btn-outline-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .75rem 1.1rem;
+            border-radius: .9rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, .30);
+        }
+
+        #hero .btn-outline-link:hover {
+            background: rgba(255, 255, 255, .10);
+            transform: translateY(-2px);
+        }
+
+        /* ===== 320px mobile fit ===== */
+        @media (max-width: 360px) {
+            .container {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            #hero .lead {
+                font-size: .95rem;
+            }
+
+            #hero .cta-group {
+                gap: .6rem;
+            }
+
+            #hero .cta-group a {
+                padding: .7rem 1rem !important;
+            }
+
+            #hero .chips {
+                gap: .35rem .5rem;
             }
         }
     </style>
@@ -102,26 +341,25 @@
     <section id="hero" class="relative min-h-svh overflow-hidden">
 
         <!-- Background image (dominant on desktop) -->
-        <div class="absolute inset-0 lg:inset-y-0 lg:right-0 lg:w-[78%] hero-slice bg-cover bg-center will-change-transform rm:no-anim z-0"
+        <div class="hero-slice lg:inset-y-0 lg:right-0 lg:w-[78%] rm:no-anim z-0"
             style="background-image:url('https://faili.liepaja.lv/Bildes/Sports/1DX29498-20.jpg'); animation: slideInRight var(--slide-duration) var(--easing-soft) var(--slide-delay) both;">
         </div>
 
-        <!-- Subtle Latvian pattern (between image and overlays) -->
-        <div class="absolute inset-0 opacity-[0.10] bg-repeat rm:no-anim z-[12]"
-            style="background-image:url('https://upload.wikimedia.org/wikipedia/commons/f/fc/Lielvardes_josta_pattern.svg'); background-size:180px; animation:scrollBg 28s linear infinite;">
+        <!-- Subtle Latvian pattern -->
+        <div class="pattern absolute inset-0 rm:no-anim z-[12]"
+            style="background-image:url('https://upload.wikimedia.org/wikipedia/commons/f/fc/Lielvardes_josta_pattern.svg');">
         </div>
+
+        <!-- Noise texture to tie layers together -->
+        <div class="noise absolute inset-0 z-[13]"></div>
 
         <!-- Overlays for drama & readability -->
-        <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/70 z-20"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent z-20"></div>
-        <div class="absolute inset-0 mix-blend-screen pointer-events-none z-20"
-            style="background: radial-gradient(900px 700px at 75% 45%, rgba(239,68,68,.33), transparent 60%)"></div>
+        <div class="gloom-b absolute inset-0 z-20"></div>
+        <div class="gloom-r absolute inset-0 z-20"></div>
+        <div class="glow absolute inset-0 z-20"></div>
 
         <!-- Watermark (big background label) -->
-        <div class="absolute -left-6 bottom-8 lg:bottom-10 z-10 watermark"
-            style="font-weight:700; font-size: clamp(3.5rem, 9vw, 8rem);">
-            VolleyLV
-        </div>
+        <div class="absolute -left-6 bottom-8 lg:bottom-10 z-10 watermark">VolleyLV</div>
 
         <!-- Content -->
         <div class="relative z-30 container mx-auto px-6 md:px-10 lg:px-14">
@@ -131,7 +369,7 @@
                 <div class="lg:col-span-6 py-20 md:py-24 lg:py-0 will-change-transform"
                     style="animation: slideInLeft var(--slide-duration) var(--easing-soft) calc(var(--slide-delay) + .05s) both;">
 
-                    <!-- Small label (your “p-style” tag) -->
+                    <!-- Small label -->
                     <p class="uppercase tracking-[0.2em] text-[11px] text-red-300/90 font-bold"
                         style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .10s) both;">
                         Ziņas & Turnīri
@@ -139,57 +377,48 @@
 
                     <!-- Headline -->
                     <h1 class="mt-1 font-bold tracking-tight text-white"
-                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .15s) both; font-size: clamp(2.6rem, 5.2vw, 4.75rem);">
+                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .15s) both; font-size: clamp(2.4rem, 5.2vw, 4.75rem);">
                         VolleyLV
                     </h1>
 
                     <!-- Subcopy -->
-                    <p class="mt-5 text-white/85 text-lg leading-relaxed max-w-xl"
+                    <p class="lead mt-5 text-white/85 text-lg leading-relaxed max-w-xl"
                         style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .25s) both;">
                         Mēs spēlējam kā viens.
                     </p>
 
-                    <!-- Quick chips (secondary labels in your p-style spirit) -->
-                    <div class="mt-4 flex flex-wrap gap-2"
+                    <!-- Quick chips -->
+                    <div class="chips mt-4 flex flex-wrap gap-2"
                         style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .30s) both;">
-                        <span
-                            class="inline-flex items-center rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1 text-xs font-semibold">
-                            <span class="uppercase tracking-[0.2em] text-[10px] text-white/80">Kalendārs</span>
-                        </span>
-                        <span
-                            class="inline-flex items-center rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1 text-xs font-semibold">
-                            <span class="uppercase tracking-[0.2em] text-[10px] text-white/80">Rezultāti</span>
-                        </span>
-                        <span
-                            class="inline-flex items-center rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1 text-xs font-semibold">
-                            <span class="uppercase tracking-[0.2em] text-[10px] text-white/80">Statistika</span>
-                        </span>
+                        <span class="chip"><span class="upcase">Kalendārs</span></span>
+                        <span class="chip"><span class="upcase">Rezultāti</span></span>
+                        <span class="chip"><span class="upcase">Statistika</span></span>
                     </div>
 
-                    <!-- CTAs -->
-                    <div class="mt-8 flex flex-col sm:flex-row gap-4"
+                    <!-- CTAs (no markup change required; extra classes just add nicer CSS skins) -->
+                    <div class="cta-group mt-8 flex flex-col sm:flex-row gap-4"
                         style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .35s) both;">
                         <a href="{{ route('register') }}"
-                            class="inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-neutral-950 shadow-lg shadow-red-900/30 transition-transform duration-300 hover:-translate-y-0.5">
+                            class="btn-primary-link inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-neutral-950 shadow-lg shadow-red-900/30">
                             Pievienojies spēlei
                         </a>
                         <a href="{{ route('login') }}"
-                            class="inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold bg-white/10 hover:bg-white/20 ring-1 ring-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 focus:ring-offset-neutral-950 transition-transform duration-300 hover:-translate-y-0.5">
+                            class="btn-ghost-link inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 focus:ring-offset-neutral-950">
                             Esmu spēlētājs
                         </a>
                         <a href="{{ route('dashboard') }}"
-                            class="inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold bg-transparent hover:bg-white/10 ring-1 ring-white/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 focus:ring-offset-neutral-950 transition-transform duration-300 hover:-translate-y-0.5">
+                            class="btn-outline-link inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 focus:ring-offset-neutral-950">
                             Sākumlapa
                         </a>
                     </div>
 
-                    <!-- Micro caption under CTAs with p-style -->
+                    <!-- Micro caption -->
                     <p class="mt-4 uppercase tracking-[0.2em] text-[10px] text-white/60">
                         Reģistrācija • Pieslēgšanās • Pārskats
                     </p>
                 </div>
 
-
+                <!-- (Right column stays the background image; nothing needed here) -->
 
             </div>
         </div>

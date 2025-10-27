@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Event;
 use App\Models\Tournament;
 use Pest\Browser\Support\Screenshot;
 
-it('Lietotājs var pieteikties turnīru', function () {
+test('Turnīra brakets strādā', function () {
     User::factory()->create([
         'email' => 'railijsgrieznis@gmail.com',
         'password' => Hash::make('phoenix21'),
@@ -50,9 +50,26 @@ it('Lietotājs var pieteikties turnīru', function () {
         ->fill('team_name', 'Lauvas')
         ->fill('captain_name', 'Didzis')
         ->fill('email', 'railijsgrieznis@gmail.com')
+        ->press('Iesniegt pieteikumu')
+
+        ->assertSee('Pieteikums veiksmīgi iesniegts!')
+
+        ->fill('team_name', 'Tigeri')
+        ->fill('captain_name', 'Railijs')
+        ->fill('email', 'railijsgrieznis@gmail.com')
 
         ->press('Iesniegt pieteikumu')
-        ->assertSee('Pieteikums veiksmīgi iesniegts!')
-        ->press('Brakets →')
+
+        ->press('Sākt turnīru')
+
+
+        ->assertSee('Tigeri')
+        ->fill('input[data-side="A"]', '12')
+
+        ->assertSee('Lauvas')
+        ->fill('input[data-side="B"]', '25')
+
+        ->assertSee('Turnīra uzvarētājs')
+
         ->screenshot(filename: 'tournament');
 });

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Event;
 use App\Models\Tournament;
 use Pest\Browser\Support\Screenshot;
 
-it('Lietotājs var pieteikties turnīru', function () {
+test('Lietotājs var pieteikties turnīram', function () {
     User::factory()->create([
         'email' => 'railijsgrieznis@gmail.com',
         'password' => Hash::make('phoenix21'),

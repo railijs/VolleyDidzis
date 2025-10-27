@@ -1,7 +1,26 @@
 <x-app-layout>
-    <div class="relative min-h-screen pt-24 pb-16 bg-gradient-to-b from-white via-red-50 to-white overflow-x-hidden">
+    <div class="relative min-h-screen pt-24 pb-0 bg-gradient-to-b from-white via-red-50 to-white overflow-x-hidden">
         <style>
-            /* Center narrow sections on very small screens and prevent overflow */
+            :root {
+                --ease: cubic-bezier(.22, .55, .15, 1);
+            }
+
+            @keyframes fadeUp {
+                0% {
+                    opacity: 0;
+                    transform: translateY(18px) scale(.985)
+                }
+
+                100% {
+                    opacity: 1;
+                    transform: translateY(0) scale(1)
+                }
+            }
+
+            .animate-fade-up {
+                animation: fadeUp .7s var(--ease) .05s both;
+            }
+
             @media (max-width: 400px) {
                 .xs-center {
                     width: 100%;
@@ -17,6 +36,65 @@
                     min-width: 0;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                }
+            }
+
+            .card {
+                transition: transform .2s var(--ease), box-shadow .2s var(--ease), border-color .2s;
+                will-change: transform;
+            }
+
+            .card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 16px 32px -20px rgba(0, 0, 0, .35);
+            }
+
+            .card:focus-within {
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, .20);
+            }
+
+            .cal-cell {
+                transition: box-shadow .18s var(--ease), transform .18s var(--ease), border-color .18s;
+            }
+
+            .cal-cell:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 12px 26px -18px rgba(0, 0, 0, .35);
+            }
+
+            @keyframes modalIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px) scale(.98)
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1)
+                }
+            }
+
+            #modalOverlay .modal-card {
+                animation: modalIn .25s var(--ease) both;
+            }
+
+            @media (max-width: 360px) {
+                .hero-title {
+                    font-size: 1.35rem;
+                    line-height: 1.15;
+                }
+
+                .news-thumb {
+                    width: 64px !important;
+                    height: 64px !important;
+                }
+
+                .date-badge {
+                    width: 3rem !important;
+                }
+
+                .cta-btn {
+                    padding: .6rem .9rem !important;
                 }
             }
         </style>
@@ -47,7 +125,7 @@
             @endphp
 
             @if ($news->isNotEmpty())
-                {{-- ===================== HERO / FEATURED (unchanged) ===================== --}}
+                {{-- ===================== HERO / FEATURED ===================== --}}
                 <section
                     class="relative overflow-hidden rounded-[1.25rem] sm:rounded-[2rem] shadow-2xl mb-8 sm:mb-12 group">
                     <div class="absolute inset-0">
@@ -80,7 +158,8 @@
                                 </p>
                                 <div class="mt-4 flex items-center gap-4">
                                     <a href="{{ route('news.show', $featured) }}"
-                                        class="inline-flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 shadow transition">
+                                        class="inline-flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 shadow transition cta-btn"
+                                        data-transition data-prefetch>
                                         Lasīt vairāk
                                     </a>
                                     <span
@@ -91,13 +170,13 @@
                             <aside class="hidden lg:block">
                                 @php $rp = $newsBar->first(); @endphp
                                 <div
-                                    class="rounded-2xl overflow-hidden border border-white/15 bg-white/10 backdrop-blur-md">
+                                    class="rounded-2xl overflow-hidden border border-white/15 bg-white/10 backdrop-blur-md card">
                                     <div class="p-5 pb-3 text-white/90">
                                         <p class="uppercase text-xs tracking-widest text-white/70">Recent Post</p>
                                     </div>
                                     <div class="px-5">
                                         <a href="{{ $rp ? route('news.show', $rp) : '#' }}"
-                                            class="block overflow-hidden rounded-xl">
+                                            class="block overflow-hidden rounded-xl" data-transition data-prefetch>
                                             @if ($rp && $rp->image_url)
                                                 <img src="{{ $rp->image_url }}" alt="{{ $rp->title }}"
                                                     class="w-full h-40 object-cover transition duration-500 group-hover:scale-[1.02]"
@@ -117,7 +196,7 @@
                                         </p>
                                         <h3 class="mt-1 text-lg font-bold leading-snug">
                                             <a href="{{ $rp ? route('news.show', $rp) : '#' }}"
-                                                class="hover:text-red-300 line-clamp-2">
+                                                class="hover:text-red-300 line-clamp-2" data-transition data-prefetch>
                                                 {{ $rp->title ?? 'Nosaukums drīzumā' }}
                                             </a>
                                         </h3>
@@ -142,7 +221,8 @@
                                         </h2>
                                     </div>
                                     <a href="{{ route('tournaments.index') }}"
-                                        class="text-sm font-semibold text-red-600 hover:text-red-800">Visi turnīri →</a>
+                                        class="text-sm font-semibold text-red-600 hover:text-red-800" data-transition
+                                        data-prefetch>Visi turnīri →</a>
                                 </div>
 
                                 <div class="space-y-3 sm:space-y-4">
@@ -191,11 +271,11 @@
                                         @endphp
 
                                         <div
-                                            class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm p-3 sm:p-4 transition hover:shadow-lg hover:border-gray-300">
+                                            class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm p-3 sm:p-4 transition hover:shadow-lg hover:border-gray-300 card">
                                             <div class="flex items-center justify-between gap-3">
                                                 <div class="flex items-center gap-3 sm:gap-4 minw0">
                                                     <div
-                                                        class="flex flex-col items-center justify-center bg-red-600 text-white rounded-lg px-2.5 py-2 w-14 sm:px-3 sm:py-2 sm:w-16 shadow">
+                                                        class="date-badge flex flex-col items-center justify-center bg-red-600 text-white rounded-lg px-2.5 py-2 w-14 sm:px-3 sm:py-2 sm:w-16 shadow">
                                                         <span class="text-base sm:text-lg font-bold">
                                                             {{ \Carbon\Carbon::parse($tournament->start_date)->format('d') }}
                                                         </span>
@@ -205,8 +285,7 @@
                                                     </div>
                                                     <div class="minw0">
                                                         <h3 class="text-sm sm:text-lg font-bold text-gray-900 truncate">
-                                                            {{ $tournament->name }}
-                                                        </h3>
+                                                            {{ $tournament->name }}</h3>
                                                         <div
                                                             class="mt-1 flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
                                                             <span class="text-gray-500 truncate">📍
@@ -239,7 +318,8 @@
 
                                                 <div class="flex items-center gap-2">
                                                     <a href="{{ route('tournaments.show', $tournament) }}"
-                                                        class="px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs sm:text-sm font-semibold shadow whitespace-nowrap">
+                                                        class="px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs sm:text-sm font-semibold shadow whitespace-nowrap"
+                                                        data-transition data-prefetch>
                                                         Skatīt
                                                     </a>
                                                 </div>
@@ -250,7 +330,7 @@
                             </section>
                         @endif
 
-                        {{-- Calendar (uses true mobile agenda + md+ grid) --}}
+                        {{-- Calendar (mobile agenda + md+ grid) --}}
                         <section class="mt-8 sm:mt-12 animate-fade-up">
                             <h2
                                 class="text-xl sm:text-3xl font-extrabold text-gray-900 mb-4 sm:mb-6 flex items-center gap-3">
@@ -311,14 +391,17 @@
                         <div class="flex items-center justify-between">
                             <h2 class="text-lg sm:text-2xl font-extrabold text-gray-900">Ziņu josla</h2>
                             <a href="{{ route('news.index') }}"
-                                class="text-sm font-semibold text-red-600 hover:text-red-800">Visas ziņas →</a>
+                                class="text-sm font-semibold text-red-600 hover:text-red-800" data-transition
+                                data-prefetch>Visas ziņas →</a>
                         </div>
 
                         @foreach ($newsBar as $item)
                             <article
-                                class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden transition hover:shadow-lg hover:border-gray-300">
-                                <a href="{{ route('news.show', $item) }}" class="flex minw0">
-                                    <div class="w-20 h-20 max-[360px]:w-16 max-[360px]:h-16 shrink-0 overflow-hidden">
+                                class="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 shadow-sm overflow-hidden transition hover:shadow-lg hover:border-gray-300 card">
+                                <a href="{{ route('news.show', $item) }}" class="flex minw0" data-transition
+                                    data-prefetch>
+                                    <div
+                                        class="news-thumb w-20 h-20 max-[360px]:w-16 max-[360px]:h-16 shrink-0 overflow-hidden">
                                         @if ($item->image_url)
                                             <img src="{{ $item->image_url }}" alt="{{ $item->title }}"
                                                 class="w-full h-full object-cover transition duration-500 hover:scale-[1.04]"
@@ -345,7 +428,8 @@
 
                         <div class="pt-1 sm:pt-2">
                             <a href="{{ route('news.index') }}"
-                                class="inline-flex items-center justify-center w-full text-sm font-semibold text-red-700 hover:text-red-900">
+                                class="inline-flex items-center justify-center w-full text-sm font-semibold text-red-700 hover:text-red-900"
+                                data-transition data-prefetch>
                                 Visas ziņas →
                             </a>
                         </div>
@@ -357,23 +441,112 @@
 
     {{-- Modal --}}
     <div id="modalOverlay" class="fixed inset-0 bg-black/40 hidden justify-center items-center z-50">
-        <div class="bg-white rounded-2xl p-6 max-w-lg w-full relative shadow-2xl">
-            <button id="closeModal" class="absolute top-3 right-3 text-gray-600 font-bold text-xl">&times;</button>
+        <div class="modal-card bg-white rounded-2xl p-6 max-w-lg w-full relative shadow-2xl">
+            <button id="closeModal" class="absolute top-3 right-3 text-gray-600 font-bold text-xl"
+                aria-label="Aizvērt">&times;</button>
             <h3 id="modalDate" class="text-xl sm:text-2xl font-bold mb-4 text-gray-900"></h3>
             <ul id="modalTournaments" class="space-y-3 max-h-96 overflow-y-auto"></ul>
         </div>
     </div>
 
-    <footer class="bg-gradient-to-r from-red-600 to-red-700 text-white mt-0">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+    {{-- Small spacer between calendar and footer --}}
+    <div class="h-4 sm:h-6"></div>
+
+    {{-- Footer (simplified + centered left block, no contacts row) --}}
+    <footer class="bg-red-600  text-white">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-10">
             @guest
-                {{-- ... --}}
+                <div class="grid lg:grid-cols-2 gap-6 lg:gap-10 items-center">
+                    {{-- Left: centered vertically --}}
+                    <section class="flex flex-col justify-center text-center">
+                        <h2 class="text-2xl sm:text-3xl font-extrabold">Ienākt — VolleyLV</h2>
+                        <p class="mt-2 text-red-100 max-w-xl mx-auto">
+                            Ienāc, lai sekotu turnīriem, pārvaldītu komandas un redzētu jaunākās ziņas.
+                        </p>
+                    </section>
+
+                    {{-- Right: simple login card --}}
+                    <section class="xs-center">
+                        <div class="bg-white text-neutral-900 rounded-xl shadow-lg ring-1 ring-black/5 p-6 sm:p-7">
+                            <h3 class="text-lg font-extrabold text-center">Laipni lūdzam atpakaļ</h3>
+                            <p class="text-sm text-neutral-600 mt-1 text-center">Ienāc ar savu e-pastu un paroli.</p>
+
+                            @if ($errors->any())
+                                <div
+                                    class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                                    <ul class="list-disc list-inside">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            @if (session('status'))
+                                <div
+                                    class="mt-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                                    {{ session('status') }}
+                                </div>
+                            @endif
+
+                            {{-- Login form --}}
+                            <form method="POST" action="{{ route('login') }}" class="mt-5 space-y-4">
+                                @csrf
+                                <div>
+                                    <label for="email" class="block text-sm font-medium mb-1">E-pasts</label>
+                                    <input id="email" type="email" name="email" value="{{ old('email') }}"
+                                        required
+                                        class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600"
+                                        placeholder="you@example.com" />
+                                </div>
+                                <div>
+                                    <label for="password" class="block text-sm font-medium mb-1">Parole</label>
+                                    <input id="password" type="password" name="password" required
+                                        class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600"
+                                        placeholder="••••••••" />
+                                </div>
+                                <div class="flex items-center">
+                                    <label for="remember_me" class="inline-flex items-center gap-2">
+                                        <input id="remember_me" type="checkbox" name="remember"
+                                            class="rounded border-neutral-300 text-red-600 shadow-sm focus:ring-red-600">
+                                        <span class="text-sm text-neutral-700">Atcerēties mani</span>
+                                    </label>
+                                </div>
+                                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                                    <a href="{{ route('register') }}"
+                                        class="text-sm text-neutral-600 hover:text-neutral-800 underline underline-offset-4"
+                                        data-transition data-prefetch>
+                                        Vai nav konta? Reģistrējies
+                                    </a>
+                                    <button type="submit"
+                                        class="inline-flex items-center justify-center rounded-lg bg-red-600 text-white font-semibold px-6 py-2.5 shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition">
+                                        Ienāc
+                                    </button>
+                                </div>
+                            </form>
+
+                            {{-- Guest CTA --}}
+                            @if (Route::has('guest.login'))
+                                <form method="POST" action="{{ route('guest.login') }}" class="mt-4">
+                                    @csrf
+                                    <button type="submit"
+                                        class="inline-flex items-center justify-center w-full rounded-lg bg-neutral-100 text-neutral-900 font-semibold px-4 py-2.5 shadow hover:bg-neutral-200 transition">
+                                        Turpināt kā viesim
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </section>
+                </div>
             @endguest
-            {{-- ... --}}
+
+            <div class="mt-6 text-center text-white/90 text-sm">
+                © {{ now()->year }} VolleyLV — Visi tiesību aizsargāti
+            </div>
         </div>
     </footer>
 
-    {{-- JS: page-load flag + calendar --}}
+    {{-- JS: page-load flag + calendar + small enhancements --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             document.documentElement.classList.add('loaded');
@@ -425,7 +598,6 @@
             return map;
         }
 
-        // Desktop Month Grid
         function renderCalendar(date) {
             if (!calendarGrid) return;
             calendarGrid.innerHTML = '';
@@ -446,7 +618,7 @@
             for (let d = 1; d <= lastDate; d++) {
                 const cell = document.createElement('div');
                 cell.className =
-                    'border p-1.5 sm:p-2 h-16 max-[360px]:h-14 sm:h-24 rounded-xl bg-white flex flex-col text-[11px] sm:text-sm transition hover:shadow-md hover:ring-1 hover:ring-red-200';
+                    'cal-cell border p-1.5 sm:p-2 h-16 max-[360px]:h-14 sm:h-24 rounded-xl bg-white flex flex-col text-[11px] sm:text-sm transition hover:shadow-md hover:ring-1 hover:ring-red-200';
 
                 const label = document.createElement('div');
                 label.className = 'font-semibold text-gray-900';
@@ -488,7 +660,6 @@
             }
         }
 
-        // Mobile Agenda
         function renderMobileAgenda(date) {
             if (!mobileAgenda) return;
             mobileAgenda.innerHTML = '';
@@ -522,7 +693,7 @@
                 left.className = 'flex flex-col items-center justify-center min-w-[2.75rem]';
                 const dow = document.createElement('div');
                 dow.className = 'text-[10px] font-extrabold text-red-800 leading-none';
-                dow.textContent = wdShort[dObj.getDay()];
+                dow.textContent = ["Sv", "Pr", "Ot", "Tr", "Ce", "Pk", "Se"][dObj.getDay()];
                 const num = document.createElement('div');
                 num.className = 'text-base font-black text-gray-900 leading-none mt-0.5';
                 num.textContent = String(d).padStart(2, '0');
@@ -606,7 +777,35 @@
             clearTimeout(rTO);
             rTO = setTimeout(renderAll, 100);
         });
-
         renderAll();
+
+        // Prefetch + view transitions for faster nav
+        document.addEventListener('mouseover', prefetchHandler, {
+            passive: true
+        });
+        document.addEventListener('touchstart', prefetchHandler, {
+            passive: true
+        });
+
+        function prefetchHandler(e) {
+            const a = e.target.closest('a[data-prefetch]');
+            if (!a || a.dataset.prefetched) return;
+            const l = document.createElement('link');
+            l.rel = 'prefetch';
+            l.as = 'document';
+            l.href = a.href;
+            document.head.appendChild(l);
+            a.dataset.prefetched = '1';
+        }
+        document.addEventListener('click', (e) => {
+            const a = e.target.closest('a[data-transition]');
+            if (!a) return;
+            if (!document.startViewTransition) return;
+            e.preventDefault();
+            const href = a.href;
+            document.startViewTransition(() => {
+                window.location.href = href;
+            });
+        });
     </script>
 </x-app-layout>
