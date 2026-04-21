@@ -16,6 +16,9 @@ class TournamentSeeder extends Seeder
 {
     public function run(): void
     {
+        // Clean up any existing tournaments first
+        Tournament::query()->delete();
+
         // Add/adjust as you like. Different sizes test odd and power-of-two brackets.
         $configs = [
             ['name' => 'Rīgas Kauss — Pludmales Volejbols', 'location' => 'Rīga, LV',      'teams' => 12],
