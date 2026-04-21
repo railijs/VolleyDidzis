@@ -5,423 +5,616 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'VolleyLV') }}</title>
-
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,600,700" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,700;0,900;1,700;1,900&family=Barlow:wght@300;400;500&display=swap"
+        rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
     <style>
-        /* ===== Theme & Motion ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         :root {
-            --accent: #ef4444;
-            /* red-500 */
-            --accent-600: #dc2626;
-            --chip-bg: rgba(255, 255, 255, .10);
-            --chip-ring: rgba(255, 255, 255, .15);
-
-            --slide-duration: 1.4s;
-            --slide-delay: .10s;
-            --content-duration: .95s;
-            --easing-soft: cubic-bezier(.22, .55, .15, 1);
-
-            --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/ filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+            --red: #D42B2B;
+            --red-glow: rgba(212, 43, 43, 0.45);
+            --gold: #C8963E;
+            --ink: #080808;
+            --white: #F5F4F0;
         }
 
-        @keyframes fadeUp {
-            0% {
-                opacity: 0;
-                transform: translateY(22px) scale(.985)
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1)
-            }
-        }
-
-        @keyframes slideInLeft {
-            0% {
-                opacity: 0;
-                transform: translateX(-8%) scale(1.02);
-                filter: blur(2px)
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-                filter: blur(0)
-            }
-        }
-
-        @keyframes slideInRight {
-            0% {
-                opacity: 0;
-                transform: translateX(8%) scale(1.02);
-                filter: blur(2px)
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-                filter: blur(0)
-            }
-        }
-
-        @keyframes scrollBg {
+        /* ── Keyframes ── */
+        @keyframes imgReveal {
             from {
-                background-position: 0 0
+                opacity: 0;
+                transform: scale(1.06);
+                filter: blur(4px);
             }
 
             to {
-                background-position: 180px 0
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
             }
         }
 
-        /* ===== Accessibility toggles ===== */
+        @keyframes slashReveal {
+            from {
+                opacity: 0;
+                transform: translateX(-40px) skewX(-12deg);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0) skewX(-12deg);
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes lineGrow {
+            from {
+                transform: scaleX(0);
+            }
+
+            to {
+                transform: scaleX(1);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        @keyframes scrollX {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
-
-            .rm\:no-anim,
-            #hero * {
-                animation: none !important;
-                transition: none !important;
+            * {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
             }
         }
 
-        @media (prefers-contrast: more) {
-            .chip {
-                border-color: rgba(255, 255, 255, .45) !important;
-            }
-
-            .btn-ghost {
-                border-color: rgba(255, 255, 255, .6) !important;
-            }
-        }
-
-        /* ===== Typography polish ===== */
+        /* ── Base ── */
+        html,
         body {
-            font-feature-settings: "ss01", "ss02", "case", "cpsp";
+            height: 100%;
         }
 
-        h1 {
-            text-wrap: balance;
+        body {
+            font-family: 'Barlow', sans-serif;
+            background: var(--ink);
+            color: var(--white);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== Hero image slice: wider on desktop, feathered edge ===== */
-        .hero-slice {
+        /* ── Hero ── */
+        .hero {
+            position: relative;
+            min-height: 100svh;
+            display: grid;
+            grid-template-rows: 1fr auto;
+            overflow: hidden;
+        }
+
+        /* ── Background photo ── */
+        .hero__bg {
             position: absolute;
             inset: 0;
+            background-image: url('https://faili.liepaja.lv/Bildes/Sports/1DX29498-20.jpg');
             background-size: cover;
-            background-position: center;
-            will-change: transform;
+            background-position: center 30%;
+            animation: imgReveal 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+            z-index: 0;
         }
 
-        @media (min-width:1024px) {
-            .hero-slice {
-                /* geometric wedge */
-                clip-path: polygon(30% 0, 100% 0, 100% 100%, 16% 100%);
-                /* soft feather on the left edge (so text reads cleanly) */
-                -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 0) 98%);
-                mask-image: linear-gradient(to left, rgba(0, 0, 0, 1) 70%, rgba(0, 0, 0, 0) 98%);
+        /* Progressive dark overlay — left panel solid, right feathers */
+        .hero__veil {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(100deg,
+                    rgba(8, 8, 8, 0.97) 0%,
+                    rgba(8, 8, 8, 0.90) 28%,
+                    rgba(8, 8, 8, 0.55) 55%,
+                    rgba(8, 8, 8, 0.15) 80%,
+                    rgba(8, 8, 8, 0.08) 100%);
+        }
+
+        /* Bottom fade so ticker reads */
+        .hero__floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 220px;
+            z-index: 2;
+            background: linear-gradient(to top, rgba(8, 8, 8, 1) 0%, transparent 100%);
+        }
+
+        /* Red glow blob behind headline */
+        .hero__glow {
+            position: absolute;
+            z-index: 1;
+            left: -80px;
+            top: 30%;
+            width: 700px;
+            height: 500px;
+            background: radial-gradient(ellipse at center, var(--red-glow) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        /* ── Diagonal accent bar ── */
+        .hero__slash {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: clamp(260px, 46vw, 680px);
+            width: 3px;
+            background: var(--red);
+            transform: skewX(-4deg);
+            z-index: 3;
+            transform-origin: top;
+            animation: slashReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+            box-shadow: 0 0 24px 4px var(--red-glow);
+        }
+
+        /* hide on mobile */
+        @media (max-width: 900px) {
+            .hero__slash {
+                display: none;
             }
         }
 
-        /* On tiny screens: no clip-path, keep image full-bleed but darken more */
-        @media (max-width: 360px) {
-            .hero-slice {
-                -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .92), rgba(0, 0, 0, .92));
-                mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .92), rgba(0, 0, 0, .92));
-            }
+        /* ── Main content ── */
+        .hero__content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            padding: 0 clamp(1.5rem, 6vw, 6rem);
+            padding-top: clamp(5rem, 12vh, 8rem);
+            padding-bottom: 5rem;
         }
 
-        /* ===== Pattern & noise overlays (Latvian spirit, subtle) ===== */
-        .pattern {
-            opacity: .10;
-            background-repeat: repeat;
-            background-size: 180px;
-            animation: scrollBg 28s linear infinite;
+        .hero__left {
+            max-width: 560px;
         }
 
-        .noise {
-            pointer-events: none;
-            background-image: var(--noise);
-            mix-blend-mode: overlay;
-            opacity: .9;
+        /* ── Eyebrow ── */
+        .eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
         }
 
-        /* ===== Hero gradient layers ===== */
-        .gloom-b {
-            background: linear-gradient(to bottom, rgba(0, 0, 0, .70), rgba(0, 0, 0, .40), rgba(0, 0, 0, .70));
+        .eyebrow__dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--red);
+            animation: pulse 2s ease-in-out 1.5s infinite;
         }
 
-        .gloom-r {
-            background: linear-gradient(to right, rgba(0, 0, 0, .70), rgba(0, 0, 0, .30), transparent);
+        .eyebrow__text {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(245, 244, 240, 0.55);
         }
 
-        .glow {
-            mix-blend-mode: screen;
-            pointer-events: none;
-            background: radial-gradient(900px 700px at 75% 45%, rgba(239, 68, 68, .33), transparent 60%);
+        .eyebrow__sep {
+            width: 28px;
+            height: 1px;
+            background: var(--red);
+            flex-shrink: 0;
         }
 
-        /* ===== Watermark ===== */
-        .watermark {
+        /* ── Headline ── */
+        .headline {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-style: italic;
+            line-height: 0.9;
+            letter-spacing: -0.01em;
+            text-transform: uppercase;
+            color: var(--white);
+            animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+        }
+
+        .headline__main {
+            display: block;
+            font-size: clamp(5rem, 13vw, 10rem);
+        }
+
+        .headline__sub {
+            display: block;
+            font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+            color: var(--red);
+            font-weight: 700;
+            font-style: normal;
+            letter-spacing: 0.06em;
+            margin-top: 0.1em;
+        }
+
+        /* ── Divider line ── */
+        .hero__line {
+            height: 2px;
+            background: linear-gradient(to right, var(--red) 0%, rgba(200, 150, 62, 0.4) 60%, transparent 100%);
+            margin: 1.5rem 0;
+            transform-origin: left;
+            animation: lineGrow 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
+        }
+
+        /* ── Lead copy ── */
+        .lead {
+            font-size: 1.05rem;
+            font-weight: 300;
+            line-height: 1.7;
+            color: rgba(245, 244, 240, 0.70);
+            max-width: 400px;
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both;
+        }
+
+        /* ── Stats row ── */
+        .stats {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
+        }
+
+        .stat__num {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+            color: var(--white);
+        }
+
+        .stat__label {
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(245, 244, 240, 0.4);
+            margin-top: 0.2rem;
+        }
+
+        .stat__sep {
+            width: 1px;
+            height: 36px;
+            background: rgba(245, 244, 240, 0.12);
+        }
+
+        /* ── CTA buttons ── */
+        .ctas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.1s both;
+        }
+
+        .cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 0.75rem 1.75rem;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
+        }
+
+        .cta:hover {
+            transform: translateY(-2px);
+        }
+
+        .cta--primary {
+            background: var(--red);
+            color: var(--white);
+            box-shadow: 0 8px 32px -8px var(--red-glow);
+        }
+
+        .cta--primary:hover {
+            background: #E03030;
+            box-shadow: 0 12px 40px -8px var(--red-glow);
+        }
+
+        .cta--ghost {
+            background: rgba(245, 244, 240, 0.08);
+            color: var(--white);
+            border: 1px solid rgba(245, 244, 240, 0.18);
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
+        }
+
+        .cta--ghost:hover {
+            background: rgba(245, 244, 240, 0.14);
+        }
+
+        .cta--outline {
+            background: transparent;
+            color: rgba(245, 244, 240, 0.6);
+            border: 1px solid rgba(245, 244, 240, 0.15);
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
+        }
+
+        .cta--outline:hover {
+            color: var(--white);
+            border-color: rgba(245, 244, 240, 0.35);
+        }
+
+        .cta__arrow {
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        /* ── Bottom ticker ── */
+        .ticker {
+            position: relative;
+            z-index: 10;
+            border-top: 1px solid rgba(245, 244, 240, 0.08);
+            background: rgba(8, 8, 8, 0.85);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+            height: 42px;
+            display: flex;
+            align-items: center;
+        }
+
+        .ticker__label {
+            flex-shrink: 0;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            background: var(--red);
+            color: var(--white);
+            padding: 0 1.1rem;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .ticker__track {
+            overflow: hidden;
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .ticker__inner {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            animation: scrollX 28s linear infinite;
+        }
+
+        .ticker__item {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(245, 244, 240, 0.55);
+            padding: 0 2.5rem;
+        }
+
+        .ticker__item strong {
+            color: var(--white);
+            font-weight: 700;
+        }
+
+        .ticker__dot {
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--red);
+            flex-shrink: 0;
+        }
+
+        /* ── Corner number ── */
+        .hero__number {
+            position: absolute;
+            bottom: 70px;
+            right: clamp(1.5rem, 5vw, 5rem);
+            z-index: 10;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(6rem, 16vw, 14rem);
+            font-weight: 900;
+            font-style: italic;
+            color: rgba(245, 244, 240, 0.04);
+            line-height: 1;
             pointer-events: none;
             user-select: none;
-            line-height: .8;
-            letter-spacing: -.04em;
-            white-space: nowrap;
-            color: rgba(255, 255, 255, .06);
-            -webkit-text-stroke: 1px rgba(255, 255, 255, .12);
-            text-shadow: 0 2px 18px rgba(0, 0, 0, .20);
+            letter-spacing: -0.05em;
+            -webkit-text-stroke: 1px rgba(245, 244, 240, 0.06);
+        }
+
+        @media (max-width: 600px) {
+            .hero__number {
+                display: none;
+            }
+        }
+
+        /* ── Scroll cue ── */
+        .scroll-cue {
+            position: absolute;
+            bottom: 56px;
+            left: clamp(1.5rem, 6vw, 6rem);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.65rem;
             font-weight: 700;
-            font-size: clamp(3.5rem, 9vw, 8rem);
-        }
-
-        @media (max-width: 360px) {
-            .watermark {
-                opacity: .04;
-                transform: translateX(-4px);
-            }
-        }
-
-        /* ===== Chips & CTA tactile tweaks (no markup change) ===== */
-        .chip {
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-            padding: .45rem .75rem;
-            border-radius: 999px;
-            background: var(--chip-bg);
-            border: 1px solid var(--chip-ring);
-            backdrop-filter: blur(4px);
-        }
-
-        .chip>.upcase {
+            letter-spacing: 0.18em;
             text-transform: uppercase;
-            letter-spacing: .2em;
-            font-size: 10px;
-            opacity: .85;
+            color: rgba(245, 244, 240, 0.3);
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.4s both;
         }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: .75rem 1.1rem;
-            border-radius: .9rem;
-            font-weight: 600;
-            transition: transform .25s var(--easing-soft), box-shadow .25s var(--easing-soft), background-color .2s, border-color .2s, color .2s;
-            outline: none;
+        .scroll-cue__line {
+            width: 1px;
+            height: 32px;
+            background: linear-gradient(to bottom, var(--red), transparent);
         }
 
-        .btn:focus-visible {
-            box-shadow: 0 0 0 2px #111827, 0 0 0 4px rgba(255, 255, 255, .8);
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            box-shadow: 0 12px 24px -12px rgba(239, 68, 68, .45);
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-600);
-            transform: translateY(-2px);
-        }
-
-        .btn-ghost {
-            background: rgba(255, 255, 255, .10);
-            border: 1px solid rgba(255, 255, 255, .20);
-        }
-
-        .btn-ghost:hover {
-            background: rgba(255, 255, 255, .18);
-            transform: translateY(-2px);
-        }
-
-        .btn-outline {
-            border: 1px solid rgba(255, 255, 255, .30);
-            background: transparent;
-        }
-
-        .btn-outline:hover {
-            background: rgba(255, 255, 255, .10);
-            transform: translateY(-2px);
-        }
-
-        /* Bind our button skins to the existing Tailwind buttons (no markup change) */
-        #hero .btn-primary-link {
-            composes: btn btn-primary;
-        }
-
-        #hero .btn-ghost-link {
-            composes: btn btn-ghost;
-        }
-
-        #hero .btn-outline-link {
-            composes: btn btn-outline;
-        }
-
-        /* If your build doesn't support `composes`, fallback: */
-        #hero .btn-primary-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: .75rem 1.1rem;
-            border-radius: .9rem;
-            font-weight: 600;
-            background: var(--accent);
-            box-shadow: 0 12px 24px -12px rgba(239, 68, 68, .45);
-        }
-
-        #hero .btn-primary-link:hover {
-            background: var(--accent-600);
-            transform: translateY(-2px);
-        }
-
-        #hero .btn-ghost-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: .75rem 1.1rem;
-            border-radius: .9rem;
-            font-weight: 600;
-            background: rgba(255, 255, 255, .10);
-            border: 1px solid rgba(255, 255, 255, .20);
-        }
-
-        #hero .btn-ghost-link:hover {
-            background: rgba(255, 255, 255, .18);
-            transform: translateY(-2px);
-        }
-
-        #hero .btn-outline-link {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: .75rem 1.1rem;
-            border-radius: .9rem;
-            font-weight: 600;
-            border: 1px solid rgba(255, 255, 255, .30);
-        }
-
-        #hero .btn-outline-link:hover {
-            background: rgba(255, 255, 255, .10);
-            transform: translateY(-2px);
-        }
-
-        /* ===== 320px mobile fit ===== */
-        @media (max-width: 360px) {
-            .container {
-                padding-left: 18px;
-                padding-right: 18px;
-            }
-
-            #hero .lead {
-                font-size: .95rem;
-            }
-
-            #hero .cta-group {
-                gap: .6rem;
-            }
-
-            #hero .cta-group a {
-                padding: .7rem 1rem !important;
-            }
-
-            #hero .chips {
-                gap: .35rem .5rem;
+        @media (max-width: 600px) {
+            .scroll-cue {
+                display: none;
             }
         }
     </style>
 </head>
 
-<body class="antialiased bg-neutral-950 text-white selection:bg-red-600/40 selection:text-white">
+<body>
 
-    <!-- ===== HERO ===== -->
-    <section id="hero" class="relative min-h-svh overflow-hidden">
+    <section class="hero">
 
-        <!-- Background image (dominant on desktop) -->
-        <div class="hero-slice lg:inset-y-0 lg:right-0 lg:w-[78%] rm:no-anim z-0"
-            style="background-image:url('https://faili.liepaja.lv/Bildes/Sports/1DX29498-20.jpg'); animation: slideInRight var(--slide-duration) var(--easing-soft) var(--slide-delay) both;">
+        <!-- Photo layer -->
+        <div class="hero__bg"></div>
+        <div class="hero__veil"></div>
+        <div class="hero__floor"></div>
+        <div class="hero__glow"></div>
+
+        <!-- Vertical red slash (desktop) -->
+        <div class="hero__slash"></div>
+
+        <!-- Large ghost number -->
+        <div class="hero__number">LV</div>
+
+        <!-- Scroll cue -->
+        <div class="scroll-cue">
+            <div class="scroll-cue__line"></div>
+            Ritiniet
         </div>
 
-        <!-- Subtle Latvian pattern -->
-        <div class="pattern absolute inset-0 rm:no-anim z-[12]"
-            style="background-image:url('https://upload.wikimedia.org/wikipedia/commons/f/fc/Lielvardes_josta_pattern.svg');">
-        </div>
+        <!-- Main content -->
+        <div class="hero__content">
+            <div class="hero__left">
 
-        <!-- Noise texture to tie layers together -->
-        <div class="noise absolute inset-0 z-[13]"></div>
-
-        <!-- Overlays for drama & readability -->
-        <div class="gloom-b absolute inset-0 z-20"></div>
-        <div class="gloom-r absolute inset-0 z-20"></div>
-        <div class="glow absolute inset-0 z-20"></div>
-
-        <!-- Watermark (big background label) -->
-        <div class="absolute -left-6 bottom-8 lg:bottom-10 z-10 watermark">VolleyLV</div>
-
-        <!-- Content -->
-        <div class="relative z-30 container mx-auto px-6 md:px-10 lg:px-14">
-            <div class="grid lg:grid-cols-12 gap-8 lg:gap-10 min-h-svh items-center">
-
-                <!-- Left column -->
-                <div class="lg:col-span-6 py-20 md:py-24 lg:py-0 will-change-transform"
-                    style="animation: slideInLeft var(--slide-duration) var(--easing-soft) calc(var(--slide-delay) + .05s) both;">
-
-                    <!-- Small label -->
-                    <p class="uppercase tracking-[0.2em] text-[11px] text-red-300/90 font-bold"
-                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .10s) both;">
-                        Ziņas & Turnīri
-                    </p>
-
-                    <!-- Headline -->
-                    <h1 class="mt-1 font-bold tracking-tight text-white"
-                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .15s) both; font-size: clamp(2.4rem, 5.2vw, 4.75rem);">
-                        VolleyLV
-                    </h1>
-
-                    <!-- Subcopy -->
-                    <p class="lead mt-5 text-white/85 text-lg leading-relaxed max-w-xl"
-                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .25s) both;">
-                        Mēs spēlējam kā viens.
-                    </p>
-
-                    <!-- Quick chips -->
-                    <div class="chips mt-4 flex flex-wrap gap-2"
-                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .30s) both;">
-                        <span class="chip"><span class="upcase">Kalendārs</span></span>
-                        <span class="chip"><span class="upcase">Rezultāti</span></span>
-                        <span class="chip"><span class="upcase">Statistika</span></span>
-                    </div>
-
-                    <!-- CTAs (no markup change required; extra classes just add nicer CSS skins) -->
-                    <div class="cta-group mt-8 flex flex-col sm:flex-row gap-4"
-                        style="animation: fadeUp var(--content-duration) var(--easing-soft) calc(var(--slide-delay) + .35s) both;">
-                        <a href="{{ route('register') }}"
-                            class="btn-primary-link inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-neutral-950 shadow-lg shadow-red-900/30">
-                            Pievienojies spēlei
-                        </a>
-                        <a href="{{ route('login') }}"
-                            class="btn-ghost-link inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 focus:ring-offset-neutral-950">
-                            Esmu spēlētājs
-                        </a>
-                        <a href="{{ route('dashboard') }}"
-                            class="btn-outline-link inline-flex items-center justify-center px-7 py-3 rounded-xl text-base font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60 focus:ring-offset-neutral-950">
-                            Sākumlapa
-                        </a>
-                    </div>
-
-                    <!-- Micro caption -->
-                    <p class="mt-4 uppercase tracking-[0.2em] text-[10px] text-white/60">
-                        Reģistrācija • Pieslēgšanās • Pārskats
-                    </p>
+                <div class="eyebrow">
+                    <div class="eyebrow__dot"></div>
+                    <span class="eyebrow__text">Latvijas volejbols</span>
+                    <div class="eyebrow__sep"></div>
+                    <span class="eyebrow__text">Ziņas & Turnīri</span>
                 </div>
 
-                <!-- (Right column stays the background image; nothing needed here) -->
+                <h1 class="headline">
+                    <span class="headline__main">Volley</span>
+                    <span class="headline__sub">Latvija</span>
+                </h1>
+
+                <div class="hero__line"></div>
+
+                <p class="lead">Mēs spēlējam kā viens. Seko aktuālajiem turnīriem, rezultātiem un spēlētāju
+                    statistikai.</p>
+
+                <div class="stats">
+                    <div>
+                        <div class="stat__num">24</div>
+                        <div class="stat__label">Turnīri</div>
+                    </div>
+                    <div class="stat__sep"></div>
+                    <div>
+                        <div class="stat__num">400+</div>
+                        <div class="stat__label">Spēlētāji</div>
+                    </div>
+                    <div class="stat__sep"></div>
+                    <div>
+                        <div class="stat__num">18</div>
+                        <div class="stat__label">Komandas</div>
+                    </div>
+                </div>
+
+                <div class="ctas">
+                    <a href="{{ route('register') }}" class="cta cta--primary">
+                        Pievienojies <span class="cta__arrow">→</span>
+                    </a>
+                    <a href="{{ route('login') }}" class="cta cta--ghost">
+                        Esmu spēlētājs
+                    </a>
+                    <a href="{{ route('dashboard') }}" class="cta cta--outline">
+                        Sākumlapa
+                    </a>
+                </div>
 
             </div>
         </div>
+
+        <!-- Bottom ticker -->
+        <div class="ticker">
+            <div class="ticker__label">Aktuāli</div>
+            <div class="ticker__track">
+                <div class="ticker__inner">
+                    <!-- duplicate for seamless loop -->
+                    <span class="ticker__item"><strong>Sezona 2025</strong> — reģistrācija atvērta</span>
+                    <span class="ticker__dot"></span>
+                    <span class="ticker__item">Nākamā spēle: <strong>Rīga vs Liepāja</strong> — 28. apr.</span>
+                    <span class="ticker__dot"></span>
+                    <span class="ticker__item">Rezultāti: <strong>Jelgava 3:1 Ventspils</strong></span>
+                    <span class="ticker__dot"></span>
+                    <span class="ticker__item">Jaunākās ziņas — volejbols.lv</span>
+                    <span class="ticker__dot"></span>
+                    <span class="ticker__item"><strong>Sezona 2025</strong> — reģistrācija atvērta</span>
+                    <span class="ticker__dot"></span>
+                    <span class="ticker__item">Nākamā spēle: <strong>Rīga vs Liepāja</strong> — 28. apr.</span>
+                    <span class="ticker__dot"></span>
+                    <span class="ticker__item">Rezultāti: <strong>Jelgava 3:1 Ventspils</strong></span>
+                    <span class="ticker__dot"></span>
+                    <span class="ticker__item">Jaunākās ziņas — volejbols.lv</span>
+                    <span class="ticker__dot"></span>
+                </div>
+            </div>
+        </div>
+
     </section>
 
 </body>
