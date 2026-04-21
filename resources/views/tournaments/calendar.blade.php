@@ -1,414 +1,710 @@
 <x-app-layout>
-    <div class="relative min-h-screen pt-24 pb-16 bg-gradient-to-b from-white via-red-50 to-white">
-        <style>
-            @media (prefers-reduced-motion: no-preference) {
-                .fade-up {
-                    opacity: 0;
-                    transform: translateY(12px);
-                    transition: opacity .55s, transform .55s;
-                }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900&family=Barlow+Condensed:wght@600;700;900&family=DM+Sans:wght@400;500&display=swap');
 
-                .loaded .fade-up {
-                    opacity: 1;
-                    transform: none;
-                }
+        .cal * {
+            box-sizing: border-box;
+        }
+
+        .cal {
+            --ink: #0F0F0E;
+            --ink-2: #3A3935;
+            --ink-3: #7A7770;
+            --ink-4: #B8B5AF;
+            --paper: #F8F6F1;
+            --paper-2: #EFECE5;
+            --rule: #D8D4CC;
+            --red: #B8241C;
+            --red-hover: #961E17;
+            --red-tint: #F9EEEE;
+            --white: #FFFFFF;
+            --men: #1A4F8A;
+            --men-bg: #EBF1F9;
+            --women: #8A1A5E;
+            --women-bg: #FCEEF5;
+            --mix: #4A1A8A;
+            --mix-bg: #F0EBF9;
+
+            font-family: 'DM Sans', sans-serif;
+            background: var(--paper);
+            min-height: 100vh;
+            color: var(--ink);
+            margin-top: 50px;
+            padding-bottom: 5rem;
+        }
+
+        .cal-wrap {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 0 1.25rem;
+        }
+
+        /* ── Masthead ── */
+        .cal-masthead {
+            border-top: 4px solid var(--ink);
+            padding: 1.25rem 0 1rem;
+        }
+
+        .cal-masthead__eyebrow {
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: 0.4rem;
+        }
+
+        .cal-masthead__row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .cal-masthead__title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 900;
+            letter-spacing: -0.025em;
+            line-height: 1.05;
+            color: var(--ink);
+            margin: 0;
+        }
+
+        /* ── Nav controls ── */
+        .cal-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cal-nav__btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: var(--white);
+            color: var(--ink-2);
+            border: 1px solid var(--rule);
+            padding: 0.4rem 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            border-radius: 0;
+        }
+
+        .cal-nav__btn:hover {
+            background: var(--ink);
+            color: var(--white);
+            border-color: var(--ink);
+        }
+
+        .cal-nav__today {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background: var(--red);
+            color: var(--white);
+            border: 1px solid var(--red);
+            padding: 0.4rem 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            border-radius: 0;
+        }
+
+        .cal-nav__today:hover {
+            background: var(--red-hover);
+            border-color: var(--red-hover);
+        }
+
+        /* ── Rule ── */
+        .cal-rule {
+            border: none;
+            border-top: 1px solid var(--rule);
+            margin: 0;
+        }
+
+        /* ── Month header row ── */
+        .cal-month-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 0 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .cal-month-label {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(1.4rem, 3vw, 2rem);
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            color: var(--ink);
+        }
+
+        .cal-mobile-nav {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .cal-desktop-nav {
+                display: none;
             }
 
-            .glass {
-                background: rgba(255, 255, 255, .88);
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(148, 163, 184, .35);
-                border-radius: 1rem;
-                box-shadow: 0 10px 20px rgba(0, 0, 0, .06);
-                transition: border-color .25s, box-shadow .25s, transform .25s;
-            }
-
-            .glass:hover {
-                border-color: rgba(148, 163, 184, .55);
-                box-shadow: 0 16px 32px rgba(0, 0, 0, .08);
-                transform: translateY(-2px);
-            }
-
-            .chip {
-                display: inline-flex;
-                align-items: center;
-                white-space: nowrap;
-                border-radius: 9999px;
-                font-weight: 700;
-                font-size: .72rem;
-                padding: .15rem .55rem;
-                color: #fff;
-                max-width: 100%;
-                transition: transform .15s ease, box-shadow .2s ease, opacity .15s ease;
-            }
-
-            .chip-men {
-                background: #3b82f6;
-            }
-
-            .chip-women {
-                background: #ec4899;
-            }
-
-            .chip-mix {
-                background: #8b5cf6;
-            }
-
-            .chip-generic {
-                background: #ef4444;
-            }
-
-            /* Only interactive chips show pointer + hover */
-            .chip.clickable {
-                cursor: pointer;
-            }
-
-            .chip.clickable:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 8px 16px rgba(0, 0, 0, .12);
-            }
-
-            .chip:focus {
-                outline: 2px solid rgba(239, 68, 68, .6);
-                outline-offset: 2px;
-            }
-
-            .btn-red {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 9999px;
-                background: #dc2626;
-                color: #fff;
-                font-weight: 700;
-                padding: .5rem 1rem;
-                box-shadow: 0 8px 16px rgba(220, 38, 38, .18);
-                transition: transform .15s, box-shadow .2s, background .2s;
-            }
-
-            .btn-red:hover {
-                background: #b91c1c;
-                box-shadow: 0 10px 18px rgba(185, 28, 28, .22);
-                transform: translateY(-1px);
-            }
-
-            .btn-muted {
-                border: 1px solid #e5e7eb;
-                border-radius: 9999px;
-                background: #fff;
-                color: #374151;
-                padding: .5rem 1rem;
-            }
-
-            .btn-muted:hover {
-                background: #f9fafb;
-            }
-
-            .wk-pill {
-                padding: .35rem .75rem;
-                border-radius: .75rem;
-                font-weight: 800;
-                text-align: center;
-            }
-
-            .wk-work {
-                background: #fee2e2;
-                color: #991b1b;
-            }
-
-            /* red-100/700 */
-            .wk-weekend {
-                background: #fecaca;
-                color: #7f1d1d;
-            }
-
-            /* red-200/800 */
-
-            /* Desktop month grid cells */
-            .cell {
-                border: 1px solid #e5e7eb;
-                border-radius: 1rem;
-                background: #fff;
-                min-height: 6.25rem;
+            .cal-mobile-nav {
                 display: flex;
-                flex-direction: column;
-                padding: .5rem .6rem;
-                transition: box-shadow .2s, border-color .2s;
+            }
+        }
+
+        /* ── Legend ── */
+        .cal-legend {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--rule);
+            margin-bottom: 0;
+        }
+
+        .cal-legend__item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ink-3);
+        }
+
+        .cal-legend__dot {
+            width: 8px;
+            height: 8px;
+            flex-shrink: 0;
+        }
+
+        /* ── Weekday header ── */
+        .cal-wk-row {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border-left: 1px solid var(--rule);
+            border-top: 1px solid var(--rule);
+        }
+
+        .cal-wk-cell {
+            border-right: 1px solid var(--rule);
+            border-bottom: 1px solid var(--rule);
+            padding: 0.5rem 0.4rem;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-3);
+            text-align: center;
+            background: var(--paper-2);
+        }
+
+        .cal-wk-cell--weekend {
+            color: var(--red);
+        }
+
+        /* ── Desktop month grid ── */
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border-left: 1px solid var(--rule);
+        }
+
+        .cal-cell {
+            border-right: 1px solid var(--rule);
+            border-bottom: 1px solid var(--rule);
+            min-height: 100px;
+            padding: 0.4rem 0.4rem 0.5rem;
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            transition: background 0.12s;
+            overflow: hidden;
+        }
+
+        .cal-cell:hover {
+            background: var(--paper);
+        }
+
+        .cal-cell--empty {
+            background: var(--paper);
+        }
+
+        .cal-cell--weekend {
+            background: #FDFCFA;
+        }
+
+        .cal-cell--today {
+            background: var(--red-tint) !important;
+            position: relative;
+        }
+
+        .cal-cell--today::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--red);
+        }
+
+        .cal-cell__day {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--ink-3);
+            line-height: 1;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cal-cell--today .cal-cell__day {
+            color: var(--red);
+        }
+
+        .cal-cell__count {
+            font-size: 0.55rem;
+            font-weight: 700;
+            background: var(--red);
+            color: var(--white);
+            padding: 0.1rem 0.3rem;
+            line-height: 1.4;
+        }
+
+        /* ── Event chips ── */
+        .cal-chip {
+            display: block;
+            font-size: 0.58rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            padding: 0.15rem 0.3rem;
+            margin-bottom: 0.15rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: opacity 0.12s;
+            border: none;
+            text-align: left;
+            width: 100%;
+        }
+
+        .cal-chip:hover {
+            opacity: 0.8;
+        }
+
+        .cal-chip--generic {
+            background: var(--red);
+            color: var(--white);
+        }
+
+        .cal-chip--men {
+            background: var(--men-bg);
+            color: var(--men);
+        }
+
+        .cal-chip--women {
+            background: var(--women-bg);
+            color: var(--women);
+        }
+
+        .cal-chip--mix {
+            background: var(--mix-bg);
+            color: var(--mix);
+        }
+
+        .cal-chip--more {
+            background: none;
+            color: var(--red);
+            font-size: 0.58rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 0.1rem 0;
+            cursor: pointer;
+            border: none;
+            text-align: left;
+            display: block;
+            margin-top: auto;
+        }
+
+        .cal-chip--more:hover {
+            color: var(--red-hover);
+        }
+
+        /* ── Mobile agenda ── */
+        .cal-agenda {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cal-agenda-item {
+            display: flex;
+            gap: 0.9rem;
+            padding: 0.85rem 0;
+            border-bottom: 1px solid var(--rule);
+            align-items: flex-start;
+        }
+
+        .cal-agenda-item:first-child {
+            border-top: 1px solid var(--rule);
+        }
+
+        .cal-agenda-item--today {
+            background: var(--red-tint);
+            margin: 0 -1.25rem;
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+        }
+
+        .cal-agenda__left {
+            flex-shrink: 0;
+            width: 48px;
+            font-family: 'Barlow Condensed', sans-serif;
+            text-align: center;
+        }
+
+        .cal-agenda__dow {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--red);
+        }
+
+        .cal-agenda__num {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--ink);
+            line-height: 1;
+        }
+
+        .cal-agenda__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            flex: 1;
+            padding-top: 0.2rem;
+        }
+
+        .cal-agenda__chip {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 0.2rem 0.55rem;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.12s;
+        }
+
+        .cal-agenda__chip:hover {
+            opacity: 0.8;
+        }
+
+        .cal-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            font-size: 0.85rem;
+            color: var(--ink-3);
+            font-style: italic;
+        }
+
+        /* ── Footer hint ── */
+        .cal-hint {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--rule);
+            font-size: 0.68rem;
+            color: var(--ink-4);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        /* ── Modal ── */
+        .cal-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 15, 14, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .cal-modal-overlay.open {
+            display: flex;
+        }
+
+        .cal-modal {
+            background: var(--white);
+            max-width: 460px;
+            width: 100%;
+            margin: 1rem;
+            padding: 1.75rem;
+            border-top: 4px solid var(--red);
+            position: relative;
+            animation: calModalIn 0.22s ease both;
+        }
+
+        @keyframes calModalIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
             }
 
-            .cell:hover {
-                box-shadow: 0 8px 16px rgba(0, 0, 0, .06);
-                border-color: #fecaca;
+            to {
+                opacity: 1;
+                transform: none;
             }
+        }
 
-            .cell-today {
-                box-shadow: inset 0 0 0 2px rgba(252, 165, 165, .8);
-                background: #fff1f2;
+        .cal-modal__title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 1rem;
+        }
+
+        .cal-modal__close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--ink-3);
+            line-height: 1;
+            transition: color 0.15s;
+        }
+
+        .cal-modal__close:hover {
+            color: var(--ink);
+        }
+
+        .cal-modal__list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 360px;
+            overflow-y: auto;
+        }
+
+        .cal-modal__item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--rule);
+            cursor: pointer;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--ink);
+            transition: background 0.12s;
+        }
+
+        .cal-modal__item:hover {
+            background: var(--paper-2);
+        }
+
+        /* ── Reveal ── */
+        .cal-reveal {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .cal-reveal.in {
+            opacity: 1;
+            transform: none;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+
+            .cal-grid,
+            .cal-wk-row {
+                display: none;
             }
+        }
 
-            .cell-weekend {
-                background: #fff5f5;
+        @media (min-width: 641px) {
+            .cal-agenda {
+                display: none;
             }
+        }
+    </style>
 
-            .cell-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: .5rem;
-            }
+    <div class="cal">
+        <div class="cal-wrap">
 
-            .day-num {
-                font-weight: 800;
-                color: #111827;
-            }
-
-            .badge-count {
-                font-size: .65rem;
-                font-weight: 800;
-                color: #991b1b;
-                background: #fee2e2;
-                border: 1px solid #fecaca;
-                border-radius: 9999px;
-                padding: .05rem .4rem;
-            }
-
-            .chip-row {
-                display: flex;
-                flex-direction: column;
-                gap: .25rem;
-                margin-top: .25rem;
-            }
-
-            .chip-row .chip {
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .chip-more {
-                margin-top: auto;
-                font-size: .72rem;
-                font-weight: 800;
-                color: #b91c1c;
-            }
-
-            .chip-more:hover {
-                color: #7f1d1d;
-                text-decoration: underline;
-            }
-
-            /* --- Dedicated Mobile Agenda (<= md) --- */
-            .m-day {
-                display: flex;
-                gap: .75rem;
-                border: 1px solid #e5e7eb;
-                border-radius: 1rem;
-                background: #fff;
-                padding: .6rem .75rem;
-                align-items: flex-start;
-                transition: box-shadow .2s, border-color .2s;
-            }
-
-            .m-day:hover {
-                border-color: #fecaca;
-                box-shadow: 0 8px 16px rgba(0, 0, 0, .06);
-            }
-
-            .m-left {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                min-width: 3rem;
-                /* fits 320px nicely */
-            }
-
-            .m-dow {
-                font-size: .7rem;
-                font-weight: 800;
-                color: #7f1d1d;
-                line-height: 1;
-            }
-
-            .m-num {
-                font-size: 1.05rem;
-                font-weight: 900;
-                color: #111827;
-                line-height: 1.15;
-            }
-
-            .m-right {
-                display: flex;
-                flex-direction: column;
-                gap: .35rem;
-                width: 100%;
-                min-width: 0;
-            }
-
-            .m-day.today {
-                box-shadow: inset 0 0 0 2px rgba(252, 165, 165, .8);
-                background: #fff1f2;
-            }
-
-            .m-day.weekend {
-                background: #fff5f5;
-            }
-
-            .m-title {
-                font-size: .82rem;
-                font-weight: 800;
-                color: #374151;
-                margin-bottom: .15rem;
-            }
-
-            .m-chips {
-                display: flex;
-                flex-wrap: wrap;
-                gap: .3rem .4rem;
-            }
-
-            .m-empty {
-                text-align: center;
-                font-size: .85rem;
-                color: #6b7280;
-                padding: .75rem 0;
-            }
-        </style>
-
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
-            <!-- Title -->
-            <div class="fade-up mb-6 sm:mb-8 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="h-6 w-1.5 bg-red-600 rounded"></span>
-                    <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Turnīru kalendārs</h1>
-                </div>
-                <div class="hidden md:flex items-center gap-2">
-                    <button id="prevMonth" class="btn-muted" aria-label="Iepriekšējais mēnesis">←</button>
-                    <button id="todayBtn" class="btn-red" aria-label="Šodien">Šodien</button>
-                    <button id="nextMonth" class="btn-muted" aria-label="Nākamais mēnesis">→</button>
+            {{-- Masthead --}}
+            <div class="cal-masthead cal-reveal" data-stagger="0">
+                <div class="cal-masthead__eyebrow">VolleyLV</div>
+                <div class="cal-masthead__row">
+                    <h1 class="cal-masthead__title">Turnīru Kalendārs</h1>
+                    <div class="cal-nav cal-desktop-nav">
+                        <button id="prevMonth" class="cal-nav__btn">← Iepr.</button>
+                        <button id="todayBtn" class="cal-nav__today">Šodien</button>
+                        <button id="nextMonth" class="cal-nav__btn">Nāk. →</button>
+                    </div>
                 </div>
             </div>
 
-            <section class="glass p-5 sm:p-6 fade-up">
-                <!-- Mobile nav -->
-                <div class="md:hidden flex items-center justify-between mb-3">
-                    <button id="prevMonth_m" class="btn-muted" aria-label="Iepriekšējais mēnesis">←</button>
-                    <button id="todayBtn_m" class="btn-red" aria-label="Šodien">Šodien</button>
-                    <button id="nextMonth_m" class="btn-muted" aria-label="Nākamais mēnesis">→</button>
+            <hr class="cal-rule">
+
+            {{-- Month bar --}}
+            <div class="cal-month-bar cal-reveal" data-stagger="1">
+                <div id="monthYear" class="cal-month-label"></div>
+                <div class="cal-mobile-nav">
+                    <button id="prevMonth_m" class="cal-nav__btn">←</button>
+                    <button id="todayBtn_m" class="cal-nav__today">Šodien</button>
+                    <button id="nextMonth_m" class="cal-nav__btn">→</button>
                 </div>
+            </div>
 
-                <!-- Month label -->
-                <div class="flex items-center justify-center mb-3">
-                    <h2 id="monthYear" class="text-2xl sm:text-3xl font-extrabold text-gray-900 text-center"></h2>
+            {{-- Legend --}}
+            <div class="cal-legend cal-reveal" data-stagger="2">
+                <div class="cal-legend__item">
+                    <div class="cal-legend__dot" style="background:var(--red)"></div>
+                    Vispārējs
                 </div>
-
-                <!-- Legend -->
-                <div class="flex flex-wrap items-center justify-center gap-2 text-xs mb-4">
-                    <span class="chip chip-generic">Turnīrs</span>
+                <div class="cal-legend__item">
+                    <div class="cal-legend__dot" style="background:var(--men-bg);border:1px solid var(--men)"></div>
+                    Vīrieši
                 </div>
-
-                <!-- Week header (Mon-first) – desktop only -->
-                <div class="hidden md:grid grid-cols-7 gap-3 text-xs sm:text-sm mb-2">
-                    @php $wd = ['Pr','Ot','Tr','Ce','Pk','Se','Sv']; @endphp
-                    @foreach ($wd as $i => $d)
-                        <div class="wk-pill {{ $i >= 5 ? 'wk-weekend' : 'wk-work' }}">{{ $d }}</div>
-                    @endforeach
+                <div class="cal-legend__item">
+                    <div class="cal-legend__dot" style="background:var(--women-bg);border:1px solid var(--women)"></div>
+                    Sievietes
                 </div>
-
-                <!-- Desktop Month Grid -->
-                <div id="calendarGrid" class="hidden md:grid grid-cols-7 gap-3 text-sm"></div>
-
-                <!-- Mobile Agenda (true mobile UX) -->
-                <div id="mobileAgenda" class="md:hidden space-y-3"></div>
-
-                <!-- Footer actions -->
-                <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500">Padoms: klikšķini “+N” lai redzētu visas dienas sacensības.</div>
-                    <div class="hidden sm:flex items-center gap-2">
-                        <button id="prevMonth_btm" class="btn-muted">← Iepriekšējais</button>
-                        <button id="nextMonth_btm" class="btn-muted">Nākamais →</button>
-                    </div>
+                <div class="cal-legend__item">
+                    <div class="cal-legend__dot" style="background:var(--mix-bg);border:1px solid var(--mix)"></div>
+                    Mix
                 </div>
-            </section>
+            </div>
+
+            {{-- Desktop weekday header --}}
+            <div class="cal-wk-row cal-reveal" data-stagger="3">
+                @foreach (['Pr', 'Ot', 'Tr', 'Ce', 'Pk', 'Se', 'Sv'] as $i => $d)
+                    <div class="cal-wk-cell {{ $i >= 5 ? 'cal-wk-cell--weekend' : '' }}">{{ $d }}</div>
+                @endforeach
+            </div>
+
+            {{-- Desktop grid --}}
+            <div id="calendarGrid" class="cal-grid cal-reveal" data-stagger="3"></div>
+
+            {{-- Mobile agenda --}}
+            <div id="mobileAgenda" class="cal-agenda cal-reveal" data-stagger="3"></div>
+
+            {{-- Hint --}}
+            <div class="cal-hint cal-reveal" data-stagger="4">
+                <span>Klikšķini uz turnīra nosaukuma, lai skatītu sīkāk. Nospied ← → lai mainītu mēnesi.</span>
+                <div class="cal-nav" style="gap:0.4rem;">
+                    <button id="prevMonth_btm" class="cal-nav__btn" style="font-size:0.65rem;padding:0.3rem 0.6rem;">←
+                        Iepr.</button>
+                    <button id="nextMonth_btm" class="cal-nav__btn"
+                        style="font-size:0.65rem;padding:0.3rem 0.6rem;">Nāk. →</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <!-- Modal (desktop "+N") -->
-    <div id="modalOverlay" class="fixed inset-0 bg-black/40 hidden justify-center items-center z-50">
-        <div class="bg-white rounded-2xl p-6 max-w-lg w-full relative shadow-2xl border border-gray-200">
-            <button id="closeModal" class="absolute top-3 right-3 text-gray-600 font-bold text-xl"
-                aria-label="Aizvērt">×</button>
-            <h3 id="modalDate" class="text-2xl font-bold mb-4 text-gray-900"></h3>
-            <ul id="modalTournaments" class="space-y-3 max-h-96 overflow-y-auto"></ul>
+    {{-- Modal --}}
+    <div id="modalOverlay" class="cal-modal-overlay">
+        <div class="cal-modal">
+            <button id="closeModal" class="cal-modal__close" aria-label="Aizvērt">✕</button>
+            <h3 id="modalDate" class="cal-modal__title"></h3>
+            <ul id="modalTournaments" class="cal-modal__list"></ul>
         </div>
     </div>
 
     <script>
-        // ---- Data ----
-        const events = @json($events); // [{title, start, end?, gender_type?, url?}]
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.cal-reveal').forEach(el => {
+                const i = parseInt(el.dataset.stagger || '0', 10);
+                setTimeout(() => el.classList.add('in'), 50 + i * 70);
+            });
+        });
 
-        // ---- DOM refs ----
-        const monthYearEl = document.getElementById('monthYear');
-        const calendarGrid = document.getElementById('calendarGrid');
-        const mobileAgenda = document.getElementById('mobileAgenda');
+        const events = @json($events);
 
-        const prevMonthBtn = document.getElementById('prevMonth');
-        const nextMonthBtn = document.getElementById('nextMonth');
-        const todayBtn = document.getElementById('todayBtn');
-
-        const prevMonth_m = document.getElementById('prevMonth_m');
-        const nextMonth_m = document.getElementById('nextMonth_m');
-        const todayBtn_m = document.getElementById('todayBtn_m');
-
-        const prevMonth_btm = document.getElementById('prevMonth_btm');
-        const nextMonth_btm = document.getElementById('nextMonth_btm');
-
-        const modalOverlay = document.getElementById('modalOverlay');
-        const modalTournaments = document.getElementById('modalTournaments');
-        const modalDate = document.getElementById('modalDate');
-        const closeModal = document.getElementById('closeModal');
-
-        // ---- Date helpers ----
         const monthNames = ["Janvāris", "Februāris", "Marts", "Aprīlis", "Maijs", "Jūnijs", "Jūlijs", "Augusts",
             "Septembris", "Oktobris", "Novembris", "Decembris"
         ];
-        const wdShort = ["Sv", "Pr", "Ot", "Tr", "Ce", "Pk", "Se"]; // JS dow indexing
+        const wdShort = ["Sv", "Pr", "Ot", "Tr", "Ce", "Pk", "Se"];
+
         let currentDate = new Date();
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
         function parseDate(d) {
             if (!d) return null;
-            const asIs = new Date(d);
-            if (!isNaN(asIs)) return new Date(asIs.getFullYear(), asIs.getMonth(), asIs.getDate());
             const p = String(d).split('-').map(Number);
             if (p.length === 3) return new Date(p[0], p[1] - 1, p[2]);
-            return null;
+            const asIs = new Date(d);
+            return isNaN(asIs) ? null : new Date(asIs.getFullYear(), asIs.getMonth(), asIs.getDate());
         }
-        const monIndex = (jsDow) => (jsDow + 6) % 7; // 0..6, Mon-first index
-        const isWeekend = (date) => [6, 0].includes(date.getDay());
+        const monIndex = dow => (dow + 6) % 7;
+        const isWeekend = d => [6, 0].includes(d.getDay());
 
-        // ---- Efficient per-month mapping ----
+        function chipCls(g) {
+            const v = (g || '').toLowerCase();
+            if (v === 'men') return 'cal-chip--men';
+            if (v === 'women') return 'cal-chip--women';
+            if (v === 'mix') return 'cal-chip--mix';
+            return 'cal-chip--generic';
+        }
+
+        function agendaChipCls(g) {
+            const v = (g || '').toLowerCase();
+            if (v === 'men') return 'cal-chip--men';
+            if (v === 'women') return 'cal-chip--women';
+            if (v === 'mix') return 'cal-chip--mix';
+            return 'cal-chip--generic';
+        }
+
+        function genderLabel(g) {
+            const v = (g || '').toLowerCase();
+            if (v === 'men') return 'Vīrieši';
+            if (v === 'women') return 'Sievietes';
+            if (v === 'mix') return 'Mix';
+            return 'Turnīrs';
+        }
+
         function buildMonthMap(year, month) {
             const first = new Date(year, month, 1);
             const last = new Date(year, month + 1, 0);
             const map = Object.create(null);
-
-            const clampToMonth = (d) => {
-                if (d < first) return first;
-                if (d > last) return last;
-                return d;
-            };
-
             for (const ev of events) {
                 const sRaw = parseDate(ev.start);
                 if (!sRaw) continue;
                 const eRaw = parseDate(ev.end || ev.start) || sRaw;
-
                 if (eRaw < first || sRaw > last) continue;
-
-                const s = clampToMonth(new Date(sRaw));
-                const e = clampToMonth(new Date(eRaw));
-
+                const s = sRaw < first ? first : sRaw;
+                const e = eRaw > last ? last : eRaw;
                 for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
                     const key = d.toISOString().slice(0, 10);
                     (map[key] ||= []).push(ev);
@@ -417,268 +713,153 @@
             return map;
         }
 
-        // ---- Desktop Month Grid ----
         function renderCalendar(date) {
-            if (!calendarGrid) return;
-            calendarGrid.innerHTML = '';
+            const grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
 
-            const y = date.getFullYear();
-            const m = date.getMonth();
-            monthYearEl.textContent = `${monthNames[m]} ${y}`;
+            const y = date.getFullYear(),
+                m = date.getMonth();
+            document.getElementById('monthYear').textContent = `${monthNames[m]} ${y}`;
 
-            const firstDow = new Date(y, m, 1).getDay(); // 0..6 (Sun..Sat)
-            const lead = monIndex(firstDow);
+            const lead = monIndex(new Date(y, m, 1).getDay());
             const lastDate = new Date(y, m + 1, 0).getDate();
+            const map = buildMonthMap(y, m);
 
-            const monthMap = buildMonthMap(y, m);
-
-            // Leading blanks
             for (let i = 0; i < lead; i++) {
-                const spacer = document.createElement('div');
-                spacer.className = 'p-2';
-                calendarGrid.appendChild(spacer);
+                const s = document.createElement('div');
+                s.className = 'cal-cell cal-cell--empty';
+                grid.appendChild(s);
             }
 
             for (let d = 1; d <= lastDate; d++) {
-                const cellDate = new Date(y, m, d);
-                const key = cellDate.toISOString().slice(0, 10);
-                const dayEvents = monthMap[key] || [];
-                const weekend = isWeekend(cellDate);
+                const dObj = new Date(y, m, d);
+                const key = dObj.toISOString().slice(0, 10);
+                const evs = map[key] || [];
+                const wknd = isWeekend(dObj);
+                const isToday = dObj.getTime() === today.getTime();
 
                 const cell = document.createElement('div');
-                cell.className = `cell ${weekend ? 'cell-weekend' : ''}`;
+                cell.className = `cal-cell${wknd ? ' cal-cell--weekend' : ''}${isToday ? ' cal-cell--today' : ''}`;
 
-                // Header
-                const header = document.createElement('div');
-                header.className = 'cell-header';
-
-                const dn = document.createElement('div');
-                dn.className = 'day-num';
-                dn.textContent = d;
-                header.appendChild(dn);
-
-                if (dayEvents.length > 3) {
+                // Day number
+                const dayRow = document.createElement('div');
+                dayRow.className = 'cal-cell__day';
+                dayRow.appendChild(Object.assign(document.createElement('span'), {
+                    textContent: d
+                }));
+                if (evs.length > 2) {
                     const ct = document.createElement('span');
-                    ct.className = 'badge-count';
-                    ct.textContent = dayEvents.length;
-                    header.appendChild(ct);
+                    ct.className = 'cal-cell__count';
+                    ct.textContent = evs.length;
+                    dayRow.appendChild(ct);
                 }
-                cell.appendChild(header);
+                cell.appendChild(dayRow);
 
-                // Chips (max 2), then "+N"
+                // Chips
                 const maxInline = 2;
-                if (dayEvents.length) {
-                    const wrap = document.createElement('div');
-                    wrap.className = 'chip-row';
+                evs.slice(0, maxInline).forEach(ev => {
+                    const btn = document.createElement('button');
+                    btn.className = `cal-chip ${chipCls(ev.gender_type)}`;
+                    btn.textContent = ev.title;
+                    btn.title = ev.title;
+                    btn.setAttribute('aria-label', ev.title);
+                    btn.onclick = () => ev.url && (window.location.href = ev.url);
+                    cell.appendChild(btn);
+                });
 
-                    dayEvents.slice(0, maxInline).forEach(ev => {
-                        const chip = document.createElement('span');
-                        chip.className = 'chip ' + chipClass(ev.gender_type);
-                        chip.classList.add('clickable');
-                        chip.setAttribute('tabindex', '0');
-                        chip.setAttribute('role', 'button');
-                        chip.setAttribute('aria-label', ev.title);
-
-                        chip.textContent = ev.title;
-                        chip.title = ev.title;
-
-                        chip.onclick = () => ev.url && (window.location.href = ev.url);
-                        chip.addEventListener('keydown', (e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                if (ev.url) window.location.href = ev.url;
-                            }
-                        });
-
-                        wrap.appendChild(chip);
-                    });
-
-                    if (dayEvents.length > maxInline) {
-                        const more = document.createElement('button');
-                        more.type = 'button';
-                        more.className = 'chip-more';
-                        const extra = dayEvents.length - maxInline;
-                        more.textContent = `+${extra} turnīr${extra === 1 ? 's' : 'i'}`;
-                        more.onclick = () => openModalFor(cellDate, dayEvents);
-                        wrap.appendChild(more);
-                    }
-                    cell.appendChild(wrap);
+                if (evs.length > maxInline) {
+                    const more = document.createElement('button');
+                    more.className = 'cal-chip cal-chip--more';
+                    more.textContent = `+${evs.length - maxInline} vairāk`;
+                    more.onclick = () => openModal(dObj, evs);
+                    cell.appendChild(more);
                 }
 
-                if (cellDate.getTime() === today.getTime()) {
-                    cell.classList.add('cell-today');
-                }
-
-                calendarGrid.appendChild(cell);
+                grid.appendChild(cell);
             }
         }
 
-        // ---- Mobile Agenda (true mobile UX) ----
-        function renderMobileAgenda(date) {
-            if (!mobileAgenda) return;
-            mobileAgenda.innerHTML = '';
+        function renderAgenda(date) {
+            const agenda = document.getElementById('mobileAgenda');
+            if (!agenda) return;
+            agenda.innerHTML = '';
 
-            const y = date.getFullYear();
-            const m = date.getMonth();
-            // keep label in sync
-            monthYearEl.textContent = `${monthNames[m]} ${y}`;
+            const y = date.getFullYear(),
+                m = date.getMonth();
+            document.getElementById('monthYear').textContent = `${monthNames[m]} ${y}`;
 
             const lastDate = new Date(y, m + 1, 0).getDate();
-            const monthMap = buildMonthMap(y, m);
-
+            const map = buildMonthMap(y, m);
             let hasAny = false;
+
             for (let d = 1; d <= lastDate; d++) {
-                const dayDate = new Date(y, m, d);
-                const key = dayDate.toISOString().slice(0, 10);
-                const dayEvents = monthMap[key] || [];
-                if (!dayEvents.length) continue; // Agenda shows event days only
+                const dObj = new Date(y, m, d);
+                const key = dObj.toISOString().slice(0, 10);
+                const evs = map[key] || [];
+                if (!evs.length) continue;
                 hasAny = true;
 
-                const isToday = dayDate.getTime() === today.getTime();
-                const weekend = isWeekend(dayDate);
+                const isToday = dObj.getTime() === today.getTime();
+                const row = document.createElement('div');
+                row.className = `cal-agenda-item${isToday ? ' cal-agenda-item--today' : ''}`;
 
-                const wrap = document.createElement('div');
-                wrap.className = `m-day ${isToday ? 'today' : ''} ${weekend ? 'weekend' : ''}`;
-                wrap.setAttribute('aria-label', `Diena ${d}. ${monthNames[m]} ${y}`);
-
-                // Left (weekday + date)
                 const left = document.createElement('div');
-                left.className = 'm-left';
-                const dow = document.createElement('div');
-                dow.className = 'm-dow';
-                dow.textContent = wdShort[dayDate.getDay()];
-                const num = document.createElement('div');
-                num.className = 'm-num';
-                num.textContent = String(d).padStart(2, '0');
-                left.appendChild(dow);
-                left.appendChild(num);
-
-                // Right (title + chips)
-                const right = document.createElement('div');
-                right.className = 'm-right';
-
-                const title = document.createElement('div');
-                title.className = 'm-title';
-                title.textContent = `${monthNames[m]} ${String(d).padStart(2,'0')}, ${y}`;
-                right.appendChild(title);
+                left.className = 'cal-agenda__left';
+                left.innerHTML =
+                    `<div class="cal-agenda__dow">${wdShort[dObj.getDay()]}</div><div class="cal-agenda__num">${String(d).padStart(2,'0')}</div>`;
 
                 const chips = document.createElement('div');
-                chips.className = 'm-chips';
-
-                dayEvents.forEach(ev => {
-                    const chip = document.createElement('span');
-                    chip.className = 'chip ' + chipClass(ev.gender_type);
-                    chip.classList.add('clickable');
-                    chip.setAttribute('tabindex', '0');
-                    chip.setAttribute('role', 'button');
-                    chip.setAttribute('aria-label', ev.title);
-
-                    chip.textContent = ev.title;
-                    chip.title = ev.title;
-
-                    chip.onclick = () => ev.url && (window.location.href = ev.url);
-                    chip.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            if (ev.url) window.location.href = ev.url;
-                        }
-                    });
-
-                    chips.appendChild(chip);
+                chips.className = 'cal-agenda__chips';
+                evs.forEach(ev => {
+                    const btn = document.createElement('button');
+                    btn.className = `cal-agenda__chip ${chipCls(ev.gender_type)}`;
+                    btn.textContent = ev.title;
+                    btn.title = ev.title;
+                    btn.onclick = () => ev.url && (window.location.href = ev.url);
+                    chips.appendChild(btn);
                 });
 
-                right.appendChild(chips);
-                wrap.appendChild(left);
-                wrap.appendChild(right);
-
-                mobileAgenda.appendChild(wrap);
+                row.append(left, chips);
+                agenda.appendChild(row);
             }
 
             if (!hasAny) {
-                const empty = document.createElement('div');
-                empty.className = 'm-empty';
-                empty.textContent = 'Šajā mēnesī nav turnīru.';
-                mobileAgenda.appendChild(empty);
+                agenda.innerHTML = '<div class="cal-empty">Šajā mēnesī nav turnīru.</div>';
             }
         }
 
-        function chipClass(gender) {
-            const g = (gender || '').toLowerCase();
-            if (g === 'men') return 'chip-men';
-            if (g === 'women') return 'chip-women';
-            if (g === 'mix') return 'chip-mix';
-            return 'chip-generic';
-        }
-
-        function openModalFor(dateObj, items) {
-            modalTournaments.innerHTML = '';
-            modalDate.textContent =
+        function openModal(dateObj, items) {
+            document.getElementById('modalDate').textContent =
                 `${monthNames[dateObj.getMonth()]} ${String(dateObj.getDate()).padStart(2,'0')}, ${dateObj.getFullYear()}`;
-
+            const list = document.getElementById('modalTournaments');
+            list.innerHTML = '';
             items.forEach(ev => {
                 const li = document.createElement('li');
-                li.className =
-                    'p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 flex items-center justify-between gap-3 border border-gray-200';
-                li.setAttribute('tabindex', '0');
-                li.setAttribute('role', 'button');
-                li.addEventListener('keydown', (e) => {
-                    if ((e.key === 'Enter' || e.key === ' ') && ev.url) {
-                        e.preventDefault();
-                        window.location.href = ev.url;
-                    }
-                });
-
-                const title = document.createElement('span');
-                title.className = 'font-medium text-gray-800 truncate';
-                title.textContent = ev.title;
-
-                const badge = document.createElement('span');
-                badge.className = 'chip ' + chipClass(ev.gender_type);
-                badge.textContent = labelFromGender(ev.gender_type);
-
-                li.appendChild(title);
-                li.appendChild(badge);
-                li.addEventListener('click', () => ev.url && (window.location.href = ev.url));
-
-                modalTournaments.appendChild(li);
+                li.className = 'cal-modal__item';
+                li.innerHTML =
+                    `<span>${ev.title}</span><span class="cal-agenda__chip ${chipCls(ev.gender_type)}" style="font-size:0.6rem;padding:0.15rem 0.45rem;">${genderLabel(ev.gender_type)}</span>`;
+                li.onclick = () => ev.url && (window.location.href = ev.url);
+                list.appendChild(li);
             });
-
-            modalOverlay.classList.remove('hidden');
-            modalOverlay.classList.add('flex');
+            document.getElementById('modalOverlay').classList.add('open');
         }
 
-        function labelFromGender(g) {
-            const v = (g || '').toLowerCase();
-            if (v === 'men') return 'Vīrieši';
-            if (v === 'women') return 'Sievietes';
-            if (v === 'mix') return 'Mix';
-            return 'Turnīrs';
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('open');
         }
 
-        function closeTheModal() {
-            modalOverlay.classList.add('hidden');
-            modalOverlay.classList.remove('flex');
-        }
-
-        // ---- Render helpers ----
         function renderAll() {
-            // render both; CSS controls which one is visible for current viewport
             renderCalendar(currentDate);
-            renderMobileAgenda(currentDate);
+            renderAgenda(currentDate);
         }
 
-        // ---- Init & events ----
-        document.addEventListener('DOMContentLoaded', () => {
-            document.documentElement.classList.add('loaded');
-            renderAll();
-        });
-
-        function prevMonth() {
+        function prevM() {
             currentDate.setMonth(currentDate.getMonth() - 1);
             renderAll();
         }
 
-        function nextMonth() {
+        function nextM() {
             currentDate.setMonth(currentDate.getMonth() + 1);
             renderAll();
         }
@@ -688,36 +869,33 @@
             renderAll();
         }
 
-        // Controls
-        prevMonthBtn?.addEventListener('click', prevMonth);
-        nextMonthBtn?.addEventListener('click', nextMonth);
-        todayBtn?.addEventListener('click', goToday);
-
-        prevMonth_m?.addEventListener('click', prevMonth);
-        nextMonth_m?.addEventListener('click', nextMonth);
-        todayBtn_m?.addEventListener('click', goToday);
-
-        prevMonth_btm?.addEventListener('click', prevMonth);
-        nextMonth_btm?.addEventListener('click', nextMonth);
-
-        // Modal + keyboard
-        closeModal.addEventListener('click', closeTheModal);
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) closeTheModal();
+        document.getElementById('prevMonth')?.addEventListener('click', prevM);
+        document.getElementById('nextMonth')?.addEventListener('click', nextM);
+        document.getElementById('todayBtn')?.addEventListener('click', goToday);
+        document.getElementById('prevMonth_m')?.addEventListener('click', prevM);
+        document.getElementById('nextMonth_m')?.addEventListener('click', nextM);
+        document.getElementById('todayBtn_m')?.addEventListener('click', goToday);
+        document.getElementById('prevMonth_btm')?.addEventListener('click', prevM);
+        document.getElementById('nextMonth_btm')?.addEventListener('click', nextM);
+        document.getElementById('closeModal')?.addEventListener('click', closeModal);
+        document.getElementById('modalOverlay')?.addEventListener('click', e => {
+            if (e.target === document.getElementById('modalOverlay')) closeModal();
         });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeTheModal();
-            if (e.key === 'ArrowLeft') prevMonth();
-            if (e.key === 'ArrowRight') nextMonth();
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+            if (e.key === 'ArrowLeft') prevM();
+            if (e.key === 'ArrowRight') nextM();
         }, {
             passive: true
         });
 
-        // Keep in sync on resize (e.g., rotate phone)
-        let resizeTO;
+        let rTO;
         window.addEventListener('resize', () => {
-            clearTimeout(resizeTO);
-            resizeTO = setTimeout(renderAll, 120);
+            clearTimeout(rTO);
+            rTO = setTimeout(renderAll, 120);
         });
+
+        renderAll();
     </script>
 </x-app-layout>
