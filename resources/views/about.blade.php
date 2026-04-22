@@ -1,287 +1,791 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="sr-only">Par VolleyLV</h2>
-    </x-slot>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,900;1,700;1,900&family=Barlow:wght@300;400;500&family=DM+Sans:wght@400;500&display=swap');
 
-    <div class="relative">
-        {{-- ============= Local Styles ============= --}}
-        <style>
-            .glass {
-                background: rgba(255, 255, 255, .88);
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(148, 163, 184, .35);
-                border-radius: 1rem;
-                box-shadow: 0 10px 20px rgba(0, 0, 0, .06);
-                transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+        .ab * {
+            box-sizing: border-box;
+        }
+
+        .ab {
+            --ink: #0A0A0A;
+            --ink-2: #2E2E2C;
+            --ink-3: #6B6864;
+            --ink-4: #B0ADA8;
+            --paper: #F7F5F0;
+            --paper-2: #EDEAE3;
+            --rule: #D5D1C9;
+            --red: #C5231B;
+            --red-dark: #9E1C15;
+            --red-tint: #FAF0EF;
+            --white: #FFFFFF;
+
+            font-family: 'DM Sans', sans-serif;
+            background: var(--paper);
+            min-height: 100vh;
+            color: var(--ink);
+            padding-bottom: 6rem;
+        }
+
+        .ab-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* ── Hero masthead ── */
+        .ab-header {
+            background: var(--ink);
+            padding: clamp(4rem, 10vh, 7rem) 0 0;
+            position: relative;
+            overflow: hidden;
+            margin-top: 30px;
+        }
+
+        .ab-header__bg-word {
+            position: absolute;
+            right: -0.02em;
+            bottom: -0.15em;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-style: italic;
+            font-size: clamp(6rem, 18vw, 14rem);
+            color: rgba(255, 255, 255, 0.03);
+            line-height: 1;
+            pointer-events: none;
+            letter-spacing: -0.03em;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.04);
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .ab-header__inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.5rem 3rem;
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: end;
+        }
+
+        @media (max-width: 720px) {
+            .ab-header__inner {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        .ab-header__eyebrow {
+            font-size: 0.62rem;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .ab-header__eyebrow::before {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--red);
+        }
+
+        .ab-header__title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+            color: var(--white);
+            line-height: 0.9;
+            margin: 0;
+        }
+
+        .ab-header__right {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding-bottom: 0.25rem;
+        }
+
+        .ab-header__tagline {
+            font-family: 'Barlow', sans-serif;
+            font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+            font-weight: 300;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.5);
+            border-left: 2px solid var(--red);
+            padding-left: 1rem;
+        }
+
+        .ab-header__stats {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .ab-header__stat {}
+
+        .ab-header__stat strong {
+            display: block;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.85);
+            letter-spacing: 0;
+            line-height: 1;
+        }
+
+        .ab-header__stat span {
+            font-size: 0.62rem;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .ab-bar {
+            height: 3px;
+            background: var(--red);
+        }
+
+        /* ── Hero image ── */
+        .ab-hero-img {
+            width: 100%;
+            height: clamp(180px, 26vw, 360px);
+            object-fit: cover;
+            display: block;
+            filter: brightness(0.85) contrast(1.05);
+        }
+
+        /* ── Story ── */
+        .ab-story-section {
+            padding: 3.5rem 0 3rem;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .ab-story-grid {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        @media (max-width: 680px) {
+            .ab-story-grid {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+        }
+
+        .ab-story-aside-label {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 3.2rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            line-height: 0.9;
+            color: var(--paper-2);
+            letter-spacing: -0.02em;
+            -webkit-text-stroke: 1px var(--rule);
+            user-select: none;
+        }
+
+        .ab-story-aside-label em {
+            display: block;
+            font-style: normal;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--red);
+            -webkit-text-stroke: 0;
+            margin-bottom: 0.4rem;
+        }
+
+        .ab-story-body {
+            font-family: 'Barlow', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 300;
+            line-height: 1.85;
+            color: var(--ink-2);
+        }
+
+        .ab-story-body p+p {
+            margin-top: 1.1rem;
+        }
+
+        .ab-story-body p:first-child::first-letter {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 3.4rem;
+            font-weight: 900;
+            font-style: italic;
+            float: left;
+            line-height: 0.78;
+            margin-right: 0.05em;
+            margin-top: 0.1em;
+            color: var(--ink);
+        }
+
+        /* ── Features ── */
+        .ab-features-section {
+            padding: 3rem 0;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .ab-section-header {
+            margin-bottom: 1.75rem;
+        }
+
+        .ab-eyebrow {
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--red);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .ab-eyebrow::before {
+            content: '';
+            display: block;
+            width: 14px;
+            height: 2px;
+            background: var(--red);
+        }
+
+        .ab-section-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--ink);
+            letter-spacing: -0.01em;
+        }
+
+        .ab-features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            border: 1px solid var(--rule);
+        }
+
+        @media (max-width: 860px) {
+            .ab-features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .ab-features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .ab-feature {
+            padding: 1.5rem 1.25rem;
+            border-right: 1px solid var(--rule);
+            background: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ab-feature:last-child {
+            border-right: none;
+        }
+
+        @media (max-width: 860px) {
+            .ab-feature:nth-child(2n) {
+                border-right: none;
             }
 
-            .glass:hover {
-                border-color: rgba(148, 163, 184, .55);
-                box-shadow: 0 16px 32px rgba(0, 0, 0, .08);
-                transform: translateY(-2px);
+            .ab-feature:nth-child(-n+2) {
+                border-bottom: 1px solid var(--rule);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .ab-feature {
+                border-right: none;
+                border-bottom: 1px solid var(--rule);
             }
 
-            .chip {
-                display: inline-flex;
-                align-items: center;
-                gap: .5rem;
-                padding: .5rem .9rem;
-                font-weight: 700;
-                font-size: .85rem;
-                border-radius: 9999px;
-                border: 1px solid #fecaca;
-                color: #b91c1c;
-                background: #fff;
-                transition: background .2s ease, color .2s ease, border-color .2s ease;
+            .ab-feature:last-child {
+                border-bottom: none;
+            }
+        }
+
+        .ab-feature__accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--red);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.25s ease;
+        }
+
+        .ab-feature:hover .ab-feature__accent {
+            transform: scaleX(1);
+        }
+
+        .ab-feature__num {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--paper-2);
+            line-height: 1;
+            margin-bottom: 0.65rem;
+            -webkit-text-stroke: 1px var(--rule);
+            user-select: none;
+        }
+
+        .ab-feature__title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--ink);
+            margin-bottom: 0.45rem;
+        }
+
+        .ab-feature__desc {
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 300;
+            line-height: 1.65;
+            color: var(--ink-3);
+        }
+
+        /* ── Values ── */
+        .ab-values-section {
+            padding: 3rem 0;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        .ab-values-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+        }
+
+        @media (max-width: 720px) {
+            .ab-values-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        .ab-value__line {
+            width: 24px;
+            height: 2px;
+            background: var(--red);
+            margin-bottom: 0.7rem;
+        }
+
+        .ab-value__title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--ink);
+            margin-bottom: 0.45rem;
+        }
+
+        .ab-value__text {
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 300;
+            line-height: 1.7;
+            color: var(--ink-3);
+        }
+
+        /* ── CTA ── */
+        .ab-cta-section {
+            padding: 3rem 0;
+        }
+
+        .ab-cta-inner {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 2rem;
+            align-items: center;
+            border: 1px solid var(--rule);
+            border-top: 3px solid var(--red);
+            background: var(--white);
+            padding: 2rem 2rem;
+        }
+
+        @media (max-width: 600px) {
+            .ab-cta-inner {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .ab-cta__title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(1.3rem, 2.8vw, 1.9rem);
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--ink);
+            margin-bottom: 0.3rem;
+        }
+
+        .ab-cta__sub {
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 300;
+            color: var(--ink-3);
+            line-height: 1.6;
+        }
+
+        .ab-cta__btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .ab-btn {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 0.6rem 1.4rem;
+            border: 1px solid;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 0;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .ab-btn--solid {
+            background: var(--ink);
+            color: var(--white);
+            border-color: var(--ink);
+        }
+
+        .ab-btn--solid:hover {
+            background: var(--ink-2);
+            border-color: var(--ink-2);
+        }
+
+        .ab-btn--outline {
+            background: none;
+            color: var(--red);
+            border-color: rgba(197, 35, 27, 0.4);
+        }
+
+        .ab-btn--outline:hover {
+            background: var(--red-tint);
+            border-color: var(--red);
+        }
+
+        /* ── Contacts ── */
+        .ab-contacts-section {
+            padding: 2.5rem 0 0;
+            border-top: 1px solid var(--rule);
+        }
+
+        .ab-contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            border: 1px solid var(--rule);
+            background: var(--white);
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .ab-contacts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .ab-contact-cell {
+            padding: 1.25rem 1.25rem;
+            border-right: 1px solid var(--rule);
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .ab-contact-cell:last-child {
+            border-right: none;
+        }
+
+        @media (max-width: 640px) {
+            .ab-contact-cell {
+                border-right: none;
+                border-bottom: 1px solid var(--rule);
             }
 
-            .chip:hover {
-                background: #fff1f2;
-                border-color: #fca5a5;
+            .ab-contact-cell:last-child {
+                border-bottom: none;
             }
+        }
 
-            .watermark {
-                letter-spacing: -.02em;
-                line-height: .9;
-                user-select: none;
-            }
+        .ab-contact-cell__label {
+            font-size: 0.58rem;
+            font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--ink-4);
+            margin-bottom: 0.1rem;
+        }
 
-            .blob {
-                filter: blur(20px);
-                opacity: .22;
-            }
+        .ab-contact-cell__value {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--ink);
+            text-decoration: none;
+            transition: color 0.12s;
+        }
 
-            @media (prefers-reduced-motion:no-preference) {
-                .fade-up {
-                    opacity: 0;
-                    transform: translateY(14px);
-                    transition: opacity .6s ease, transform .6s ease
-                }
+        a.ab-contact-cell__value:hover {
+            color: var(--red);
+        }
 
-                .loaded .fade-up {
-                    opacity: 1;
-                    transform: none
-                }
+        .ab-contact-cell__sub {
+            font-size: 0.7rem;
+            color: var(--ink-4);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 0.1rem;
+        }
 
-                .reveal {
-                    opacity: 0;
-                    transform: translateY(14px);
-                }
+        .ab-online-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #4ADE80;
+            flex-shrink: 0;
+        }
 
-                .reveal.in-view {
-                    opacity: 1;
-                    transform: none;
-                    transition: opacity .7s ease, transform .7s ease;
-                }
+        /* ── Reveal ── */
+        .ab-reveal {
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
 
-                .stagger>* {
-                    opacity: 0;
-                    transform: translateY(12px);
-                }
+        .ab-reveal.in {
+            opacity: 1;
+            transform: none;
+        }
+    </style>
 
-                .loaded .stagger>* {
-                    animation: staggerIn .55s ease forwards;
-                }
+    <div class="ab">
 
-                .loaded .stagger>*:nth-child(2) {
-                    animation-delay: .06s
-                }
-
-                .loaded .stagger>*:nth-child(3) {
-                    animation-delay: .12s
-                }
-
-                .loaded .stagger>*:nth-child(4) {
-                    animation-delay: .18s
-                }
-
-                @keyframes staggerIn {
-                    to {
-                        opacity: 1;
-                        transform: none
-                    }
-                }
-            }
-        </style>
-
-        {{-- ============= HERO (kept, image replaced) ============= --}}
-        <section class="relative h-[18rem] sm:h-[24rem] mt-16 overflow-hidden">
-            <img src="https://i.tiesraides.lv/1200x0s/pictures/2025-06-06/852c_volejbols_latvija.jpg"
-                alt="Latvijas volejbols" class="absolute inset-0 w-full h-full object-cover brightness-[.75]">
-            <div class="absolute inset-0 bg-gradient-to-r from-black/60 via-black/45 to-black/10"></div>
-
-            {{-- subtle blobs (kept) --}}
-            <div class="pointer-events-none absolute inset-0">
-                <div class="blob absolute -top-10 left-[10%] w-40 h-40 rounded-full bg-red-400/60"></div>
-                <div class="blob absolute top-14 right-[6%] w-56 h-56 rounded-full bg-rose-500/60"></div>
-                <div class="blob absolute -bottom-16 left-[38%] w-52 h-52 rounded-full bg-red-600/60"></div>
-            </div>
-
-            <div class="relative h-full flex flex-col items-center justify-center text-center px-6">
-                <p class="text-red-200/95 text-[11px] font-bold uppercase tracking-[0.22em] fade-up">Par mums</p>
-                <h1 class="mt-2 text-3xl sm:text-5xl font-extrabold text-white leading-tight fade-up">
-                    VolleyLV
-                </h1>
-                <p class="mt-3 max-w-2xl text-sm sm:text-lg text-white/90 fade-up">
-                    Turnīri, kalendārs un rezultāti vienuviet, lai spēlētāji, komandas un organizatori satiekas ātrāk.
-                </p>
-
-
-            </div>
-
-            <div class="absolute inset-x-0 bottom-[-.22em] px-6 pointer-events-none">
-
-            </div>
-        </section>
-
-        {{-- ============= BODY ============= --}}
-        <div class="relative bg-gradient-to-b from-white via-red-50/30 to-white pb-16">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                {{-- Story (text only) --}}
-                <section id="story" class="mt-10 reveal">
-                    <div class="glass p-6 sm:p-8">
-                        <div class="flex items-center gap-3 mb-2">
-                            <span class="h-5 w-1.5 bg-red-600 rounded"></span>
-                            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900">Mūsu stāsts</h2>
+        <div class="ab-header ab-reveal" data-stagger="0">
+            <div class="ab-header__bg-word">Par mums</div>
+            <div class="ab-header__inner">
+                <div>
+                    <div class="ab-header__eyebrow">VolleyLV · Par mums</div>
+                    <h1 class="ab-header__title">Par<br>VolleyLV</h1>
+                </div>
+                <div class="ab-header__right">
+                    <p class="ab-header__tagline">
+                        Turnīri, kalendārs un rezultāti vienuviet — lai spēlētāji, komandas un organizatori satiekas
+                        ātrāk.
+                    </p>
+                    <div class="ab-header__stats">
+                        <div class="ab-header__stat">
+                            <strong>2024</strong>
+                            <span>Dibināts</span>
                         </div>
-                        <p class="text-gray-700 leading-relaxed">
-                            VolleyLV radās ar vienkāršu mērķi, apvienot Latvijas volejbola entuziastus vienā vietā.
+                        <div class="ab-header__stat">
+                            <strong>Latvija</strong>
+                            <span>Valsts</span>
+                        </div>
+                        <div class="ab-header__stat">
+                            <strong>Volejbols</strong>
+                            <span>Sports</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="ab-bar"></div>
+
+        <img class="ab-hero-img ab-reveal" data-stagger="1"
+            src="https://i.tiesraides.lv/1200x0s/pictures/2025-06-06/852c_volejbols_latvija.jpg"
+            alt="Latvijas volejbols">
+
+        <div class="ab-wrap">
+
+            <section class="ab-story-section ab-reveal" data-stagger="2">
+                <div class="ab-story-grid">
+                    <div>
+                        <div class="ab-story-aside-label">
+                            <em>Mūsu stāsts</em>
+                            Kā<br>tas<br>sākās
+                        </div>
+                    </div>
+                    <div class="ab-story-body">
+                        <p>
+                            VolleyLV radās ar vienkāršu mērķi — apvienot Latvijas volejbola entuziastus vienā vietā.
                             Mēs noņēmām lieko troksni: meklē turnīrus, piesakies komandai, seko līdzi progresam bez
                             jucekļa.
                         </p>
-                        <p class="mt-3 text-gray-700 leading-relaxed">
+                        <p>
                             Mūsu komanda tic, ka spēcīga kopiena sākas ar atklātību un vienkāršību. Tāpēc mēs
-                            būvējam rīkus, kas ļauj koncentrēties uz spēli nevis birokrātiju.
+                            būvējam rīkus, kas ļauj koncentrēties uz spēli, nevis birokrātiju. Katrs turnīrs, katrs
+                            pieteikums, katrs rezultāts — viss pieejams vienā, pārskatāmā vietā.
                         </p>
                     </div>
-                </section>
+                </div>
+            </section>
 
-
-
-                {{-- Features (4 cards; removed “Statistika & rezultāti” and “Godīga spēle”) --}}
-                <section id="features" class="mt-8 reveal">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <span class="h-5 w-1.5 bg-red-600 rounded"></span>
-                            <h3 class="text-xl sm:text-2xl font-extrabold text-gray-900">Ko piedāvājam</h3>
-                        </div>
-                        <div class="hidden sm:flex gap-2">
-                            <a href="{{ route('tournaments.calendar') }}" class="chip">Kalendārs</a>
-                            <a href="{{ route('news.index') }}" class="chip">Ziņas</a>
+            <section class="ab-features-section ab-reveal" data-stagger="3">
+                <div class="ab-section-header">
+                    <div class="ab-eyebrow">Ko piedāvājam</div>
+                    <div class="ab-section-title">Platformas iespējas</div>
+                </div>
+                <div class="ab-features-grid">
+                    <div class="ab-feature">
+                        <div class="ab-feature__accent"></div>
+                        <div class="ab-feature__num">01</div>
+                        <div class="ab-feature__title">Gudrs kalendārs</div>
+                        <div class="ab-feature__desc">Tuvākie turnīri, vairāku dienu pasākumi un klikšķināmi ieraksti
+                            vienā vietā.</div>
+                    </div>
+                    <div class="ab-feature">
+                        <div class="ab-feature__accent"></div>
+                        <div class="ab-feature__num">02</div>
+                        <div class="ab-feature__title">Turnīru pārvaldība</div>
+                        <div class="ab-feature__desc">Pieteikumi, komandas un norises statuss — pārskatāmi un droši.
                         </div>
                     </div>
-
-                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 stagger">
-                        <div class="glass p-5">
-                            <div class="flex items-center gap-3">
-                                <div class="rounded-xl bg-red-50 text-red-700 p-2">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                        <path
-                                            d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v3H2V6a2 2 0 0 1 2-2h1V3a1 1 0 1 1 2 0v1zM2 10h20v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10z" />
-                                    </svg>
-                                </div>
-                                <h4 class="font-extrabold text-gray-900">Gudrs kalendārs</h4>
-                            </div>
-                            <p class="mt-2 text-sm text-gray-700">Tuvākie turnīri, vairāku dienu pasākumi, klikšķināmi
-                                ieraksti.</p>
-                        </div>
-
-                        <div class="glass p-5">
-                            <div class="flex items-center gap-3">
-                                <div class="rounded-xl bg-red-50 text-red-700 p-2">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                        <path
-                                            d="M18 2a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v2a5 5 0 0 1-5 5h-1.1A5.002 5.002 0 0 1 13 16v2h3a1 1 0 1 1 0 2H8a1 1 0 1 1 0-2h3v-2a5.002 5.002 0 0 1-2.9-4H7a5 5 0 0 1-5-5V5a1 1 0 0 1 1-1h2V3a1 1 0 1 1 2 0v1h8V3a1 1 0 0 1 1-1zM4 7a3 3 0 0 0 3 3h1V5H4v2zm16-2h-4v5h1a3 3 0 0 0 3-3V5z" />
-                                    </svg>
-                                </div>
-                                <h4 class="font-extrabold text-gray-900">Turnīru pārvaldība</h4>
-                            </div>
-                            <p class="mt-2 text-sm text-gray-700">Pieteikumi, komandas un norises statuss, pārskatāmi
-                                un droši.</p>
-                        </div>
-
-                        <div class="glass p-5">
-                            <div class="flex items-center gap-3">
-                                <div class="rounded-xl bg-red-50 text-red-700 p-2">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                        <path
-                                            d="M7 7a4 4 0 1 1 8 0 4 4 0 0 1-8 0zm-5 13a7 7 0 0 1 14 0v1H2v-1zM17.5 7.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zM22 21h-3a5 5 0 0 0-3.6-4.8 8.02 8.02 0 0 1 4.6-1.2A5 5 0 0 1 22 21z" />
-                                    </svg>
-                                </div>
-                                <h4 class="font-extrabold text-gray-900">Komandas & pieteikumi</h4>
-                            </div>
-                            <p class="mt-2 text-sm text-gray-700">Viegla pieteikšanās, kapteiņi, komandu lielumi un
-                                nosacījumi.</p>
-                        </div>
-
-                        <div class="glass p-5">
-                            <div class="flex items-center gap-3">
-                                <div class="rounded-xl bg-red-50 text-red-700 p-2">
-                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                        <path
-                                            d="M4 5a2 2 0 0 0-2 2v10a3 3 0 0 0 3 3h15a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4zm1 2h14v11H5a1 1 0 0 1-1-1V7zm2 2h6v3H7V9zm0 4h6v3H7v-3z" />
-                                    </svg>
-                                </div>
-                                <h4 class="font-extrabold text-gray-900">Ziņas & jaunumi</h4>
-                            </div>
-                            <p class="mt-2 text-sm text-gray-700">Aktualitātes no kopienas un turnīru organizatoriem.
-                            </p>
+                    <div class="ab-feature">
+                        <div class="ab-feature__accent"></div>
+                        <div class="ab-feature__num">03</div>
+                        <div class="ab-feature__title">Komandas & pieteikumi</div>
+                        <div class="ab-feature__desc">Viegla pieteikšanās, kapteiņi, komandu lielumi un nosacījumi.
                         </div>
                     </div>
-                </section>
+                    <div class="ab-feature">
+                        <div class="ab-feature__accent"></div>
+                        <div class="ab-feature__num">04</div>
+                        <div class="ab-feature__title">Ziņas & jaunumi</div>
+                        <div class="ab-feature__desc">Aktualitātes no kopienas un turnīru organizatoriem.</div>
+                    </div>
+                </div>
+            </section>
 
-                {{-- CTA --}}
-                <section class="mt-10 reveal">
-                    <div class="relative overflow-hidden rounded-2xl shadow-xl">
-                        <div class="absolute inset-0 bg-gradient-to-r from-red-700 via-red-600 to-red-500"></div>
-                        <div
-                            class="relative p-6 sm:p-8 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div>
-                                <h3 class="text-2xl font-extrabold">Pievienojies VolleyLV kopienai</h3>
-                                <p class="text-white/90 mt-1">Atrast turnīru, pieteikties un sekot līdzi, tikai pāris
-                                    klikšķi.</p>
-                            </div>
-                            <div class="flex gap-3">
-                                <a href="{{ route('tournaments.calendar') }}"
-                                    class="inline-flex items-center justify-center rounded-full bg-white text-red-700 font-semibold px-5 py-2 shadow hover:bg-red-50 transition">
-                                    Skatīt kalendāru
-                                </a>
-                                <a href="{{ route('news.index') }}"
-                                    class="inline-flex items-center justify-center rounded-full border border-white/70 text-white font-semibold px-5 py-2 hover:bg-white/10 transition">
-                                    Lasīt ziņas
-                                </a>
-                            </div>
+            <section class="ab-values-section ab-reveal" data-stagger="4">
+                <div class="ab-section-header">
+                    <div class="ab-eyebrow">Mūsu vērtības</div>
+                    <div class="ab-section-title">Ko mēs ticam</div>
+                </div>
+                <div class="ab-values-grid">
+                    <div>
+                        <div class="ab-value__line"></div>
+                        <div class="ab-value__title">Atklātība</div>
+                        <div class="ab-value__text">Visi rezultāti, statistika un informācija ir pieejama ikvienam. Nav
+                            slēptu maksu vai bloķēta satura.</div>
+                    </div>
+                    <div>
+                        <div class="ab-value__line"></div>
+                        <div class="ab-value__title">Vienkāršība</div>
+                        <div class="ab-value__text">Mēs projektējam rīkus, kas ļauj koncentrēties uz spēli. Mazāk
+                            klikšķu, vairāk volejbola.</div>
+                    </div>
+                    <div>
+                        <div class="ab-value__line"></div>
+                        <div class="ab-value__title">Kopiena</div>
+                        <div class="ab-value__text">VolleyLV ir veidota spēlētājiem un organizatoriem. Jūsu atsauksmes
+                            veido platformas attīstību.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ab-cta-section ab-reveal" data-stagger="5">
+                <div class="ab-cta-inner">
+                    <div>
+                        <div class="ab-cta__title">Pievienojies VolleyLV kopienai</div>
+                        <div class="ab-cta__sub">Atrast turnīru, pieteikties un sekot līdzi — tikai pāris klikšķi.</div>
+                    </div>
+                    <div class="ab-cta__btns">
+                        <a href="{{ route('tournaments.calendar') }}" class="ab-btn ab-btn--solid">Skatīt kalendāru
+                            →</a>
+                        <a href="{{ route('news.index') }}" class="ab-btn ab-btn--outline">Lasīt ziņas</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="ab-contacts-section ab-reveal" data-stagger="6">
+                <div class="ab-section-header">
+                    <div class="ab-eyebrow">Sazināties</div>
+                    <div class="ab-section-title">Kontakti</div>
+                </div>
+                <div class="ab-contacts-grid">
+                    <div class="ab-contact-cell">
+                        <div class="ab-contact-cell__label">Tālrunis</div>
+                        <a href="tel:+37120001234" class="ab-contact-cell__value">+371 20 001 234</a>
+                        <div class="ab-contact-cell__sub">
+                            <span class="ab-online-dot"></span>
+                            Pieejami 09:00–18:00
                         </div>
                     </div>
-                </section>
+                    <div class="ab-contact-cell">
+                        <div class="ab-contact-cell__label">E-pasts</div>
+                        <a href="mailto:info@volleylv.example" class="ab-contact-cell__value">info@volleylv.example</a>
+                        <div class="ab-contact-cell__sub">Atbildam darba dienās</div>
+                    </div>
+                    <div class="ab-contact-cell">
+                        <div class="ab-contact-cell__label">Platforma</div>
+                        <div class="ab-contact-cell__value">volleylv.lv</div>
+                        <div class="ab-contact-cell__sub">© {{ date('Y') }} VolleyLV</div>
+                    </div>
+                </div>
+            </section>
 
-            </div>
         </div>
     </div>
 
-    {{-- ============= Scripts (no libs) ============= --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            document.documentElement.classList.add('loaded');
-        });
-
-        // reveal on scroll
-        (function() {
-            const els = Array.from(document.querySelectorAll('.reveal'));
-            if (!('IntersectionObserver' in window) || !els.length) return;
-            const io = new IntersectionObserver((entries) => {
+            document.querySelectorAll('.ab-reveal').forEach(el => {
+                const i = parseInt(el.dataset.stagger || '0', 10);
+                setTimeout(() => el.classList.add('in'), 60 + i * 90);
+            });
+            const io = new IntersectionObserver(entries => {
                 entries.forEach(e => {
                     if (e.isIntersecting) {
-                        e.target.classList.add('in-view');
+                        e.target.classList.add('in');
                         io.unobserve(e.target);
                     }
                 });
             }, {
-                rootMargin: '0px 0px -10% 0px',
-                threshold: 0.08
+                rootMargin: '0px 0px -8% 0px',
+                threshold: 0.06
             });
-            els.forEach(el => io.observe(el));
-        })();
+            document.querySelectorAll('.ab-reveal:not(.in)').forEach(el => io.observe(el));
+        });
     </script>
 </x-app-layout>
