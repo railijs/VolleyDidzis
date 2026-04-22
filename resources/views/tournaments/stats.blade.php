@@ -1,23 +1,21 @@
 ﻿{{-- resources/views/tournaments/stats.blade.php --}}
 <x-app-layout>
     @php
-        // Group and order rounds 0..N
         $rounds = $matches->groupBy('round')->sortKeys();
         $finalRound = optional($rounds->keys())->max();
         $finalMatch = $matches->where('round', $finalRound)->first();
         $participants = $tournament->applications()->count();
         $matchCount = $matches->count();
 
-        // Final helpers
         $aTeam = $finalMatch?->participantA?->team_name;
         $bTeam = $finalMatch?->participantB?->team_name;
         $aScr = $finalMatch?->score_a;
         $bScr = $finalMatch?->score_b;
         $finalDone = $finalMatch && $finalMatch->status === 'completed' && $finalMatch->winner_slot;
         $champion = $finalDone ? $finalMatch->winnerApplication()?->team_name : null;
-        $finalistsKnown = (bool) ($aTeam || $bTeam);
 
         $isEditable = $tournament->status === 'active';
+        $canManage = auth()->id() === $tournament->creator_id || auth()->user()?->isAdmin();
 
         function roundTitle(int $r, int $finalRound): string
         {
@@ -27,897 +25,1506 @@
             if ($r === $finalRound) {
                 return 'Final';
             }
-            return "Round {$r}";
+            $dist = $finalRound - $r;
+            return match ($dist) {
+                1 => 'Semi-Final',
+                2 => 'Quarter-Final',
+                default => "Round {$r}",
+            };
         }
-        function statusBadge(string $status): array
+        function statusMeta(string $status): array
         {
             return [
-                'pending' => ['Gaida', 'bg-gray-100 text-gray-700'],
-                'in_progress' => ['Notiek', 'bg-blue-50 text-blue-700'],
-                'completed' => ['Pabeigts', 'bg-emerald-50 text-emerald-700'],
-            ][$status] ?? ['—', 'bg-gray-100 text-gray-700'];
+                'pending' => ['Gaida', 'st-badge--pending'],
+                'in_progress' => ['Notiek', 'st-badge--live'],
+                'completed' => ['Pabeigts', 'st-badge--done'],
+            ][$status] ?? ['—', 'st-badge--pending'];
         }
     @endphp
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    {{-- ========= BRACKET CSS POLISH (no JS changes needed) ========= --}}
     <style>
-        :root {
-            --vv-bg: #ffffff;
-            --vv-rail: rgba(225, 29, 72, .28);
-            /* rose-600 @ 28% */
-            --vv-rail-strong: rgba(225, 29, 72, .55);
-            --vv-shadow: 0 1px 1px rgba(0, 0, 0, .04), 0 16px 32px -20px rgba(0, 0, 0, .45);
-            --vv-shadow-hover: 0 1px 1px rgba(0, 0, 0, .05), 0 18px 44px -16px rgba(225, 29, 72, .35);
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,900;1,700;1,900&family=Barlow:wght@300;400;500&family=DM+Sans:ital,wght@0,400;0,500;1,400&display=swap');
+
+        /* ── Design tokens ── */
+        .st * {
+            box-sizing: border-box;
         }
 
-        /* Horizontal scroll area: soft edge shadows & nicer scrollbar */
-        .bracket-wrap {
+        .st {
+            --ink: #0A0A0A;
+            --ink-2: #2E2E2C;
+            --ink-3: #6B6864;
+            --ink-4: #B0ADA8;
+            --paper: #F7F5F0;
+            --paper-2: #EDEAE3;
+            --rule: #D5D1C9;
+            --red: #C5231B;
+            --red-dark: #9E1C15;
+            --red-tint: #FAF0EF;
+            --white: #FFFFFF;
+            --gold: #B8860B;
+            --gold-tint: #FBF5E6;
+            --gold-rule: #E8D08A;
+            --green: #1E6A3A;
+            --green-tint: #EAF4EE;
+            --blue: #1A4A8A;
+
+            font-family: 'DM Sans', sans-serif;
+            background: var(--paper);
+            min-height: 100vh;
+            color: var(--ink);
+            padding-bottom: 6rem;
+        }
+
+        /* ── Masthead ── */
+        .st-header {
+            background: var(--ink);
+            padding: clamp(3.5rem, 8vh, 5.5rem) 0 0;
             position: relative;
-            --edge: 28px;
-            scroll-snap-type: x mandatory;
+            overflow: hidden;
+            margin-top: 30px;
         }
 
-        .bracket-wrap::before,
-        .bracket-wrap::after {
-            content: "";
-            position: sticky;
-            top: 0;
-            bottom: 0;
-            width: var(--edge);
+        .st-header__bg {
+            position: absolute;
+            right: -0.02em;
+            bottom: -0.1em;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            font-style: italic;
+            font-size: clamp(5rem, 13vw, 10rem);
+            color: rgba(255, 255, 255, 0.04);
+            line-height: 1;
             pointer-events: none;
-            z-index: 20;
-        }
-
-        .bracket-wrap::before {
-            left: 0;
-            background: linear-gradient(to right, rgb(248 250 252), rgba(248, 250, 252, 0));
-        }
-
-        .bracket-wrap::after {
-            right: 0;
-            background: linear-gradient(to left, rgb(248 250 252), rgba(248, 250, 252, 0));
-        }
-
-        .bracket-wrap::-webkit-scrollbar {
-            height: 10px;
-        }
-
-        .bracket-wrap::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .bracket-wrap::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, .15);
-            border-radius: 999px;
-        }
-
-        .bracket-wrap::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, .22);
-        }
-
-        /* The grid holding columns */
-        .bracket-grid {
-            gap: 3rem;
-            /* matches Tailwind gap-12 */
-        }
-
-        /* Each round column gets a subtle vertical "rail" that flows into the next column */
-        .round-col {
-            position: relative;
-        }
-
-        .round-col::after {
-            /* place the rail into the inter-column gap (half of gap-12 ≈ 24px) */
-            content: "";
-            position: absolute;
-            top: 8px;
-            bottom: 8px;
-            right: -24px;
-            width: 1px;
-            background:
-                repeating-linear-gradient(to bottom,
-                    var(--vv-rail),
-                    var(--vv-rail) 12px,
-                    transparent 12px,
-                    transparent 22px);
-            opacity: .85;
-        }
-
-        /* Hide rail after the last column (final) */
-        .round-col:last-child::after {
-            display: none;
-        }
-
-        /* Sticky round chips feel more "anchored" and readable */
-        .round-chip {
-            box-shadow: 0 4px 14px -6px rgba(225, 29, 72, .35);
-            border: 1px solid rgba(225, 29, 72, .25);
-            backdrop-filter: blur(6px);
-        }
-
-        /* Match cards: add status-colored accent, better hover/focus & connector stubs */
-        .match-card {
-            position: relative;
-            background: var(--vv-bg);
-            box-shadow: var(--vv-shadow);
-            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
-            isolation: isolate;
-            /* keep pseudo elems tucked */
-        }
-
-        /* left accent stripe reacts to status */
-        .match-card::before {
-            content: "";
-            position: absolute;
-            inset: 0 auto 0 0;
-            width: 3px;
-            background: var(--accent, var(--vv-rail-strong));
-        }
-
-        .match-card[data-status="pending"] {
-            --accent: #9ca3af;
-        }
-
-        /* gray-400 */
-        .match-card[data-status="in_progress"] {
-            --accent: #2563eb;
-        }
-
-        /* blue-600 */
-        .match-card[data-status="completed"] {
-            --accent: #059669;
-        }
-
-        /* emerald-600 */
-
-        /* outbound connector stub (to next column) */
-        .match-card::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            right: -24px;
-            /* half of gap */
-            width: 24px;
-            height: 1px;
-            background: var(--vv-rail-strong);
-            transform: translateY(-50%);
-            opacity: .8;
-        }
-
-        /* no outbound for final column */
-        .round-col:last-child .match-card::after {
-            display: none;
-        }
-
-        /* inbound stub for non-first columns, purely decorative */
-        .round-col:not(:first-child) .match-card>.inbound {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: -24px;
-            width: 24px;
-            height: 1px;
-            background: var(--vv-rail);
-            transform: translateY(-50%);
-            opacity: .6;
-        }
-
-        /* Hover / highlight pairing (works with your JS ring-2 class too) */
-        .match-card:hover {
-            transform: translateY(-1px);
-            box-shadow: var(--vv-shadow-hover);
-        }
-
-        .match-card.ring-2 {
-            transform: translateY(-1px) scale(1.01);
-            box-shadow: 0 0 0 2px rgba(225, 29, 72, .2), 0 18px 44px -16px rgba(225, 29, 72, .45);
-        }
-
-        /* Status chip stays tidy on tiny screens */
-        .status-chip {
+            letter-spacing: -0.03em;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.05);
+            text-transform: uppercase;
             white-space: nowrap;
         }
 
-        /* Feed line text looks like an inline chip with dotted underline */
-        .feed-line {
-            padding: 2px 6px;
-            border-radius: 999px;
-            background: rgba(244, 63, 94, .06);
-            border: 1px dashed rgba(244, 63, 94, .35);
+        .st-header__inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem 2rem;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex-wrap: wrap;
         }
 
-        .match-card:hover .feed-line {
-            background: rgba(244, 63, 94, .1);
+        .st-header__eyebrow {
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
         }
 
-        /* Winner rows get a subtle, consistent look (works with your JS toggling) */
-        .match-card .row-A,
-        .match-card .row-B {
-            transition: background-color .18s ease, color .18s ease;
+        .st-header__eyebrow::before {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--red);
         }
 
-        .match-card[data-winner-slot="A"] .row-A,
-        .match-card .row-A.bg-emerald-50 {
-            background: #ecfdf5;
+        .st-header__title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(2.2rem, 5.5vw, 4rem);
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: -0.01em;
+            color: var(--white);
+            line-height: 0.95;
+            margin: 0 0 1rem;
         }
 
-        .match-card[data-winner-slot="B"] .row-B,
-        .match-card .row-B.bg-emerald-50 {
-            background: #ecfdf5;
+        .st-header__stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
         }
 
-        /* Score inputs: remove number spinners, make them feel crisp and tappable */
-        .score-input {
+        .st-stat-chip {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 0.25rem 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.07);
+            color: rgba(255, 255, 255, 0.6);
+            white-space: nowrap;
+        }
+
+        .st-stat-chip--red {
+            border-color: rgba(197, 35, 27, 0.4);
+            color: #FF8A84;
+            background: rgba(197, 35, 27, 0.1);
+        }
+
+        .st-header__actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .st-btn-ghost {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.07);
+            color: var(--white);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.45rem 1.1rem;
+            cursor: pointer;
+            border-radius: 0;
+            text-decoration: none;
+            transition: background 0.15s, border-color 0.15s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .st-btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .st-btn-ghost--green {
+            color: #5DBF85;
+            border-color: rgba(93, 191, 133, 0.35);
+        }
+
+        .st-btn-ghost--green:hover {
+            background: rgba(93, 191, 133, 0.1);
+        }
+
+        .st-btn-ghost--danger {
+            color: #FF7A72;
+            border-color: rgba(255, 122, 114, 0.3);
+        }
+
+        .st-btn-ghost--danger:hover {
+            background: rgba(255, 122, 114, 0.1);
+        }
+
+        .st-bar {
+            height: 3px;
+            background: var(--red);
+        }
+
+        /* ── Wrap ── */
+        .st-wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* ── Alert ── */
+        .st-alert {
+            padding: 0.7rem 0.9rem;
+            font-size: 0.82rem;
+            font-weight: 500;
+            border-left: 3px solid;
+            margin: 1.5rem 0;
+        }
+
+        .st-alert--error {
+            background: var(--red-tint);
+            color: var(--red-dark);
+            border-color: var(--red);
+        }
+
+        .st-alert--note {
+            background: #FEF8EC;
+            color: #7A5A10;
+            border-color: #D4A82A;
+        }
+
+        .st-alert ul {
+            list-style: none;
+        }
+
+        .st-alert li::before {
+            content: '— ';
+        }
+
+        /* ── Winner banner ── */
+        .st-champion {
+            border: 1px solid var(--gold-rule);
+            border-top: 3px solid var(--gold);
+            background: var(--gold-tint);
+            padding: 1.25rem 1.5rem;
+            margin: 2rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .st-champion__icon {
+            font-size: 2rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .st-champion__label {
+            font-size: 0.62rem;
+            font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 0.2rem;
+        }
+
+        .st-champion__name {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--gold);
+            line-height: 1;
+        }
+
+        .st-champion__score {
+            margin-left: auto;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gold);
+            opacity: 0.7;
+        }
+
+        /* ── Final (pending) banner ── */
+        .st-final-pending {
+            border: 1px solid var(--rule);
+            background: var(--white);
+            border-top: 3px solid var(--ink);
+            margin: 2rem 0;
+        }
+
+        .st-final-pending__head {
+            background: var(--ink);
+            padding: 0.6rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .st-final-pending__label {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--white);
+            letter-spacing: 0.04em;
+        }
+
+        .st-final-pending__status {
+            font-size: 0.62rem;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .st-final-pending__body {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .st-final-team-a {
+            text-align: right;
+        }
+
+        .st-final-team-b {
+            text-align: left;
+        }
+
+        .st-final-team__name {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--ink);
+            line-height: 1;
+        }
+
+        .st-final-team__score {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--ink-3);
+            margin-top: 0.2rem;
+        }
+
+        .st-final-vs {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            color: var(--ink-4);
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        /* ── Bracket canvas ── */
+        .st-bracket-outer {
+            position: relative;
+            margin: 2rem 0;
+            background:
+                radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.035) 1px, transparent 0) var(--paper);
+            background-size: 20px 20px;
+            border: 1px solid var(--rule);
+            overflow: hidden;
+        }
+
+        .st-bracket-scroll {
+            overflow-x: auto;
+            overflow-y: visible;
+            padding: 2rem 2.5rem 2.5rem;
+            /* nice scrollbar */
+        }
+
+        .st-bracket-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .st-bracket-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .st-bracket-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .st-bracket-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        /* Fade edges */
+        .st-bracket-outer::before,
+        .st-bracket-outer::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 32px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .st-bracket-outer::before {
+            left: 0;
+            background: linear-gradient(to right, var(--paper), transparent);
+        }
+
+        .st-bracket-outer::after {
+            right: 0;
+            background: linear-gradient(to left, var(--paper), transparent);
+        }
+
+        .st-bracket-grid {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: 260px;
+            gap: 0;
+            width: fit-content;
+            min-width: 100%;
+            align-items: stretch;
+        }
+
+        /* ── Round column ── */
+        .st-round {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Vertical connector line between columns */
+        .st-round:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 1px;
+            background: repeating-linear-gradient(to bottom,
+                    var(--rule) 0px,
+                    var(--rule) 10px,
+                    transparent 10px,
+                    transparent 18px);
+            opacity: 0.7;
+        }
+
+        .st-round__head {
+            padding: 0.75rem 1rem 0.6rem;
+            border-bottom: 1px solid var(--rule);
+            background: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border-right: 1px solid var(--rule);
+        }
+
+        .st-round:last-child .st-round__head {
+            border-right: none;
+        }
+
+        .st-round__dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .st-round__dot--final {
+            background: var(--gold);
+        }
+
+        .st-round__dot--semi {
+            background: var(--red);
+        }
+
+        .st-round__dot--playin {
+            background: var(--ink-3);
+        }
+
+        .st-round__dot--normal {
+            background: var(--ink-4);
+        }
+
+        .st-round__name {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--ink);
+            letter-spacing: 0.03em;
+        }
+
+        .st-round__count {
+            margin-left: auto;
+            font-size: 0.58rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink-4);
+        }
+
+        /* ── Match cards container inside column ── */
+        .st-round__matches {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 1rem 0;
+            gap: 0.75rem;
+            border-right: 1px solid var(--rule);
+        }
+
+        .st-round:last-child .st-round__matches {
+            border-right: none;
+        }
+
+        /* ── Match card ── */
+        .st-match {
+            margin: 0 1rem;
+            background: var(--white);
+            border: 1px solid var(--rule);
+            position: relative;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            /* left accent reacts to status */
+        }
+
+        .st-match::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 3px;
+            background: var(--accent, var(--rule));
+            transition: background 0.2s;
+        }
+
+        .st-match[data-status="pending"] {
+            --accent: var(--ink-4);
+        }
+
+        .st-match[data-status="in_progress"] {
+            --accent: var(--blue);
+        }
+
+        .st-match[data-status="completed"] {
+            --accent: var(--green);
+        }
+
+        /* Connector stubs — horizontal lines poking out of cards to meet the dashed column separator */
+        .st-match::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -1rem;
+            width: 1rem;
+            height: 1px;
+            background: var(--rule);
+            transform: translateY(-50%);
+        }
+
+        .st-round:last-child .st-match::after {
+            display: none;
+        }
+
+        .st-match:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px -6px rgba(0, 0, 0, 0.18);
+            z-index: 2;
+        }
+
+        .st-match.is-highlighted {
+            transform: translateY(-1px) scale(1.015);
+            box-shadow: 0 0 0 2px var(--red), 0 8px 24px -8px rgba(197, 35, 27, 0.3);
+            z-index: 3;
+        }
+
+        /* ── Match header ── */
+        .st-match__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.35rem 0.6rem;
+            border-bottom: 1px solid var(--rule);
+            background: var(--paper-2);
+        }
+
+        .st-match__head-left {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .st-match__id {
+            font-size: 0.55rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            color: var(--ink-4);
+            text-transform: uppercase;
+        }
+
+        /* Status badges */
+        .st-badge {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.55rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.1rem 0.45rem;
+            border: 1px solid;
+        }
+
+        .st-badge--pending {
+            color: var(--ink-3);
+            border-color: var(--rule);
+            background: var(--paper);
+        }
+
+        .st-badge--live {
+            color: var(--blue);
+            border-color: rgba(26, 74, 138, 0.3);
+            background: rgba(26, 74, 138, 0.06);
+        }
+
+        .st-badge--done {
+            color: var(--green);
+            border-color: rgba(30, 106, 58, 0.3);
+            background: rgba(30, 106, 58, 0.06);
+        }
+
+        .st-winner-chip {
+            font-size: 0.55rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--green);
+        }
+
+        /* ── Team rows ── */
+        .st-match__row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.5rem 0.6rem;
+            border-bottom: 1px solid var(--rule);
+            transition: background 0.15s;
+        }
+
+        .st-match__row:last-of-type {
+            border-bottom: none;
+        }
+
+        .st-match__row--winner {
+            background: rgba(30, 106, 58, 0.07) !important;
+        }
+
+        .st-match__team {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.01em;
+            color: var(--ink);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .st-match__team--winner {
+            color: var(--green);
+        }
+
+        .st-match__team--tbd {
+            color: var(--ink-4);
+            font-style: italic;
+            font-weight: 400;
+            font-size: 0.78rem;
+        }
+
+        /* Score input */
+        .st-score {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            width: 2.4rem;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--rule);
+            padding: 0.1rem 0.2rem;
+            color: var(--ink);
+            outline: none;
+            flex-shrink: 0;
+            transition: border-color 0.15s, background 0.15s;
             font-variant-numeric: tabular-nums;
-            transition: box-shadow .16s ease, border-color .16s ease, background-color .16s ease;
         }
 
-        .score-input:focus {
-            box-shadow: 0 0 0 3px rgba(252, 165, 165, .35);
-            /* red-300 glow */
-            background: #fff;
+        .st-score:focus {
+            border-bottom-color: var(--red);
+            background: var(--red-tint);
         }
 
-        .score-input::-webkit-outer-spin-button,
-        .score-input::-webkit-inner-spin-button {
+        .st-score:disabled {
+            color: var(--ink-4);
+            background: transparent;
+            cursor: not-allowed;
+            border-bottom-color: transparent;
+        }
+
+        .st-score::-webkit-outer-spin-button,
+        .st-score::-webkit-inner-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
 
-        .score-input[type=number] {
+        .st-score[type=number] {
             -moz-appearance: textfield;
         }
 
-        /* Saving indicator: tiny CSS dot animation */
-        .save-dot::after {
-            content: " • • •";
-            letter-spacing: 2px;
-            display: inline-block;
-            width: 2.2em;
-            animation: ellipses 1.2s infinite steps(4, end);
-            overflow: hidden;
-            vertical-align: baseline;
+        /* ── Match footer (save state + feed link) ── */
+        .st-match__foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.3rem 0.6rem;
+            background: var(--paper-2);
+            border-top: 1px solid var(--rule);
+            gap: 0.5rem;
+            min-height: 1.8rem;
         }
 
-        @keyframes ellipses {
+        .st-save-dot {
+            font-size: 0.58rem;
+            color: var(--ink-3);
+            display: none;
+        }
+
+        .st-save-dot.active {
+            display: inline;
+        }
+
+        .st-save-dot::after {
+            content: ' ···';
+            animation: stDots 1s infinite steps(4, end);
+        }
+
+        @keyframes stDots {
             0% {
-                width: 0
+                opacity: 0
             }
 
-            100% {
-                width: 2.2em
+            25% {
+                opacity: 0.4
+            }
+
+            50% {
+                opacity: 0.7
+            }
+
+            75% {
+                opacity: 1
             }
         }
 
-        /* Print: clean bracket for exports */
-        @media print {
-            .bracket-wrap {
-                overflow: visible !important;
+        .st-save-ok {
+            font-size: 0.58rem;
+            color: var(--green);
+            display: none;
+        }
+
+        .st-save-ok.active {
+            display: inline;
+        }
+
+        .st-save-err {
+            font-size: 0.58rem;
+            color: var(--red);
+            display: none;
+        }
+
+        .st-save-err.active {
+            display: inline;
+        }
+
+        .st-feed-link {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.58rem;
+            color: var(--red);
+            text-decoration: none;
+            cursor: pointer;
+            border-bottom: 1px dashed rgba(197, 35, 27, 0.4);
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: border-color 0.15s;
+        }
+
+        .st-feed-link:hover {
+            border-color: var(--red);
+        }
+
+        /* ── Empty state ── */
+        .st-empty {
+            text-align: center;
+            border: 1px solid var(--rule);
+            background: var(--white);
+            padding: 4rem 2rem;
+            margin: 2rem 0;
+        }
+
+        .st-empty__title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--ink);
+            margin-bottom: 0.5rem;
+        }
+
+        .st-empty__sub {
+            font-size: 0.85rem;
+            color: var(--ink-3);
+            font-weight: 300;
+        }
+
+        /* ── Modal ── */
+        .st-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 10, 10, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .st-modal-overlay.open {
+            display: flex;
+        }
+
+        .st-modal {
+            background: var(--white);
+            max-width: 420px;
+            width: 100%;
+            margin: 1rem;
+            border-top: 4px solid var(--red);
+            animation: stModalIn 0.22s ease both;
+            position: relative;
+        }
+
+        @keyframes stModalIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px)
             }
 
-            .bracket-wrap::before,
-            .bracket-wrap::after {
-                display: none;
+            to {
+                opacity: 1;
+                transform: none
             }
+        }
 
-            .match-card {
-                box-shadow: none;
-                border-color: #ddd !important;
-            }
+        .st-modal__head {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--rule);
+        }
 
-            header .start,
-            header button {
-                display: none !important;
-            }
+        .st-modal__title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            color: var(--ink);
+        }
 
-            .feed-line {
-                color: #666;
-                background: transparent;
-                border: 0;
-                text-decoration: underline dotted;
-            }
+        .st-modal__body {
+            padding: 1.25rem 1.5rem;
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.88rem;
+            color: var(--ink-2);
+            font-weight: 300;
+            line-height: 1.6;
+        }
 
-            .round-chip {
-                position: static;
-            }
+        .st-modal__body strong {
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .st-modal__foot {
+            padding: 0.9rem 1.5rem;
+            border-top: 1px solid var(--rule);
+            background: var(--paper-2);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .st-modal__close {
+            position: absolute;
+            top: 0.9rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--ink-3);
+        }
+
+        .st-btn-cancel {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            background: none;
+            color: var(--ink-3);
+            border: 1px solid var(--rule);
+            padding: 0.5rem 1.1rem;
+            cursor: pointer;
+            border-radius: 0;
+            transition: all 0.15s;
+        }
+
+        .st-btn-cancel:hover {
+            background: var(--paper-2);
+            color: var(--ink);
+        }
+
+        .st-btn-confirm {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            background: var(--red);
+            color: var(--white);
+            border: 1px solid var(--red);
+            padding: 0.5rem 1.25rem;
+            cursor: pointer;
+            border-radius: 0;
+            transition: background 0.15s;
+        }
+
+        .st-btn-confirm:hover {
+            background: var(--red-dark);
+            border-color: var(--red-dark);
+        }
+
+        /* ── Reveal ── */
+        .st-reveal {
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+
+        .st-reveal.in {
+            opacity: 1;
+            transform: none;
         }
     </style>
 
-    <div class="max-w-full mx-auto mt-20 sm:mt-24 px-4 sm:px-6 lg:px-8">
+    <div class="st">
 
-        {{-- Header (compact) --}}
-        <header class="mb-6">
-            <div
-                class="rounded-2xl text-white shadow-2xl ring-1 ring-white/20 bg-gradient-to-br from-red-700 via-red-600 to-red-700">
-                <div class="p-5 sm:p-7 flex flex-col gap-4">
-                    <div class="flex items-center gap-3 justify-center md:justify-start">
-                        <img src="{{ asset('images/volleylv-logo.png') }}" alt="VolleyLV"
-                            class="h-10 w-10 sm:h-12 sm:w-12 object-contain select-none" />
-                        <h1
-                            class="text-3xl sm:text-5xl font-black leading-tight drop-shadow-sm text-center md:text-left">
-                            {{ $tournament->name }}
-                        </h1>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2 text-sm justify-center md:justify-start">
-                        <span
-                            class="inline-flex items-center gap-2 font-bold rounded-full border border-white/25 bg-white/15 text-white px-3 py-1 shadow-sm">
-                            {{ $tournament->status === 'active' ? '🟢' : ($tournament->status === 'completed' ? '⚪' : '🟠') }}
-                            Status: {{ ucfirst($tournament->status) }}
+        {{-- ── Masthead ── --}}
+        <div class="st-header st-reveal" data-stagger="0">
+            <div class="st-header__bg">BRAKETS</div>
+            <div class="st-header__inner">
+                <div>
+                    <div class="st-header__eyebrow">VolleyLV · Turnīra tīklājs</div>
+                    <h1 class="st-header__title">{{ $tournament->name }}</h1>
+                    <div class="st-header__stats">
+                        <span class="st-stat-chip">
+                            {{ $tournament->status === 'active' ? '● Aktīvs' : ($tournament->status === 'completed' ? '○ Pabeigts' : '◌ Gaida') }}
                         </span>
-                        <span
-                            class="inline-flex items-center gap-2 font-bold rounded-full border border-white/25 bg-white/10 text-red-50 px-3 py-1">
-                            👥 Dalībnieki: {{ $participants }}
-                        </span>
-                        <span
-                            class="inline-flex items-center gap-2 font-bold rounded-full border border-white/25 bg-white/10 text-red-50 px-3 py-1">
-                            🎮 Spēles: {{ $matchCount }}
-                        </span>
-
-                        @if (auth()->id() === $tournament->creator_id || (auth()->user() && auth()->user()->isAdmin()))
-                            @if ($tournament->status === 'pending')
-                                <form action="{{ route('tournaments.start', $tournament) }}" method="POST"
-                                    class="ml-auto">
-                                    @csrf
-                                    <button type="submit"
-                                        class="start rounded-full bg-emerald-500/90 hover:bg-emerald-500 text-white px-4 py-2 text-sm font-bold shadow">
-                                        Sākt
-                                    </button>
-                                </form>
-                            @elseif ($tournament->status === 'active')
-                                <button type="button"
-                                    onclick="document.getElementById('stop-modal').classList.remove('hidden')"
-                                    class="ml-auto rounded-full bg-red-500/90 hover:bg-red-500 text-white px-4 py-2 text-sm font-bold shadow">
-                                    ⏹ Apturēt
-                                </button>
-                            @endif
+                        <span class="st-stat-chip">👥 {{ $participants }} dalībnieki</span>
+                        <span class="st-stat-chip">⚡ {{ $matchCount }} spēles</span>
+                        @if (!$isEditable)
+                            <span class="st-stat-chip st-stat-chip--red">Slēgts rediģēšanai</span>
+                        @else
+                            <span class="st-stat-chip"
+                                style="color:#5DBF85;border-color:rgba(93,191,133,0.35);background:rgba(93,191,133,0.07);">✎
+                                Rediģējams</span>
                         @endif
                     </div>
                 </div>
-            </div>
-        </header>
 
-        {{-- Final banner --}}
-        @if ($finalMatch)
-            <section class="mb-6 sm:mb-8 flex justify-center">
-                {{-- NB: ieliku data-final-match-id. Ja tas kaut kur iztrūkst, skripts pats atradīs finālu ar fallback. --}}
-                <div class="w-full max-w-3xl" id="final-container" data-final-match-id="{{ $finalMatch->id }}">
+                @if ($canManage)
+                    <div class="st-header__actions">
+                        @if ($tournament->status === 'pending')
+                            <form action="{{ route('tournaments.start', $tournament) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="st-btn-ghost st-btn-ghost--green">▶ Sākt turnīru</button>
+                            </form>
+                        @elseif($tournament->status === 'active')
+                            <button type="button" class="st-btn-ghost st-btn-ghost--danger"
+                                onclick="document.getElementById('stop-modal').classList.add('open')">
+                                ⏹ Apturēt
+                            </button>
+                        @endif
+                        <a href="{{ route('tournaments.show', $tournament) }}" class="st-btn-ghost">← Atpakaļ</a>
+                    </div>
+                @else
+                    <a href="{{ route('tournaments.show', $tournament) }}" class="st-btn-ghost">← Atpakaļ</a>
+                @endif
+            </div>
+        </div>
+        <div class="st-bar"></div>
+
+        <div class="st-wrap">
+
+            {{-- Errors --}}
+            @if ($errors->any())
+                <div class="st-alert st-alert--error st-reveal" data-stagger="1">
+                    <ul>
+                        @foreach ($errors->all() as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    </ul>
+                    <div style="margin-top:0.5rem;font-size:0.75rem;opacity:0.8;">
+                        Sets tiek uzvarēts pie 25 ar +2. Ja 24–24, turpina līdz +2 (26–24, 27–25, …).
+                    </div>
+                </div>
+            @endif
+
+            {{-- Final banner --}}
+            @if ($finalMatch)
+                <div id="final-container" data-final-match-id="{{ $finalMatch->id }}" class="st-reveal"
+                    data-stagger="1">
                     @if ($finalDone && $champion)
-                        <div
-                            class="rounded-2xl ring-1 ring-yellow-300/60 bg-gradient-to-br from-amber-100 via-yellow-50 to-amber-50 shadow">
-                            <div class="px-6 sm:px-8 py-5 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-3xl">🏆</span>
-                                    <div>
-                                        <div
-                                            class="text-[11px] sm:text-xs font-black tracking-widest uppercase text-amber-900/80">
-                                            Turnīra uzvarētājs</div>
-                                        <div class="text-xl sm:text-2xl font-black text-amber-900 truncate"
-                                            title="{{ $champion }}">
-                                            {{ \Illuminate\Support\Str::limit($champion, 64, '…') }}</div>
-                                    </div>
-                                </div>
-                                <div class="text-amber-900/80 text-sm tabular-nums">{{ $aScr }} –
-                                    {{ $bScr }}</div>
+                        <div class="st-champion">
+                            <div class="st-champion__icon">🏆</div>
+                            <div>
+                                <div class="st-champion__label">Turnīra uzvarētājs</div>
+                                <div class="st-champion__name">{{ $champion }}</div>
                             </div>
+                            @if (is_numeric($aScr) && is_numeric($bScr))
+                                <div class="st-champion__score">{{ $aScr }} – {{ $bScr }}</div>
+                            @endif
                         </div>
                     @else
-                        <div class="rounded-2xl border border-gray-200 bg-white/90 shadow-sm overflow-hidden">
-                            <div class="px-6 py-3 flex items-center justify-between">
-                                <div class="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-gray-600 font-bold">
-                                    Fināls</div>
-                                <div class="text-xs text-gray-600">⏳ Notiek / gaida</div>
+                        <div class="st-final-pending">
+                            <div class="st-final-pending__head">
+                                <span class="st-final-pending__label">Fināls</span>
+                                <span class="st-final-pending__status">⏳ Gaida / Notiek</span>
                             </div>
-                            <div class="px-6 pb-5 grid grid-cols-5 items-center gap-3">
-                                <div class="col-span-2 text-right">
-                                    <div class="text-base sm:text-xl font-black text-gray-900 truncate"
-                                        title="{{ $aTeam ?? '—' }}">{{ $aTeam ?? '—' }}</div>
-                                    <div class="mt-0.5 text-gray-500 tabular-nums">
-                                        {{ is_numeric($aScr) ? $aScr : '–' }}</div>
+                            <div class="st-final-pending__body">
+                                <div class="st-final-team-a">
+                                    <div class="st-final-team__name">{{ $aTeam ?? '—' }}</div>
+                                    <div class="st-final-team__score">{{ is_numeric($aScr) ? $aScr : '–' }}</div>
                                 </div>
-                                <div class="col-span-1 text-center text-[10px] uppercase tracking-widest text-gray-400">
-                                    VS</div>
-                                <div class="col-span-2 text-left">
-                                    <div class="text-base sm:text-xl font-black text-gray-900 truncate"
-                                        title="{{ $bTeam ?? '—' }}">{{ $bTeam ?? '—' }}</div>
-                                    <div class="mt-0.5 text-gray-500 tabular-nums">
-                                        {{ is_numeric($bScr) ? $bScr : '–' }}</div>
+                                <div class="st-final-vs">VS</div>
+                                <div class="st-final-team-b">
+                                    <div class="st-final-team__name">{{ $bTeam ?? '—' }}</div>
+                                    <div class="st-final-team__score">{{ is_numeric($bScr) ? $bScr : '–' }}</div>
                                 </div>
                             </div>
                         </div>
                     @endif
                 </div>
-            </section>
-        @endif
+            @endif
 
-        {{-- Errors --}}
-        @if ($errors->any())
-            <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm">
-                <strong>Kļūda:</strong>
-                <ul class="list-disc ml-5 mt-1">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <div class="mt-1 text-xs text-red-700">
-                    Sets tiek uzvarēts pie 25 ar +2. Ja 24–24, turpina līdz +2 (26–24, 27–25, …).
+            {{-- ── Bracket ── --}}
+            @if ($matches->isEmpty())
+                <div class="st-empty st-reveal" data-stagger="2">
+                    <div class="st-empty__title">Nav spēļu</div>
+                    <p class="st-empty__sub">Sāc turnīru, lai ģenerētu tīklāju.</p>
                 </div>
-            </div>
-        @endif
+            @else
+                <div class="st-bracket-outer st-reveal" data-stagger="2" role="region" aria-label="Turnīra tīklājs">
+                    <div class="st-bracket-scroll">
+                        <div class="st-bracket-grid">
 
-        {{-- BRACKET --}}
-        @if ($matches->isEmpty())
-            <div class="rounded-2xl border border-gray-200 bg-white/80 p-6 text-center shadow-sm">
-                <div class="text-gray-900 font-extrabold text-lg mb-1">Nav spēļu</div>
-                <p class="text-gray-600">Sāc turnīru, lai ģenerētu tīklāju.</p>
-            </div>
-        @else
-            <div class="bracket-wrap overflow-x-auto rounded-xl p-4 sm:p-6
-                        bg-[radial-gradient(circle_at_1px_1px,rgba(0,0,0,0.04)_1px,transparent_0)] bg-[size:18px_18px]
-                        snap-x snap-mandatory"
-                role="region" aria-label="Turnīra tīklājs">
-                <div class="w-fit mx-auto">
-                    <div class="bracket-grid grid grid-flow-col auto-cols-[280px] gap-12 justify-center">
+                            @foreach ($rounds as $roundNumber => $roundMatches)
+                                @php
+                                    $rTitle = roundTitle($roundNumber, $finalRound);
+                                    $dotCls = match ($rTitle) {
+                                        'Final' => 'st-round__dot--final',
+                                        'Semi-Final' => 'st-round__dot--semi',
+                                        'Play-In' => 'st-round__dot--playin',
+                                        default => 'st-round__dot--normal',
+                                    };
+                                @endphp
+                                <div class="st-round" data-round="{{ $roundNumber }}">
+                                    <div class="st-round__head">
+                                        <span class="st-round__dot {{ $dotCls }}"></span>
+                                        <span class="st-round__name">{{ $rTitle }}</span>
+                                        <span class="st-round__count">{{ $roundMatches->count() }} spēl.</span>
+                                    </div>
+                                    <div class="st-round__matches">
+                                        @foreach ($roundMatches->sortBy('index_in_round') as $m)
+                                            @php
+                                                $hasA = (bool) $m->participant_a_application_id;
+                                                $hasB = (bool) $m->participant_b_application_id;
+                                                $disabled = !($hasA && $hasB) || !$isEditable;
+                                                [$label, $badgeCls] = statusMeta($m->status);
 
-                        @foreach ($rounds as $roundNumber => $roundMatches)
-                            <div class="round-col w-[280px] flex flex-col items-stretch gap-4 snap-start"
-                                data-round="{{ $roundNumber }}">
-                                <div
-                                    class="round-chip sticky top-2 z-10 self-start mb-1 inline-flex items-center gap-2 rounded-full bg-white/80 ring-1 ring-gray-200 px-3 py-1 font-extrabold text-[0.9rem] text-red-700 shadow-sm backdrop-blur">
-                                    <span
-                                        class="h-1.5 w-1.5 rounded-full {{ $roundNumber === $finalRound ? 'bg-amber-500' : ($roundNumber === 0 ? 'bg-rose-400' : 'bg-rose-500') }}"></span>
-                                    {{ roundTitle($roundNumber, $finalRound) }}
-                                </div>
+                                                $aName = $m->participantA?->team_name;
+                                                $bName = $m->participantB?->team_name;
+                                                $aTbd = !$aName && $hasB ? 'Gaida pretinieku' : null;
+                                                $bTbd = !$bName && $hasA ? 'Gaida pretinieku' : null;
+                                            @endphp
 
-                                <div
-                                    class="w-[280px] h-[100%] flex flex-col items-stretch gap-4 snap-start justify-around">
-                                    @foreach ($roundMatches->sortBy('index_in_round') as $m)
-                                        @php
-                                            $hasA = (bool) $m->participant_a_application_id;
-                                            $hasB = (bool) $m->participant_b_application_id;
-                                            $disabled = !($hasA && $hasB) || !$isEditable;
-                                            [$label, $cls] = statusBadge($m->status);
-                                        @endphp
+                                            <article class="st-match" data-match-id="{{ $m->id }}"
+                                                data-next-match-id="{{ $m->next_match_id ?? '' }}"
+                                                data-next-slot="{{ $m->next_slot ?? '' }}"
+                                                data-status="{{ $m->status }}"
+                                                data-winner-slot="{{ $m->winner_slot ?? '' }}">
 
-                                        <article
-                                            class="match-card group relative rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden transition"
-                                            data-match-id="{{ $m->id }}"
-                                            data-next-match-id="{{ $m->next_match_id ?? '' }}"
-                                            data-next-slot="{{ $m->next_slot ?? '' }}"
-                                            data-status="{{ $m->status }}"
-                                            data-winner-slot="{{ $m->winner_slot ?? '' }}">
-                                            {{-- decorative inbound stub for non-first columns --}}
-                                            <i class="inbound" aria-hidden="true"></i>
-
-                                            <header class="flex items-center justify-between px-3 py-1 border-b">
-                                                <div class="text-[11px] font-semibold inline-flex items-center gap-2">
-                                                    <span
-                                                        class="status-chip inline-flex items-center px-2 py-0.5 rounded-full ring-1 ring-black/5 {{ $cls }}">
-                                                        {{ $label }}
-                                                    </span>
-                                                    @if ($m->winner_slot)
-                                                        <span class="winner-chip text-emerald-700">Uzv.:
-                                                            {{ $m->winner_slot }}</span>
-                                                    @else
-                                                        <span class="winner-chip hidden text-emerald-700"></span>
-                                                    @endif
-                                                    @unless ($isEditable)
-                                                        <span class="text-gray-500">· slēgts</span>
-                                                    @endunless
+                                                {{-- Head --}}
+                                                <div class="st-match__head">
+                                                    <div class="st-match__head-left">
+                                                        <span
+                                                            class="st-badge {{ $badgeCls }}">{{ $label }}</span>
+                                                        @if ($m->winner_slot)
+                                                            <span class="st-winner-chip winner-chip">Uzv.:
+                                                                {{ $m->winner_slot }}</span>
+                                                        @else
+                                                            <span class="st-winner-chip winner-chip"
+                                                                style="display:none;"></span>
+                                                        @endif
+                                                        @unless ($isEditable)
+                                                            <span
+                                                                style="font-size:0.52rem;color:var(--ink-4);letter-spacing:0.06em;text-transform:uppercase;">slēgts</span>
+                                                        @endunless
+                                                    </div>
+                                                    <span class="st-match__id">#{{ $m->id }}</span>
                                                 </div>
-                                                <div class="text-[10px] text-gray-500">#{{ $m->id }}</div>
-                                            </header>
 
-                                            <div class="divide-y divide-gray-200 text-[13px]">
-                                                {{-- A --}}
+                                                {{-- Row A --}}
                                                 <div
-                                                    class="row-A flex items-center justify-between px-3 py-1 {{ $m->winner_slot === 'A' ? 'bg-emerald-50 font-semibold text-emerald-800' : '' }}">
-                                                    <span class="truncate" data-team="A">
-                                                        {{ $m->participantA?->team_name ?? ($hasB ? 'Gaida pretinieku' : '—') }}
+                                                    class="st-match__row row-A {{ $m->winner_slot === 'A' ? 'st-match__row--winner' : '' }}">
+                                                    <span
+                                                        class="st-match__team {{ $m->winner_slot === 'A' ? 'st-match__team--winner' : ($aTbd ? 'st-match__team--tbd' : '') }}"
+                                                        data-team="A">
+                                                        {{ $aName ?? ($aTbd ?? '—') }}
                                                     </span>
                                                     <input type="number" inputmode="numeric" min="0"
                                                         max="{{ \App\Http\Controllers\TournamentMatchController::MAX_POINTS }}"
-                                                        class="score-input w-12 rounded-md border border-gray-300 px-2 py-1 text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 disabled:bg-gray-50 disabled:text-gray-400"
+                                                        class="st-score score-input"
                                                         value="{{ is_numeric($m->score_a) ? $m->score_a : '' }}"
-                                                        placeholder="0"
+                                                        placeholder="—"
                                                         data-url="{{ route('tournaments.updateMatchScore', [$tournament, $m]) }}"
                                                         data-match-id="{{ $m->id }}" data-side="A"
                                                         {{ $disabled ? 'disabled' : '' }}
                                                         title="{{ $disabled ? ($isEditable ? 'Gaida pretinieku' : 'Turnīrs slēgts') : 'Ievadi punktus' }}" />
                                                 </div>
-                                                {{-- B --}}
+
+                                                {{-- Row B --}}
                                                 <div
-                                                    class="row-B flex items-center justify-between px-3 py-1 {{ $m->winner_slot === 'B' ? 'bg-emerald-50 font-semibold text-emerald-800' : '' }}">
-                                                    <span class="truncate" data-team="B">
-                                                        {{ $m->participantB?->team_name ?? ($hasA ? 'Gaida pretinieku' : '—') }}
+                                                    class="st-match__row row-B {{ $m->winner_slot === 'B' ? 'st-match__row--winner' : '' }}">
+                                                    <span
+                                                        class="st-match__team {{ $m->winner_slot === 'B' ? 'st-match__team--winner' : ($bTbd ? 'st-match__team--tbd' : '') }}"
+                                                        data-team="B">
+                                                        {{ $bName ?? ($bTbd ?? '—') }}
                                                     </span>
                                                     <input type="number" inputmode="numeric" min="0"
                                                         max="{{ \App\Http\Controllers\TournamentMatchController::MAX_POINTS }}"
-                                                        class="score-input w-12 rounded-md border border-gray-300 px-2 py-1 text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 disabled:bg-gray-50 disabled:text-gray-400"
+                                                        class="st-score score-input"
                                                         value="{{ is_numeric($m->score_b) ? $m->score_b : '' }}"
-                                                        placeholder="0"
+                                                        placeholder="—"
                                                         data-url="{{ route('tournaments.updateMatchScore', [$tournament, $m]) }}"
                                                         data-match-id="{{ $m->id }}" data-side="B"
                                                         {{ $disabled ? 'disabled' : '' }}
                                                         title="{{ $disabled ? ($isEditable ? 'Gaida pretinieku' : 'Turnīrs slēgts') : 'Ievadi punktus' }}" />
                                                 </div>
 
-                                                <footer
-                                                    class="px-3 py-1 text-[12px] flex items-center justify-between">
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="save-dot hidden"
+                                                {{-- Footer --}}
+                                                <div class="st-match__foot">
+                                                    <div>
+                                                        <span class="st-save-dot"
                                                             id="saving-{{ $m->id }}">Saglabā</span>
-                                                        <span class="save-ok hidden text-emerald-700"
-                                                            id="saved-{{ $m->id }}">Saglabāts ✓</span>
-                                                        <span class="save-err hidden text-red-700"
-                                                            id="error-{{ $m->id }}">Kļūda — pārbaudi
-                                                            punktus</span>
+                                                        <span class="st-save-ok" id="saved-{{ $m->id }}">✓
+                                                            Saglabāts</span>
+                                                        <span class="st-save-err" id="error-{{ $m->id }}">✕
+                                                            Kļūda</span>
                                                     </div>
-
                                                     @if ($m->next_match_id)
-                                                        <span
-                                                            class="feed-line text-[11px] text-rose-700 underline decoration-dotted underline-offset-2 select-none cursor-pointer"
-                                                            data-from="{{ $m->id }}"
+                                                        <span class="st-feed-link" data-from="{{ $m->id }}"
                                                             data-to="{{ $m->next_match_id }}"
                                                             data-slot="{{ $m->next_slot }}">
-                                                            → Winner → #{{ $m->next_match_id }} ({{ $m->next_slot }})
+                                                            → #{{ $m->next_match_id }} ({{ $m->next_slot }})
                                                         </span>
                                                     @else
-                                                        <span class="text-gray-400 text-[11px]">—</span>
+                                                        <span style="font-size:0.58rem;color:var(--ink-4);">—</span>
                                                     @endif
-                                                </footer>
-                                            </div>
-                                        </article>
-                                    @endforeach
+                                                </div>
+                                            </article>
+                                        @endforeach
+                                    </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
 
+                        </div>
                     </div>
                 </div>
-            </div>
-        @endif
-    </div>
+            @endif
 
-    {{-- STOP modal --}}
-    @if (
-        $tournament->status === 'active' &&
-            (auth()->id() === $tournament->creator_id || (auth()->user() && auth()->user()->isAdmin())))
-        <div id="stop-modal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                onclick="document.getElementById('stop-modal').classList.add('hidden')"></div>
-            <div class="relative z-10 max-w-md mx-auto my-10">
-                <div class="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-                    <form action="{{ route('tournaments.stop', $tournament) }}" method="POST">
-                        @csrf
-                        <div class="p-6">
-                            <h2 class="text-xl font-extrabold text-red-700 mb-2">Apstiprināt apturēšanu</h2>
-                            <p class="text-gray-700 text-sm">Vai tiešām apturēt
-                                <strong>{{ $tournament->name }}</strong>? Pēc apturēšanas turnīrs tiks atzīmēts kā
-                                <strong>pabeigts</strong>.
-                            </p>
-                            <div class="mt-5 flex items-center justify-end gap-2">
-                                <button type="button"
-                                    class="rounded-full border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 text-sm font-semibold"
-                                    onclick="document.getElementById('stop-modal').classList.add('hidden')">Atcelt</button>
-                                <button type="submit"
-                                    class="rounded-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-sm font-semibold shadow">Apturēt</button>
-                            </div>
-                        </div>
-                    </form>
+        </div>{{-- /.st-wrap --}}
+    </div>{{-- /.st --}}
+
+    {{-- Stop modal --}}
+    @if ($tournament->status === 'active' && $canManage)
+        <div id="stop-modal" class="st-modal-overlay">
+            <div class="st-modal">
+                <button class="st-modal__close"
+                    onclick="document.getElementById('stop-modal').classList.remove('open')">✕</button>
+                <div class="st-modal__head">
+                    <div class="st-modal__title">Apturēt turnīru</div>
                 </div>
+                <div class="st-modal__body">
+                    Vai tiešām apturēt <strong>{{ $tournament->name }}</strong>?
+                    Pēc apturēšanas turnīrs tiks atzīmēts kā <strong>pabeigts</strong>.
+                </div>
+                <form action="{{ route('tournaments.stop', $tournament) }}" method="POST">
+                    @csrf
+                    <div class="st-modal__foot">
+                        <button type="button" class="st-btn-cancel"
+                            onclick="document.getElementById('stop-modal').classList.remove('open')">Atcelt</button>
+                        <button type="submit" class="st-btn-confirm">Apturēt</button>
+                    </div>
+                </form>
             </div>
         </div>
     @endif
 
-    {{-- JS: autosave + live winner propagation + robust final banner sync with fallback --}}
     <script>
         (function() {
-            const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            'use strict';
+
+            /* ── stagger reveals ── */
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.st-reveal').forEach(el => {
+                    const i = parseInt(el.dataset.stagger || '0', 10);
+                    setTimeout(() => el.classList.add('in'), 60 + i * 90);
+                });
+            });
+
+            const csrf = document.querySelector('meta[name="csrf-token"]').content;
             const finalRoot = document.getElementById('final-container');
             const isEditable = {{ $isEditable ? 'true' : 'false' }};
 
             const STATUS_MAP = {
                 pending: {
                     label: 'Gaida',
-                    cls: 'bg-gray-100 text-gray-700'
+                    cls: 'st-badge--pending'
                 },
                 in_progress: {
                     label: 'Notiek',
-                    cls: 'bg-blue-50 text-blue-700'
+                    cls: 'st-badge--live'
                 },
                 completed: {
                     label: 'Pabeigts',
-                    cls: 'bg-emerald-50 text-emerald-700'
+                    cls: 'st-badge--done'
                 },
             };
 
-            const cards = Array.from(document.querySelectorAll('.match-card'));
+            /* ── Index all cards ── */
+            const cards = Array.from(document.querySelectorAll('.st-match'));
             const byId = new Map(cards.map(c => [String(c.dataset.matchId), c]));
 
-            function el(q, root = document) {
-                return root.querySelector(q);
-            }
-
-            function els(q, root = document) {
-                return Array.from(root.querySelectorAll(q));
-            }
-
-            // --- FINAL ID: read from container OR auto-detect (fallback) ---
-            function findFinalMatchId() {
-                const explicit = finalRoot?.dataset?.finalMatchId;
-                if (explicit && String(explicit).trim() !== '') return String(explicit);
-                const noNext = cards.filter(c => !(c.dataset.nextMatchId && c.dataset.nextMatchId.trim()));
-                if (noNext.length === 1) return String(noNext[0].dataset.matchId);
-                if (noNext.length > 1) {
-                    let best = null,
-                        bestRound = -Infinity;
-                    noNext.forEach(c => {
-                        const col = c.closest('[data-round]');
-                        const r = col ? parseInt(col.dataset.round, 10) : 0;
-                        if (r > bestRound) {
-                            bestRound = r;
-                            best = c;
-                        }
-                    });
-                    if (best) return String(best.dataset.matchId);
-                }
+            /* ── Resolve final match ID (explicit attr → auto-detect fallback) ── */
+            function resolveFinalId() {
+                const explicit = finalRoot?.dataset?.finalMatchId?.trim();
+                if (explicit) return explicit;
+                // card with no next_match_id in the highest-numbered round
+                const noNext = cards.filter(c => !c.dataset.nextMatchId?.trim());
+                if (noNext.length === 1) return noNext[0].dataset.matchId;
                 let best = null,
                     bestRound = -Infinity;
-                cards.forEach(c => {
-                    const col = c.closest('[data-round]');
-                    const r = col ? parseInt(col.dataset.round, 10) : 0;
+                (noNext.length ? noNext : cards).forEach(c => {
+                    const r = parseInt(c.closest('[data-round]')?.dataset.round ?? 0, 10);
                     if (r > bestRound) {
                         bestRound = r;
                         best = c;
                     }
                 });
-                return best ? String(best.dataset.matchId) : '';
+                return best?.dataset.matchId ?? '';
             }
-            const FINAL_ID = findFinalMatchId();
+            const FINAL_ID = resolveFinalId();
 
-            // --- Highlight wiring (unchanged) ---
-            function clearHL() {
-                cards.forEach(c => c.classList.remove('ring-2', 'ring-red-400', 'bg-red-50/50'));
+            /* ── Helpers ── */
+            const $ = (sel, root = document) => root.querySelector(sel);
+            const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+            function clearHighlight() {
+                cards.forEach(c => c.classList.remove('is-highlighted'));
             }
 
-            function highlightPair(fromId, toId) {
-                clearHL();
-                const a = byId.get(String(fromId));
-                const b = byId.get(String(toId));
-                if (a) a.classList.add('ring-2', 'ring-red-400', 'bg-red-50/50');
-                if (b) b.classList.add('ring-2', 'ring-red-400', 'bg-red-50/50');
-                if (b) b.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center',
-                    inline: 'center'
+            function highlight(...ids) {
+                clearHighlight();
+                ids.forEach(id => {
+                    const c = byId.get(String(id));
+                    if (c) {
+                        c.classList.add('is-highlighted');
+                        c.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'nearest',
+                            inline: 'center'
+                        });
+                    }
                 });
             }
+
+            /* ── Click to highlight connected pairs ── */
             cards.forEach(card => {
                 card.addEventListener('click', e => {
                     if (e.target.closest('input')) return;
                     const to = card.dataset.nextMatchId;
-                    if (to) highlightPair(card.dataset.matchId, to);
+                    if (to) {
+                        highlight(card.dataset.matchId, to);
+                    } else {
+                        highlight(card.dataset.matchId);
+                    }
                 });
             });
+
             document.addEventListener('click', e => {
-                const feed = e.target.closest('.feed-line');
+                const feed = e.target.closest('.st-feed-link');
                 if (!feed) return;
-                e.preventDefault();
-                highlightPair(feed.dataset.from, feed.dataset.to);
+                e.stopPropagation();
+                highlight(feed.dataset.from, feed.dataset.to);
             });
 
-            // --- UI helpers ---
-            function updateStatusUI(card, status) {
-                card.dataset.status = status || '';
-                const chip = el('.status-chip', card);
-                const map = STATUS_MAP[status] || STATUS_MAP.pending;
-                if (chip) {
-                    chip.className =
-                        'status-chip inline-flex items-center px-2 py-0.5 rounded-full ring-1 ring-black/5';
-                    chip.classList.add(...map.cls.split(' '));
-                    chip.textContent = map.label;
+            /* click outside cards → clear */
+            document.addEventListener('click', e => {
+                if (!e.target.closest('.st-match') && !e.target.closest('.st-feed-link')) {
+                    clearHighlight();
+                }
+            });
+
+            /* ── DOM-driven final banner renderer ── */
+            function renderFinalBanner() {
+                if (!finalRoot || !FINAL_ID) return;
+                const card = byId.get(FINAL_ID);
+                if (!card) return;
+
+                const aName = ($('[data-team="A"]', card)?.textContent ?? '—').trim();
+                const bName = ($('[data-team="B"]', card)?.textContent ?? '—').trim();
+                const aScore = $('input[data-side="A"]', card)?.value ?? '';
+                const bScore = $('input[data-side="B"]', card)?.value ?? '';
+                const winner = card.dataset.winnerSlot ?? '';
+                const champ = winner === 'A' ? aName : winner === 'B' ? bName : '';
+
+                if (winner && champ) {
+                    finalRoot.innerHTML = `
+                    <div class="st-champion">
+                        <div class="st-champion__icon">🏆</div>
+                        <div>
+                            <div class="st-champion__label">Turnīra uzvarētājs</div>
+                            <div class="st-champion__name">${champ}</div>
+                        </div>
+                        ${(aScore && bScore) ? `<div class="st-champion__score">${aScore} – ${bScore}</div>` : ''}
+                    </div>`;
+                } else if (aName !== '—' || bName !== '—') {
+                    finalRoot.innerHTML = `
+                    <div class="st-final-pending">
+                        <div class="st-final-pending__head">
+                            <span class="st-final-pending__label">Fināls</span>
+                            <span class="st-final-pending__status">⏳ Gaida / Notiek</span>
+                        </div>
+                        <div class="st-final-pending__body">
+                            <div class="st-final-team-a">
+                                <div class="st-final-team__name">${aName}</div>
+                                <div class="st-final-team__score">${aScore || '–'}</div>
+                            </div>
+                            <div class="st-final-vs">VS</div>
+                            <div class="st-final-team-b">
+                                <div class="st-final-team__name">${bName}</div>
+                                <div class="st-final-team__score">${bScore || '–'}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    finalRoot.innerHTML = `
+                    <div class="st-final-pending">
+                        <div class="st-final-pending__head">
+                            <span class="st-final-pending__label">Fināls</span>
+                            <span class="st-final-pending__status">Finālisti drīzumā…</span>
+                        </div>
+                    </div>`;
                 }
             }
 
-            function setRowWinnerUI(card, slotOrNull) {
-                const aRow = el('.row-A', card);
-                const bRow = el('.row-B', card);
-                [aRow, bRow].forEach(r => r && r.classList.remove('bg-emerald-50', 'text-emerald-800',
-                    'font-semibold'));
-                card.dataset.winnerSlot = slotOrNull || '';
-                let chip = el('.winner-chip', card);
+            /* ── UI updaters ── */
+            function updateStatusBadge(card, status) {
+                card.dataset.status = status ?? '';
+                const chip = $('.st-badge', card);
+                if (!chip) return;
+                const meta = STATUS_MAP[status] ?? STATUS_MAP.pending;
+                chip.className = `st-badge ${meta.cls}`;
+                chip.textContent = meta.label;
+            }
+
+            function applyWinnerUI(card, slot) {
+                const aRow = $('.row-A', card);
+                const bRow = $('.row-B', card);
+                const aName = $('[data-team="A"]', card);
+                const bName = $('[data-team="B"]', card);
+
+                [aRow, bRow].forEach(r => r?.classList.remove('st-match__row--winner'));
+                [aName, bName].forEach(n => n?.classList.remove('st-match__team--winner'));
+
+                card.dataset.winnerSlot = slot ?? '';
+                let chip = $('.winner-chip', card);
                 if (!chip) {
                     chip = document.createElement('span');
-                    chip.className = 'winner-chip text-emerald-700';
-                    const headerLeft = card.querySelector('header div');
-                    if (headerLeft) headerLeft.appendChild(chip);
+                    chip.className = 'st-winner-chip winner-chip';
+                    $('.st-match__head-left', card)?.appendChild(chip);
                 }
-                if (slotOrNull === 'A') {
-                    aRow && aRow.classList.add('bg-emerald-50', 'text-emerald-800', 'font-semibold');
-                    chip.textContent = 'Uzv.: A';
-                    chip.classList.remove('hidden');
-                } else if (slotOrNull === 'B') {
-                    bRow && bRow.classList.add('bg-emerald-50', 'text-emerald-800', 'font-semibold');
-                    chip.textContent = 'Uzv.: B';
-                    chip.classList.remove('hidden');
+                if (slot === 'A' || slot === 'B') {
+                    const row = slot === 'A' ? aRow : bRow;
+                    const name = slot === 'A' ? aName : bName;
+                    row?.classList.add('st-match__row--winner');
+                    name?.classList.add('st-match__team--winner');
+                    chip.textContent = `Uzv.: ${slot}`;
+                    chip.style.display = '';
                 } else {
                     chip.textContent = '';
-                    chip.classList.add('hidden');
+                    chip.style.display = 'none';
                 }
             }
 
-            function setTeamLabel(nextCard, slot, name) {
-                const lbl = el(`[data-team="${slot}"]`, nextCard);
-                if (lbl) lbl.textContent = name ?? '—';
+            function setTeam(card, slot, name) {
+                const el = $(`[data-team="${slot}"]`, card);
+                if (!el) return;
+                el.textContent = name ?? '—';
+                el.classList.toggle('st-match__team--tbd', !name || name === '—');
             }
 
-            function enableDisableInputs(card) {
-                const aLbl = el('[data-team="A"]', card)?.textContent?.trim() || '';
-                const bLbl = el('[data-team="B"]', card)?.textContent?.trim() || '';
-                const hasA = !!aLbl && aLbl !== '—' && aLbl !== 'Gaida pretinieku';
-                const hasB = !!bLbl && bLbl !== '—' && bLbl !== 'Gaida pretinieku';
-                const lock = !(hasA && hasB) || !isEditable;
-                const aInp = el('input[data-side="A"]', card);
-                const bInp = el('input[data-side="B"]', card);
+            function refreshInputs(card) {
+                const aText = $('[data-team="A"]', card)?.textContent.trim() ?? '';
+                const bText = $('[data-team="B"]', card)?.textContent.trim() ?? '';
+                const valid = aText && aText !== '—' && aText !== 'Gaida pretinieku' &&
+                    bText && bText !== '—' && bText !== 'Gaida pretinieku';
+                const lock = !valid || !isEditable;
+                const aInp = $('input[data-side="A"]', card);
+                const bInp = $('input[data-side="B"]', card);
                 if (aInp) aInp.disabled = lock;
                 if (bInp) bInp.disabled = lock;
             }
 
-            // --- Final banner render (DOM-driven) ---
-            function renderFinalBannerFromDOM() {
-                if (!finalRoot || !FINAL_ID) return;
-                const finalCard = byId.get(String(FINAL_ID));
-                if (!finalCard) return;
-
-                const aName = (el('[data-team="A"]', finalCard)?.textContent || '—').trim();
-                const bName = (el('[data-team="B"]', finalCard)?.textContent || '—').trim();
-                const aScore = el('input[data-side="A"]', finalCard)?.value || '–';
-                const bScore = el('input[data-side="B"]', finalCard)?.value || '–';
-                const winnerSlot = finalCard.dataset.winnerSlot || '';
-
-                if (winnerSlot) {
-                    const champion = winnerSlot === 'A' ? aName : bName;
-                    finalRoot.innerHTML = `
-                        <div class="rounded-2xl ring-1 ring-yellow-300/60 bg-gradient-to-br from-amber-100 via-yellow-50 to-amber-50 shadow">
-                            <div class="px-6 sm:px-8 py-5 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-3xl">🏆</span>
-                                    <div>
-                                        <div class="text-[11px] sm:text-xs font-black tracking-widest uppercase text-amber-900/80">Turnīra uzvarētājs</div>
-                                        <div class="text-xl sm:text-2xl font-black text-amber-900 truncate" title="${champion}">${champion}</div>
-                                    </div>
-                                </div>
-                                <div class="text-amber-900/80 text-sm tabular-nums">${aScore || '–'} – ${bScore || '–'}</div>
-                            </div>
-                        </div>
-                    `;
-                } else if ((aName && aName !== '—') || (bName && bName !== '—')) {
-                    finalRoot.innerHTML = `
-                        <div class="rounded-2xl border border-gray-200 bg-white/90 shadow-sm overflow-hidden">
-                            <div class="px-6 py-3 flex items-center justify-between">
-                                <div class="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-gray-600 font-bold">Fināls</div>
-                                <div class="text-xs text-gray-600">⏳ Notiek / gaida</div>
-                            </div>
-                            <div class="px-6 pb-5 grid grid-cols-5 items-center gap-3">
-                                <div class="col-span-2 text-right">
-                                    <div class="text-base sm:text-xl font-black text-gray-900 truncate" title="${aName || '—'}">${aName || '—'}</div>
-                                    <div class="mt-0.5 text-gray-500 tabular-nums">${aScore || '–'}</div>
-                                </div>
-                                <div class="col-span-1 text-center text-[10px] uppercase tracking-widest text-gray-400">VS</div>
-                                <div class="col-span-2 text-left">
-                                    <div class="text-base sm:text-xl font-black text-gray-900 truncate" title="${bName || '—'}">${bName || '—'}</div>
-                                    <div class="mt-0.5 text-gray-500 tabular-nums">${bScore || '–'}</div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    finalRoot.innerHTML =
-                        `<div class="rounded-2xl border border-gray-200 bg-white/90 shadow-sm px-6 py-4 text-sm text-gray-500">Finālisti drīzumā…</div>`;
-                }
-            }
-
-            (function attachFinalObservers() {
-                if (!FINAL_ID) return;
-                const card = byId.get(String(FINAL_ID));
-                if (!card) return;
-
-                const attrObserver = new MutationObserver(renderFinalBannerFromDOM);
-                attrObserver.observe(card, {
-                    attributes: true,
-                    attributeFilter: ['data-winner-slot']
-                });
-
-                const textObserver = new MutationObserver(renderFinalBannerFromDOM);
-                textObserver.observe(card, {
-                    subtree: true,
-                    characterData: true,
-                    childList: true
-                });
-
-                els('input[data-side]', card).forEach(inp => {
-                    inp.addEventListener('input', renderFinalBannerFromDOM);
-                    inp.addEventListener('change', renderFinalBannerFromDOM);
-                });
-
-                renderFinalBannerFromDOM();
-            })();
-
-            // --- Autosave + server sync (unchanged) ---
-            if (!isEditable) return;
-
-            const inputs = els('.score-input');
-            const cache = new Map(); // matchId -> {A:null|int, B:null|int}
-            const timers = new Map();
-
-            // seed cache
-            inputs.forEach(inp => {
-                const id = inp.dataset.matchId,
-                    side = inp.dataset.side;
-                const v = inp.value === '' ? null : Number(inp.value);
-                const prev = cache.get(id) || {
-                    A: null,
-                    B: null
-                };
-                prev[side] = v;
-                cache.set(id, prev);
-            });
-
+            /* ── Save-state indicators ── */
             function setState(id, state) {
-                const saving = el('#saving-' + id),
-                    ok = el('#saved-' + id),
-                    err = el('#error-' + id);
-                [saving, ok, err].forEach(x => x && x.classList.add('hidden'));
-                if (state === 'saving') saving?.classList.remove('hidden');
-                if (state === 'ok') ok?.classList.remove('hidden');
-                if (state === 'err') err?.classList.remove('hidden');
+                const dot = document.getElementById(`saving-${id}`);
+                const ok = document.getElementById(`saved-${id}`);
+                const err = document.getElementById(`error-${id}`);
+                [dot, ok, err].forEach(x => x?.classList.remove('active'));
+                if (state === 'saving') dot?.classList.add('active');
+                if (state === 'ok') ok?.classList.add('active');
+                if (state === 'err') err?.classList.add('active');
             }
 
-            function validPair(p) {
-                return Number.isInteger(p.A) && Number.isInteger(p.B);
-            }
-
-            function updateStatus(card, status) {
-                updateStatusUI(card, status);
-            }
-
+            /* ── Apply a match update object from server ── */
             function applyMatchUpdate(m) {
                 const card = byId.get(String(m.id));
                 if (!card) return;
 
-                const aLbl = el('[data-team="A"]', card);
-                const bLbl = el('[data-team="B"]', card);
-                if (aLbl && typeof m.a_name !== 'undefined') aLbl.textContent = m.a_name ?? 'Gaida pretinieku';
-                if (bLbl && typeof m.b_name !== 'undefined') bLbl.textContent = m.b_name ?? 'Gaida pretinieku';
+                if (typeof m.a_name !== 'undefined') setTeam(card, 'A', m.a_name);
+                if (typeof m.b_name !== 'undefined') setTeam(card, 'B', m.b_name);
 
-                const aInp = el('input[data-side="A"]', card);
-                const bInp = el('input[data-side="B"]', card);
-                if (aInp && typeof m.score_a !== 'undefined') aInp.value = (m.score_a ?? '');
-                if (bInp && typeof m.score_b !== 'undefined') bInp.value = (m.score_b ?? '');
+                const aInp = $('input[data-side="A"]', card);
+                const bInp = $('input[data-side="B"]', card);
+                if (aInp && typeof m.score_a !== 'undefined') aInp.value = m.score_a ?? '';
+                if (bInp && typeof m.score_b !== 'undefined') bInp.value = m.score_b ?? '';
 
-                if (m.status) updateStatus(card, m.status);
-                setRowWinnerUI(card, m.winner_slot || null);
-                enableDisableInputs(card);
+                if (m.status) updateStatusBadge(card, m.status);
+                applyWinnerUI(card, m.winner_slot ?? null);
+                refreshInputs(card);
 
-                // Propagate to next
+                /* propagate winner into the next match */
                 if (m.winner_slot && m.next_match_id && m.next_slot) {
                     const nextCard = byId.get(String(m.next_match_id));
                     if (nextCard) {
                         const winnerName = m.winner_slot === 'A' ?
-                            (m.a_name ?? aLbl?.textContent) :
-                            (m.b_name ?? bLbl?.textContent);
-                        setTeamLabel(nextCard, m.next_slot, (winnerName || '—'));
-                        enableDisableInputs(nextCard);
-                        if (String(m.next_match_id) === String(FINAL_ID)) renderFinalBannerFromDOM();
+                            (m.a_name ?? $('[data-team="A"]', card)?.textContent?.trim()) :
+                            (m.b_name ?? $('[data-team="B"]', card)?.textContent?.trim());
+                        setTeam(nextCard, m.next_slot, winnerName || '—');
+                        refreshInputs(nextCard);
                     }
                 }
 
-                if (String(m.id) === String(FINAL_ID)) renderFinalBannerFromDOM();
+                if (String(m.id) === FINAL_ID) renderFinalBanner();
+                if (m.next_match_id && String(m.next_match_id) === FINAL_ID) renderFinalBanner();
             }
 
-            function syncFromResponse(data) {
+            /* ── Sync full server response ── */
+            function syncResponse(data) {
                 if (Array.isArray(data.matches)) {
                     data.matches.forEach(applyMatchUpdate);
                 } else if (data.match) {
@@ -925,33 +1532,49 @@
                 } else if (typeof data.id !== 'undefined') {
                     applyMatchUpdate(data);
                 }
-
-                if (data.final && finalRoot) {
+                /* explicit final payload from server overrides DOM render */
+                if (data.final?.done && data.final?.champion) {
                     const f = data.final;
-                    if (f.done && f.champion) {
-                        finalRoot.innerHTML = `
-                            <div class="rounded-2xl ring-1 ring-yellow-300/60 bg-gradient-to-br from-amber-100 via-yellow-50 to-amber-50 shadow">
-                                <div class="px-6 sm:px-8 py-5 flex items-center justify-between">
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-3xl">🏆</span>
-                                        <div>
-                                            <div class="text-[11px] sm:text-xs font-black tracking-widest uppercase text-amber-900/80">Turnīra uzvarētājs</div>
-                                            <div class="text-xl sm:text-2xl font-black text-amber-900 truncate" title="${f.champion}">${f.champion}</div>
-                                        </div>
-                                    </div>
-                                    <div class="text-amber-900/80 text-sm tabular-nums">${(f.a_scr ?? '–')} – ${(f.b_scr ?? '–')}</div>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        renderFinalBannerFromDOM();
-                    }
+                    finalRoot.innerHTML = `
+                    <div class="st-champion">
+                        <div class="st-champion__icon">🏆</div>
+                        <div>
+                            <div class="st-champion__label">Turnīra uzvarētājs</div>
+                            <div class="st-champion__name">${f.champion}</div>
+                        </div>
+                        ${(f.a_scr != null && f.b_scr != null) ? `<div class="st-champion__score">${f.a_scr} – ${f.b_scr}</div>` : ''}
+                    </div>`;
                 } else {
-                    renderFinalBannerFromDOM();
+                    renderFinalBanner();
                 }
             }
 
-            async function send(id, url, A, B) {
+            /* ── Autosave (debounced PATCH) ── */
+            if (!isEditable) {
+                renderFinalBanner();
+                return;
+            }
+
+            const cache = new Map(); /* matchId -> { A, B } */
+            const timers = new Map();
+
+            /* seed cache from current DOM */
+            $$('.score-input').forEach(inp => {
+                const id = inp.dataset.matchId;
+                const side = inp.dataset.side;
+                const prev = cache.get(id) ?? {
+                    A: null,
+                    B: null
+                };
+                prev[side] = inp.value === '' ? null : Number(inp.value);
+                cache.set(id, prev);
+            });
+
+            function pairReady(p) {
+                return Number.isInteger(p.A) && Number.isInteger(p.B);
+            }
+
+            async function save(id, url, A, B) {
                 setState(id, 'saving');
                 try {
                     const res = await fetch(url, {
@@ -959,7 +1582,7 @@
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': csrf,
-                            'Accept': 'application/json'
+                            Accept: 'application/json',
                         },
                         body: JSON.stringify({
                             score_a: A,
@@ -968,37 +1591,35 @@
                     });
                     const data = await res.json().catch(() => ({}));
                     if (!res.ok) throw data;
-                    syncFromResponse(data);
+                    syncResponse(data);
                     setState(id, 'ok');
-                    setTimeout(() => setState(id, 'idle'), 900);
-                } catch (e) {
+                    setTimeout(() => setState(id, 'idle'), 1200);
+                } catch (err) {
                     setState(id, 'err');
-                    if (e && e.message) alert(e.message);
+                    if (err?.message) console.error('[bracket]', err.message);
                 }
             }
 
-            // Initial render
-            renderFinalBannerFromDOM();
-
-            // Inputs wiring
-            els('.score-input').forEach(inp => {
+            $$('.score-input').forEach(inp => {
                 if (inp.disabled) return;
                 const id = inp.dataset.matchId;
                 const side = inp.dataset.side;
+                const url = inp.dataset.url;
 
                 function schedule() {
-                    const pair = cache.get(id) || {
+                    const pair = cache.get(id) ?? {
                         A: null,
                         B: null
                     };
-                    if (!validPair(pair)) return;
+                    if (!pairReady(pair)) return;
                     clearTimeout(timers.get(id));
-                    timers.set(id, setTimeout(() => send(id, inp.dataset.url, pair.A, pair.B), 350));
+                    timers.set(id, setTimeout(() => save(id, url, pair.A, pair.B), 380));
                 }
+
                 inp.addEventListener('input', e => {
                     const raw = e.currentTarget.value;
                     const val = raw === '' ? null : Number(raw);
-                    const pair = cache.get(id) || {
+                    const pair = cache.get(id) ?? {
                         A: null,
                         B: null
                     };
@@ -1007,21 +1628,55 @@
                     setState(id, 'saving');
                     schedule();
                 });
+
                 inp.addEventListener('keydown', e => {
-                    const pair = cache.get(id) || {
-                        A: null,
-                        B: null
-                    };
                     if (e.key === 'Enter') {
                         e.preventDefault();
+                        const pair = cache.get(id) ?? {
+                            A: null,
+                            B: null
+                        };
                         clearTimeout(timers.get(id));
-                        if (validPair(pair)) send(id, inp.dataset.url, pair.A, pair.B);
+                        if (pairReady(pair)) save(id, url, pair.A, pair.B);
                     } else if (e.key === 'Escape') {
-                        e.preventDefault();
                         e.currentTarget.blur();
+                    } else if (e.key === 'Tab') {
+                        /* jump to the partner score in same card */
+                        const partnerSide = side === 'A' ? 'B' : 'A';
+                        const partner = document.querySelector(
+                            `.score-input[data-match-id="${id}"][data-side="${partnerSide}"]`
+                        );
+                        if (partner && !partner.disabled) {
+                            e.preventDefault();
+                            partner.focus();
+                            partner.select();
+                        }
                     }
                 });
+
+                inp.addEventListener('focus', () => inp.select());
             });
+
+            /* ── Watch final card for attr changes (MutationObserver) ── */
+            const finalCard = byId.get(FINAL_ID);
+            if (finalCard) {
+                new MutationObserver(renderFinalBanner).observe(finalCard, {
+                    attributes: true,
+                    attributeFilter: ['data-winner-slot'],
+                });
+                new MutationObserver(renderFinalBanner).observe(finalCard, {
+                    subtree: true,
+                    characterData: true,
+                    childList: true,
+                });
+                $$('input[data-side]', finalCard).forEach(inp => {
+                    inp.addEventListener('input', renderFinalBanner);
+                });
+            }
+
+            /* initial render */
+            renderFinalBanner();
+
         })();
     </script>
 </x-app-layout>

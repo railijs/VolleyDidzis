@@ -2,209 +2,548 @@
 <html lang="lv">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reģistrēties - VolleyLV</title>
-
-    <!-- Performance: preconnect + preload critical assets -->
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
-    <link rel="preload" as="image" href="{{ asset('images/volleylv-logo.png') }}">
-
-    <!-- Prefetch opposite page -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reģistrēties — VolleyLV</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=Barlow+Condensed:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
     <link rel="prefetch" href="{{ route('login') }}" as="document">
-
-    <script src="https://cdn.tailwindcss.com" defer></script>
-
     <style>
-        ::view-transition-old(root),
-        ::view-transition-new(root) {
-            animation-duration: 200ms;
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --ink: #0F0F0E;
+            --ink-2: #3A3935;
+            --ink-3: #7A7770;
+            --ink-4: #B8B5AF;
+            --paper: #F8F6F1;
+            --paper-2: #EFECE5;
+            --rule: #D8D4CC;
+            --red: #B8241C;
+            --red-hover: #961E17;
+            --red-tint: #F9EEEE;
+            --white: #F5F4F0;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--ink);
+            color: var(--white);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Thin red top rule ── */
+        .page-rule {
+            height: 3px;
+            background: linear-gradient(to right, var(--red) 0%, rgba(184, 36, 28, 0.3) 50%, transparent 100%);
+        }
+
+        /* ── Layout ── */
+        .page {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 100vh;
+        }
+
+        @media (max-width: 860px) {
+            .page {
+                grid-template-columns: 1fr;
+            }
+
+            .page__left {
+                padding-bottom: 0;
+            }
+        }
+
+        /* ── Left panel ── */
+        .page__left {
+            padding: clamp(2.5rem, 6vw, 5rem) clamp(1.5rem, 5vw, 4rem);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid rgba(245, 244, 240, 0.07);
+        }
+
+        .brand {
+            margin-bottom: 3rem;
+        }
+
+        .brand__logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            font-style: italic;
+            letter-spacing: -0.02em;
+            color: var(--white);
+            text-decoration: none;
+        }
+
+        .brand__logo em {
+            color: var(--red);
+            font-style: normal;
+        }
+
+        .brand__rule {
+            width: 32px;
+            height: 2px;
+            background: var(--red);
+            margin-top: 0.9rem;
+        }
+
+        .hero-head {
+            margin-bottom: 2rem;
+        }
+
+        .hero-head__eyebrow {
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(245, 244, 240, 0.35);
+            margin-bottom: 0.75rem;
+        }
+
+        .hero-head__title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.4rem, 5vw, 3.8rem);
+            font-weight: 900;
+            font-style: italic;
+            line-height: 1.05;
+            letter-spacing: -0.025em;
+            color: var(--white);
+        }
+
+        .hero-head__title em {
+            color: var(--red);
+            font-style: normal;
+        }
+
+        .hero-copy {
+            font-size: 0.95rem;
+            font-weight: 300;
+            line-height: 1.75;
+            color: rgba(245, 244, 240, 0.5);
+            max-width: 380px;
+            margin-bottom: 2.5rem;
+        }
+
+        .login-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(245, 244, 240, 0.4);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(245, 244, 240, 0.15);
+            padding-bottom: 1px;
+            transition: color 0.15s, border-color 0.15s;
+        }
+
+        .login-link:hover {
+            color: var(--white);
+            border-color: rgba(245, 244, 240, 0.4);
+        }
+
+        .login-link::after {
+            content: '→';
+        }
+
+        /* Contacts block */
+        .contacts {
+            margin-top: auto;
+            padding-top: 3rem;
+        }
+
+        .contacts__label {
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(245, 244, 240, 0.25);
+            margin-bottom: 0.75rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-size: 0.82rem;
+            color: rgba(245, 244, 240, 0.45);
+            margin-bottom: 0.5rem;
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .contact-item:hover {
+            color: rgba(245, 244, 240, 0.8);
+        }
+
+        .contact-item svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            flex-shrink: 0;
+        }
+
+        .contact-item__status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.65rem;
+            color: rgba(245, 244, 240, 0.25);
+            letter-spacing: 0.04em;
+            margin-top: 0.25rem;
+        }
+
+        .contact-item__status__dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #4ADE80;
+        }
+
+        .page-footer {
+            font-size: 0.65rem;
+            color: rgba(245, 244, 240, 0.2);
+            letter-spacing: 0.06em;
+            margin-top: 2rem;
+        }
+
+        /* ── Right panel (form) ── */
+        .page__right {
+            background: var(--paper);
+            padding: clamp(2.5rem, 6vw, 5rem) clamp(1.5rem, 5vw, 4rem);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .form-header__title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            margin-bottom: 0.3rem;
+        }
+
+        .form-header__sub {
+            font-size: 0.82rem;
+            color: var(--ink-3);
+            font-weight: 300;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 0.65rem 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-left: 3px solid;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert--error {
+            background: var(--red-tint);
+            color: #8A1A14;
+            border-color: var(--red);
+        }
+
+        .alert ul {
+            list-style: none;
+        }
+
+        .alert li::before {
+            content: '— ';
+        }
+
+        /* Form fields */
+        .field {
+            margin-bottom: 1.75rem;
+        }
+
+        .field:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink-2);
+            margin-bottom: 0.45rem;
+        }
+
+        .field-input {
+            width: 100%;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95rem;
+            color: var(--ink);
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--rule);
+            padding: 0.55rem 0;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .field-input::placeholder {
+            color: var(--ink-4);
+        }
+
+        .field-input:focus {
+            border-bottom-color: var(--ink);
+        }
+
+        /* Side-by-side password fields */
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.75rem;
+        }
+
+        @media (max-width: 520px) {
+            .field-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .field-row .field {
+            margin-bottom: 0;
+        }
+
+        .form-separator {
+            border: none;
+            border-top: 1px solid var(--rule);
+            margin: 2rem 0;
+        }
+
+        /* Actions */
+        .form-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .form-link {
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--ink-3);
+            text-decoration: none;
+            border-bottom: 1px solid var(--rule);
+            padding-bottom: 1px;
+            transition: color 0.15s, border-color 0.15s;
+        }
+
+        .form-link:hover {
+            color: var(--ink);
+            border-color: var(--ink-3);
+        }
+
+        .btn-submit {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: var(--ink);
+            color: var(--white);
+            border: 1px solid var(--ink);
+            padding: 0.65rem 2rem;
+            cursor: pointer;
+            border-radius: 0;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        .btn-submit:hover {
+            background: var(--ink-2);
+            border-color: var(--ink-2);
+        }
+
+        .btn-submit:focus-visible {
+            outline: 2px solid var(--red);
+            outline-offset: 2px;
+        }
+
+        /* ── Reveal ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .reveal.in {
+            opacity: 1;
+            transform: none;
+        }
+
+        @media (max-width: 860px) {
+            .contacts {
+                display: none;
+            }
+
+            .page__right {
+                min-height: 100vh;
+            }
         }
     </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-b from-red-700 via-red-600 to-red-700/90">
-    <!-- BG soft glows -->
-    <div class="pointer-events-none fixed inset-0 select-none" aria-hidden="true">
-        <div class="absolute -top-32 -left-24 h-96 w-96 rounded-full blur-3xl opacity-20 bg-red-500"></div>
-        <div class="absolute -bottom-40 -right-24 h-[28rem] w-[28rem] rounded-full blur-[90px] opacity-15 bg-red-400">
-        </div>
-    </div>
+<body>
 
-    <main id="pageRoot" class="relative z-10 transition-opacity duration-200 ease-out opacity-0">
-        <div class="max-w-7xl mx-auto px-6 lg:px-10 py-16 lg:py-20">
-            <div class="grid lg:grid-cols-2 gap-10 items-start">
-                <!-- LEFT: Logo + Heading + Copy -->
-                <section class="text-white">
-                    <div class="flex items-center gap-5">
-                        <img src="{{ asset('images/volleylv-logo.png') }}" alt="VolleyLV"
-                            class="h-14 w-14 sm:h-16 sm:w-16 object-contain" decoding="async" fetchpriority="high" />
-                        <h1 class="text-4xl sm:text-5xl font-extrabold leading-tight">Reģistrēties</h1>
-                    </div>
+    <div class="page-rule"></div>
 
-                    <p class="mt-4 text-lg text-red-100 leading-relaxed max-w-xl">
-                        Izveido kontu un pievienojies turnīriem vieglāk un ātrāk. Seko grafikam, pārvaldi komandas un
-                        izmanto pilnu VolleyLV funkcionalitāti.
-                    </p>
+    <div class="page" id="pageRoot" style="opacity:0;transition:opacity 0.3s ease;">
 
-                    <p class="mt-6 text-red-100">
-                        Jau ir konts?
-                        <a href="{{ route('login') }}" data-transition class="underline font-semibold hover:text-white"
-                            data-prefetch>Pieslēgties</a>
-                    </p>
-
-                    <div class="mt-10 h-px w-full bg-white/10"></div>
-                </section>
-
-                <!-- RIGHT: Register Card -->
-                <section>
-                    <div class="bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 overflow-hidden">
-                        <div class="h-3 bg-gradient-to-r from-red-600 via-red-500 to-red-600"></div>
-                        <div class="p-6 sm:p-8">
-                            <h2 class="text-xl font-extrabold text-neutral-900">Izveido kontu</h2>
-                            <p class="text-sm text-neutral-600 mt-1">Aizpildi datus un pievienojies VolleyLV.</p>
-
-                            @if ($errors->any())
-                                <div
-                                    class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-                                    <ul class="list-disc list-inside">
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
-
-                            <form method="POST" action="{{ route('register') }}" class="mt-6 space-y-5">
-                                @csrf
-
-                                <div>
-                                    <label for="name"
-                                        class="block text-sm font-medium text-neutral-800 mb-1.5">Vārds</label>
-                                    <input id="name" type="text" name="name" value="{{ old('name') }}"
-                                        required autofocus
-                                        class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder-neutral-400
-                                focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600"
-                                        placeholder="Tavs vārds" />
-                                </div>
-
-                                <div>
-                                    <label for="email"
-                                        class="block text-sm font-medium text-neutral-800 mb-1.5">E-pasts</label>
-                                    <input id="email" type="email" name="email" value="{{ old('email') }}"
-                                        required
-                                        class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder-neutral-400
-                                focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600"
-                                        placeholder="you@example.com" />
-                                </div>
-
-                                <div class="grid sm:grid-cols-2 gap-5">
-                                    <div>
-                                        <label for="password"
-                                            class="block text-sm font-medium text-neutral-800 mb-1.5">Parole</label>
-                                        <input id="password" type="password" name="password" required
-                                            class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder-neutral-400
-                                  focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600"
-                                            placeholder="••••••••" />
-                                    </div>
-
-                                    <div>
-                                        <label for="password_confirmation"
-                                            class="block text-sm font-medium text-neutral-800 mb-1.5">Apstiprini
-                                            paroli</label>
-                                        <input id="password_confirmation" type="password" name="password_confirmation"
-                                            required
-                                            class="block w-full rounded-lg border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder-neutral-400
-                                  focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-red-600"
-                                            placeholder="••••••••" />
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center justify-between">
-                                    <a href="{{ route('login') }}" data-transition
-                                        class="text-sm text-neutral-600 hover:text-neutral-800 underline underline-offset-4"
-                                        data-prefetch>
-                                        Jau esi reģistrējies?
-                                    </a>
-
-                                    <button type="submit"
-                                        class="inline-flex items-center justify-center rounded-lg
-                                 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold
-                                 px-6 py-3 shadow-lg shadow-red-700/20 hover:to-red-800
-                                 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition">
-                                        Reģistrēties
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </section>
-            </div>
-
-            <!-- CONTACTS -->
-            <section class="mt-14">
-                <div class="h-px bg-white/15"></div>
-
-                <div class="grid lg:grid-cols-2 gap-8 items-start text-white mt-8">
-                    <div>
-                        <p class="uppercase tracking-[0.2em] text-[11px] text-red-100/90 font-bold">Kontakti</p>
-                        <h3 class="text-3xl font-extrabold mt-1">Sazinies ar VolleyLV</h3>
-                        <p class="mt-2 text-red-100 max-w-xl">
-                            Jautājumi par turnīriem, sadarbības piedāvājumi vai atbalsts — droši raksti vai zvani.
-                        </p>
-                    </div>
-
-                    <div class="flex flex-col gap-3">
-                        <a href="tel:+37120001234"
-                            class="group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3 hover:bg-white/15 hover:border-white/30 transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" viewBox="0 0 24 24"
-                                fill="currentColor" aria-hidden="true">
-                                <path
-                                    d="M6.62 10.79a15.05 15.05 0 006.59 6.59l1.82-1.82a1 1 0 011.01-.24c1.1.37 2.28.57 3.5.57a1 1 0 011 1V21a1 1 0 01-1 1C10.07 22 2 13.93 2 3a1 1 0 011-1h3.11a1 1 0 011 1c0 1.22.2 2.4.57 3.5a1 1 0 01-.24 1.01l-1.82 1.82z" />
-                            </svg>
-                            <span class="font-semibold">+371 20001234</span>
-                        </a>
-
-                        <a href="mailto:info@volleylv.example"
-                            class="group inline-flex items-center gap-3 rounded-xl border border-white/20 bg-white/10 px-4 py-3 hover:bg-white/15 hover:border-white/30 transition">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" viewBox="0 0 24 24"
-                                fill="currentColor" aria-hidden="true">
-                                <path
-                                    d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 2v.01L12 13 4 6.01V6h16zM4 18V8.236l7.386 5.74a1 1 0 001.228 0L20 8.236V18H4z" />
-                            </svg>
-                            <span class="font-semibold">info@volleylv.example</span>
-                        </a>
-
-                        <div class="flex items-center gap-3 pt-1 text-sm text-red-100">
-                            <span class="inline-flex items-center gap-1">
-                                <span class="h-2 w-2 rounded-full bg-green-300"></span> Atbildam darba dienās
-                                09:00–18:00
-                            </span>
-                        </div>
-                    </div>
+        {{-- Left panel --}}
+        <div class="page__left">
+            <div>
+                <div class="brand reveal" data-stagger="0">
+                    <a href="{{ route('dashboard') }}" class="brand__logo">Volley<em>LV</em></a>
+                    <div class="brand__rule"></div>
                 </div>
 
-                <p class="text-center text-xs text-red-100 mt-8">
-                    © {{ date('Y') }} VolleyLV. Visas tiesības aizsargātas.
+                <div class="hero-head reveal" data-stagger="1">
+                    <div class="hero-head__eyebrow">Latvijas volejbols</div>
+                    <h1 class="hero-head__title">Pievienojies<br><em>VolleyLV</em><br>komandai</h1>
+                </div>
+
+                <p class="hero-copy reveal" data-stagger="2">
+                    Izveido kontu un seko saviem turnīriem, pārvaldi komandas un lasi jaunākās ziņas.
                 </p>
-            </section>
+
+                <a href="{{ route('login') }}" class="login-link reveal" data-stagger="3">
+                    Jau ir konts? Ienākt
+                </a>
+            </div>
+
+            <div class="contacts reveal" data-stagger="4">
+                <div class="contacts__label">Kontakti</div>
+                <a href="tel:+37120001234" class="contact-item">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.09a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" />
+                    </svg>
+                    +371 20001234
+                </a>
+                <a href="mailto:info@volleylv.example" class="contact-item">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                    </svg>
+                    info@volleylv.example
+                </a>
+                <div class="contact-item__status">
+                    <div class="contact-item__status__dot"></div>
+                    Atbildam darba dienās 09:00–18:00
+                </div>
+                <div class="page-footer">© {{ date('Y') }} VolleyLV</div>
+            </div>
         </div>
-    </main>
+
+        {{-- Right panel (form) --}}
+        <div class="page__right">
+            <div style="max-width:460px; width:100%; margin:0 auto;">
+
+                <div class="form-header reveal" data-stagger="0">
+                    <div class="form-header__title">Reģistrēties</div>
+                    <div class="form-header__sub">Aizpildi datus, lai izveidotu kontu.</div>
+                </div>
+
+                @if ($errors->any())
+                    <div class="alert alert--error reveal" data-stagger="1">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('register') }}" class="reveal" data-stagger="1">
+                    @csrf
+
+                    <div class="field">
+                        <label class="field-label" for="name">Vārds</label>
+                        <input class="field-input" id="name" type="text" name="name"
+                            value="{{ old('name') }}" required autofocus placeholder="Tavs vārds">
+                    </div>
+
+                    <hr class="form-separator">
+
+                    <div class="field">
+                        <label class="field-label" for="email">E-pasts</label>
+                        <input class="field-input" id="email" type="email" name="email"
+                            value="{{ old('email') }}" required placeholder="you@example.com">
+                    </div>
+
+                    <hr class="form-separator">
+
+                    <div class="field-row">
+                        <div class="field">
+                            <label class="field-label" for="password">Parole</label>
+                            <input class="field-input" id="password" type="password" name="password" required
+                                placeholder="••••••••">
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="password_confirmation">Apstiprini paroli</label>
+                            <input class="field-input" id="password_confirmation" type="password"
+                                name="password_confirmation" required placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ route('login') }}" class="form-link">Jau ir konts? Ienākt</a>
+                        <button type="submit" class="btn-submit">Reģistrēties →</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
 
     <script>
-        // Fade-in
         const root = document.getElementById('pageRoot');
-        requestAnimationFrame(() => root.classList.remove('opacity-0'));
+        requestAnimationFrame(() => root.style.opacity = '1');
 
-        // Prefetch on hover/touch
-        document.addEventListener('mouseover', prefetchHandler, {
-            passive: true
-        });
-        document.addEventListener('touchstart', prefetchHandler, {
-            passive: true
+        document.querySelectorAll('.page__right .reveal, .page__left .reveal').forEach(el => {
+            const i = parseInt(el.dataset.stagger || '0', 10);
+            setTimeout(() => el.classList.add('in'), 80 + i * 90);
         });
 
-        function prefetchHandler(e) {
+        document.addEventListener('mouseover', e => {
             const a = e.target.closest('a[data-prefetch]');
             if (!a || a.dataset.prefetched) return;
             const l = document.createElement('link');
@@ -213,17 +552,16 @@
             l.href = a.href;
             document.head.appendChild(l);
             a.dataset.prefetched = '1';
-        }
+        }, {
+            passive: true
+        });
 
-        // View Transitions navigation
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', e => {
             const a = e.target.closest('a[data-transition]');
-            if (!a) return;
-            if (!document.startViewTransition) return;
+            if (!a || !document.startViewTransition) return;
             e.preventDefault();
-            const href = a.href;
             document.startViewTransition(() => {
-                window.location.href = href;
+                window.location.href = a.href;
             });
         });
     </script>
