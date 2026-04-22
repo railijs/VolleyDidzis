@@ -124,8 +124,8 @@ class TournamentController extends Controller
     private function validateTournament(Request $request)
     {
         $rules = [
-            'name'           => 'required|string|max:255',
-            'description'    => 'nullable|string|max:2000',
+            'name'           => 'required|string|max:50',
+            'description'    => 'nullable|string|max:255',
             'start_date'     => 'required|date|after_or_equal:today',
             'end_date'       => 'required|date|after_or_equal:start_date',
             'location'       => ['required', 'string', 'min:3', 'max:255', 'regex:/^(?!\d+$)[\p{L}\p{N}\s,\-\.]+$/u'],
@@ -149,10 +149,10 @@ class TournamentController extends Controller
         $messages = [
             'name.required' => 'Lūdzu ievadi turnīra nosaukumu.',
             'name.string'   => 'Nosaukumam jābūt tekstam.',
-            'name.max'      => 'Nosaukums nedrīkst pārsniegt 255 rakstzīmes.',
+            'name.max'      => 'Nosaukums nedrīkst pārsniegt 50 rakstzīmes.',
 
             'description.string' => 'Aprakstam jābūt tekstam.',
-            'description.max'    => 'Apraksts nedrīkst pārsniegt 2000 rakstzīmes.',
+            'description.max'    => 'Apraksts nedrīkst pārsniegt 255 rakstzīmes.',
 
             'start_date.required'       => 'Lūdzu izvēlies sākuma datumu.',
             'start_date.date'           => 'Sākuma datumam jābūt derīgam datumam.',
