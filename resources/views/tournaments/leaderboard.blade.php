@@ -673,188 +673,195 @@
                     <div class="lb-header__sub">
                         Uzvaras = <strong>turnīra tituli</strong>
                     </div>
+
                 </div>
-                <a href="{{ route('dashboard') }}" class="lb-btn-back">← Paneļis</a>
-            </div>
-        </div>
-        <div class="lb-bar"></div>
+                <div class="lb-bar"></div>
 
-        <div class="lb-wrap">
+                <div class="lb-wrap">
 
-            {{-- Filters ── --}}
-            <div class="lb-filters lb-reveal" data-stagger="1">
-                <form method="GET" action="{{ route('leaderboard') }}">
-                    <div class="lb-filter-group">
-                        <label class="lb-filter-label">Meklēt komandu</label>
-                        <input class="lb-filter-input" type="text" name="q" value="{{ $q }}"
-                            placeholder="Komandas nosaukums…">
-                    </div>
-                    <div class="lb-filter-group">
-                        <label class="lb-filter-label">Kārtot pēc</label>
-                        <select class="lb-filter-select" name="sort">
-                            <option value="wins" {{ $sort === 'wins' ? 'selected' : '' }}>Tituli</option>
-                            <option value="finals" {{ $sort === 'finals' ? 'selected' : '' }}>Fināli</option>
-                            <option value="win_rate" {{ $sort === 'win_rate' ? 'selected' : '' }}>Uzvaru %</option>
-                            <option value="diff" {{ $sort === 'diff' ? 'selected' : '' }}>Pt. starpība</option>
-                            <option value="pf_avg" {{ $sort === 'pf_avg' ? 'selected' : '' }}>Vid. punkti (par)</option>
-                            <option value="pa_avg" {{ $sort === 'pa_avg' ? 'selected' : '' }}>Vid. punkti (pret)
-                            </option>
-                            <option value="played" {{ $sort === 'played' ? 'selected' : '' }}>Spēles</option>
-                        </select>
-                    </div>
-                    <div class="lb-filter-group">
-                        <label class="lb-filter-label">Secība</label>
-                        <select class="lb-filter-select" name="dir">
-                            <option value="desc" {{ $dir === 'desc' ? 'selected' : '' }}>Dilstoši</option>
-                            <option value="asc" {{ $dir === 'asc' ? 'selected' : '' }}>Augoši</option>
-                        </select>
-                    </div>
-
-                    <div class="lb-filter-actions">
-                        <button type="submit" class="lb-btn-submit">Rādīt →</button>
-                        <div class="lb-per-page">
-                            <span>Rādīt:</span>
-                            <select name="per_page" onchange="this.form.submit()">
-                                @foreach ([10, 20, 50, 100] as $size)
-                                    <option value="{{ $size }}"
-                                        {{ request('per_page', 20) == $size ? 'selected' : '' }}>{{ $size }}
+                    {{-- Filters ── --}}
+                    <div class="lb-filters lb-reveal" data-stagger="1">
+                        <form method="GET" action="{{ route('leaderboard') }}">
+                            <div class="lb-filter-group">
+                                <label class="lb-filter-label">Meklēt komandu</label>
+                                <input class="lb-filter-input" type="text" name="q" value="{{ $q }}"
+                                    placeholder="Komandas nosaukums…">
+                            </div>
+                            <div class="lb-filter-group">
+                                <label class="lb-filter-label">Kārtot pēc</label>
+                                <select class="lb-filter-select" name="sort">
+                                    <option value="wins" {{ $sort === 'wins' ? 'selected' : '' }}>Tituli</option>
+                                    <option value="finals" {{ $sort === 'finals' ? 'selected' : '' }}>Fināli</option>
+                                    <option value="win_rate" {{ $sort === 'win_rate' ? 'selected' : '' }}>Uzvaru %
                                     </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </form>
-            </div>
+                                    <option value="diff" {{ $sort === 'diff' ? 'selected' : '' }}>Pt. starpība
+                                    </option>
+                                    <option value="pf_avg" {{ $sort === 'pf_avg' ? 'selected' : '' }}>Vid. punkti (par)
+                                    </option>
+                                    <option value="pa_avg" {{ $sort === 'pa_avg' ? 'selected' : '' }}>Vid. punkti (pret)
+                                    </option>
+                                    <option value="played" {{ $sort === 'played' ? 'selected' : '' }}>Spēles</option>
+                                </select>
+                            </div>
+                            <div class="lb-filter-group">
+                                <label class="lb-filter-label">Secība</label>
+                                <select class="lb-filter-select" name="dir">
+                                    <option value="desc" {{ $dir === 'desc' ? 'selected' : '' }}>Dilstoši</option>
+                                    <option value="asc" {{ $dir === 'asc' ? 'selected' : '' }}>Augoši</option>
+                                </select>
+                            </div>
 
-            {{-- Podium top 3 ── --}}
-            @if ($top3->isNotEmpty())
-                <div class="lb-podium lb-reveal" data-stagger="2">
-                    @foreach ($top3 as $idx => $r)
-                        @php
-                            $val = (int) ($r['titles'] ?? ($r['wins'] ?? 0));
-                            $pct = min(100, (int) round(($val / $maxTitles) * 100));
-                        @endphp
-                        <div class="lb-podium-card {{ $podiumCls[$idx] }}">
-                            <div class="lb-podium__rank">{{ $podiumLabels[$idx] }}</div>
-                            <div class="lb-podium__team">{{ $r['team'] }}</div>
-                            <div class="lb-podium__titles">{{ $val }}</div>
-                            <div class="lb-podium__titles-label">Tituli</div>
-                            <div class="lb-podium__stats">
-                                <div><strong>{{ $r['finals'] ?? 0 }}</strong>Fināli</div>
-                                <div><strong>{{ number_format((float) $r['win_rate'], 0) }}%</strong>Uzvaras</div>
-                                <div class="{{ (int) $r['diff'] >= 0 ? 'lb-diff-pos' : 'lb-diff-neg' }}">
-                                    <strong>{{ $r['diff'] }}</strong>Diff
+                            <div class="lb-filter-actions">
+                                <button type="submit" class="lb-btn-submit">Rādīt →</button>
+                                <div class="lb-per-page">
+                                    <span>Rādīt:</span>
+                                    <select name="per_page" onchange="this.form.submit()">
+                                        @foreach ([10, 20, 50, 100] as $size)
+                                            <option value="{{ $size }}"
+                                                {{ request('per_page', 20) == $size ? 'selected' : '' }}>
+                                                {{ $size }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
-                            <div class="lb-podium__bar">
-                                <div class="lb-podium__bar-fill" style="width:{{ $pct }}%"></div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
+                        </form>
+                    </div>
 
-            {{-- Table ── --}}
-            <div class="lb-table-wrap lb-reveal" data-stagger="3">
-                <div class="lb-table-head">
-                    <span class="lb-table-head__eyebrow">Pilnais saraksts</span>
-                </div>
-
-                <div style="overflow-x:auto;">
-                    <table class="lb-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th style="text-align:left;">Komanda</th>
-                                <th>Tituli</th>
-                                <th>Fināli</th>
-                                <th>Uzv.%</th>
-                                <th>Diff</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($restPage as $i => $r)
+                    {{-- Podium top 3 ── --}}
+                    @if ($top3->isNotEmpty())
+                        <div class="lb-podium lb-reveal" data-stagger="2">
+                            @foreach ($top3 as $idx => $r)
                                 @php
-                                    $rank = 3 + ($restPage->currentPage() - 1) * $restPage->perPage() + ($i + 1);
-                                    $titles = (int) ($r['titles'] ?? ($r['wins'] ?? 0));
-                                    $diff = (int) $r['diff'];
+                                    $val = (int) ($r['titles'] ?? ($r['wins'] ?? 0));
+                                    $pct = min(100, (int) round(($val / $maxTitles) * 100));
                                 @endphp
-                                <tr>
-                                    <td>{{ $rank }}</td>
-                                    <td title="{{ $r['team'] }}">{{ $r['team'] }}</td>
-                                    <td>{{ $titles }}</td>
-                                    <td>{{ (int) ($r['finals'] ?? 0) }}</td>
-                                    <td>{{ number_format((float) $r['win_rate'], 0) }}%</td>
-                                    <td class="{{ $diff >= 0 ? 'lb-diff-pos' : 'lb-diff-neg' }}">{{ $diff }}
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" style="text-align:center;">
-                                        <div class="lb-empty">Nav datu atbilstoši filtriem.</div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                                <div class="lb-podium-card {{ $podiumCls[$idx] }}">
+                                    <div class="lb-podium__rank">{{ $podiumLabels[$idx] }}</div>
+                                    <div class="lb-podium__team">{{ $r['team'] }}</div>
+                                    <div class="lb-podium__titles">{{ $val }}</div>
+                                    <div class="lb-podium__titles-label">Tituli</div>
+                                    <div class="lb-podium__stats">
+                                        <div><strong>{{ $r['finals'] ?? 0 }}</strong>Fināli</div>
+                                        <div><strong>{{ number_format((float) $r['win_rate'], 0) }}%</strong>Uzvaras
+                                        </div>
+                                        <div class="{{ (int) $r['diff'] >= 0 ? 'lb-diff-pos' : 'lb-diff-neg' }}">
+                                            <strong>{{ $r['diff'] }}</strong>Diff
+                                        </div>
+                                    </div>
+                                    <div class="lb-podium__bar">
+                                        <div class="lb-podium__bar-fill" style="width:{{ $pct }}%"></div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
 
-                {{-- Pagination footer ── --}}
-                @if ($restPage->total() > 0)
-                    <div class="lb-table-foot">
-                        <div class="lb-table-foot__info">
-                            @php
-                                $from = 3 + ($restPage->currentPage() - 1) * $restPage->perPage() + 1;
-                                $to = min(
-                                    3 + $restPage->total(),
-                                    3 + ($restPage->currentPage() - 1) * $restPage->perPage() + $restPage->count(),
-                                );
-                            @endphp
-                            Rāda <strong>{{ $from }}–{{ $to }}</strong> no
-                            <strong>{{ 3 + $restPage->total() }}</strong> komandām
+                    {{-- Table ── --}}
+                    <div class="lb-table-wrap lb-reveal" data-stagger="3">
+                        <div class="lb-table-head">
+                            <span class="lb-table-head__eyebrow">Pilnais saraksts</span>
                         </div>
 
-                        @if ($restPage->hasPages())
-                            <div class="lb-pagination">
-                                @if ($restPage->onFirstPage())
-                                    <span class="disabled">«</span>
-                                @else
-                                    <a href="{{ $restPage->url(1) }}">«</a>
-                                    <a href="{{ $restPage->previousPageUrl() }}">‹</a>
-                                @endif
+                        <div style="overflow-x:auto;">
+                            <table class="lb-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th style="text-align:left;">Komanda</th>
+                                        <th>Tituli</th>
+                                        <th>Fināli</th>
+                                        <th>Uzv.%</th>
+                                        <th>Diff</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($restPage as $i => $r)
+                                        @php
+                                            $rank =
+                                                3 + ($restPage->currentPage() - 1) * $restPage->perPage() + ($i + 1);
+                                            $titles = (int) ($r['titles'] ?? ($r['wins'] ?? 0));
+                                            $diff = (int) $r['diff'];
+                                        @endphp
+                                        <tr>
+                                            <td>{{ $rank }}</td>
+                                            <td title="{{ $r['team'] }}">{{ $r['team'] }}</td>
+                                            <td>{{ $titles }}</td>
+                                            <td>{{ (int) ($r['finals'] ?? 0) }}</td>
+                                            <td>{{ number_format((float) $r['win_rate'], 0) }}%</td>
+                                            <td class="{{ $diff >= 0 ? 'lb-diff-pos' : 'lb-diff-neg' }}">
+                                                {{ $diff }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" style="text-align:center;">
+                                                <div class="lb-empty">Nav datu atbilstoši filtriem.</div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
 
-                                @foreach (range(1, $restPage->lastPage()) as $pn)
-                                    @if ($pn == $restPage->currentPage())
-                                        <span class="current">{{ $pn }}</span>
-                                    @elseif ($pn == 1 || $pn == $restPage->lastPage() || abs($pn - $restPage->currentPage()) <= 2)
-                                        <a href="{{ $restPage->url($pn) }}">{{ $pn }}</a>
-                                    @elseif (abs($pn - $restPage->currentPage()) == 3)
-                                        <span class="disabled">…</span>
-                                    @endif
-                                @endforeach
+                        {{-- Pagination footer ── --}}
+                        @if ($restPage->total() > 0)
+                            <div class="lb-table-foot">
+                                <div class="lb-table-foot__info">
+                                    @php
+                                        $from = 3 + ($restPage->currentPage() - 1) * $restPage->perPage() + 1;
+                                        $to = min(
+                                            3 + $restPage->total(),
+                                            3 +
+                                                ($restPage->currentPage() - 1) * $restPage->perPage() +
+                                                $restPage->count(),
+                                        );
+                                    @endphp
+                                    Rāda <strong>{{ $from }}–{{ $to }}</strong> no
+                                    <strong>{{ 3 + $restPage->total() }}</strong> komandām
+                                </div>
 
-                                @if ($restPage->hasMorePages())
-                                    <a href="{{ $restPage->nextPageUrl() }}">›</a>
-                                    <a href="{{ $restPage->url($restPage->lastPage()) }}">»</a>
-                                @else
-                                    <span class="disabled">›</span>
-                                    <span class="disabled">»</span>
+                                @if ($restPage->hasPages())
+                                    <div class="lb-pagination">
+                                        @if ($restPage->onFirstPage())
+                                            <span class="disabled">«</span>
+                                        @else
+                                            <a href="{{ $restPage->url(1) }}">«</a>
+                                            <a href="{{ $restPage->previousPageUrl() }}">‹</a>
+                                        @endif
+
+                                        @foreach (range(1, $restPage->lastPage()) as $pn)
+                                            @if ($pn == $restPage->currentPage())
+                                                <span class="current">{{ $pn }}</span>
+                                            @elseif ($pn == 1 || $pn == $restPage->lastPage() || abs($pn - $restPage->currentPage()) <= 2)
+                                                <a href="{{ $restPage->url($pn) }}">{{ $pn }}</a>
+                                            @elseif (abs($pn - $restPage->currentPage()) == 3)
+                                                <span class="disabled">…</span>
+                                            @endif
+                                        @endforeach
+
+                                        @if ($restPage->hasMorePages())
+                                            <a href="{{ $restPage->nextPageUrl() }}">›</a>
+                                            <a href="{{ $restPage->url($restPage->lastPage()) }}">»</a>
+                                        @else
+                                            <span class="disabled">›</span>
+                                            <span class="disabled">»</span>
+                                        @endif
+                                    </div>
                                 @endif
                             </div>
                         @endif
                     </div>
-                @endif
+
+                </div>
             </div>
 
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.lb-reveal').forEach(el => {
-                const i = parseInt(el.dataset.stagger || '0', 10);
-                setTimeout(() => el.classList.add('in'), 60 + i * 90);
-            });
-        });
-    </script>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('.lb-reveal').forEach(el => {
+                        const i = parseInt(el.dataset.stagger || '0', 10);
+                        setTimeout(() => el.classList.add('in'), 60 + i * 90);
+                    });
+                });
+            </script>
 </x-app-layout>
