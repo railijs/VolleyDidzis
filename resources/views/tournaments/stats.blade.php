@@ -1298,11 +1298,10 @@
             const cards = Array.from(document.querySelectorAll('.st-match'));
             const byId = new Map(cards.map(c => [String(c.dataset.matchId), c]));
 
-            /* ── Resolve final match ID (explicit attr → auto-detect fallback) ── */
+            /* ── Resolve final match ID ── */
             function resolveFinalId() {
                 const explicit = finalRoot?.dataset?.finalMatchId?.trim();
                 if (explicit) return explicit;
-                // card with no next_match_id in the highest-numbered round
                 const noNext = cards.filter(c => !c.dataset.nextMatchId?.trim());
                 if (noNext.length === 1) return noNext[0].dataset.matchId;
                 let best = null,
@@ -1322,6 +1321,7 @@
             const $ = (sel, root = document) => root.querySelector(sel);
             const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
+            /* ── Highlight ── */
             function clearHighlight() {
                 cards.forEach(c => c.classList.remove('is-highlighted'));
             }
@@ -1340,84 +1340,43 @@
                     }
                 });
             }
-
-            /* ── Click to highlight connected pairs ── */
             cards.forEach(card => {
                 card.addEventListener('click', e => {
                     if (e.target.closest('input')) return;
                     const to = card.dataset.nextMatchId;
-                    if (to) {
-                        highlight(card.dataset.matchId, to);
-                    } else {
-                        highlight(card.dataset.matchId);
-                    }
+                    to ? highlight(card.dataset.matchId, to) : highlight(card.dataset.matchId);
                 });
             });
-
             document.addEventListener('click', e => {
                 const feed = e.target.closest('.st-feed-link');
                 if (!feed) return;
                 e.stopPropagation();
                 highlight(feed.dataset.from, feed.dataset.to);
             });
-
-            /* click outside cards → clear */
             document.addEventListener('click', e => {
-                if (!e.target.closest('.st-match') && !e.target.closest('.st-feed-link')) {
-                    clearHighlight();
-                }
+                if (!e.target.closest('.st-match') && !e.target.closest('.st-feed-link')) clearHighlight();
             });
 
-            /* ── DOM-driven final banner renderer ── */
+            /* ── Final banner ── */
             function renderFinalBanner() {
                 if (!finalRoot || !FINAL_ID) return;
                 const card = byId.get(FINAL_ID);
                 if (!card) return;
-
                 const aName = ($('[data-team="A"]', card)?.textContent ?? '—').trim();
                 const bName = ($('[data-team="B"]', card)?.textContent ?? '—').trim();
                 const aScore = $('input[data-side="A"]', card)?.value ?? '';
                 const bScore = $('input[data-side="B"]', card)?.value ?? '';
                 const winner = card.dataset.winnerSlot ?? '';
                 const champ = winner === 'A' ? aName : winner === 'B' ? bName : '';
-
                 if (winner && champ) {
-                    finalRoot.innerHTML = `
-                    <div class="st-champion">
-                        <div class="st-champion__icon">🏆</div>
-                        <div>
-                            <div class="st-champion__label">Turnīra uzvarētājs</div>
-                            <div class="st-champion__name">${champ}</div>
-                        </div>
-                        ${(aScore && bScore) ? `<div class="st-champion__score">${aScore} – ${bScore}</div>` : ''}
-                    </div>`;
+                    finalRoot.innerHTML =
+                        `<div class="st-champion"><div class="st-champion__icon">🏆</div><div><div class="st-champion__label">Turnīra uzvarētājs</div><div class="st-champion__name">${champ}</div></div>${(aScore && bScore) ? `<div class="st-champion__score">${aScore} – ${bScore}</div>` : ''}</div>`;
                 } else if (aName !== '—' || bName !== '—') {
-                    finalRoot.innerHTML = `
-                    <div class="st-final-pending">
-                        <div class="st-final-pending__head">
-                            <span class="st-final-pending__label">Fināls</span>
-                            <span class="st-final-pending__status">⏳ Gaida / Notiek</span>
-                        </div>
-                        <div class="st-final-pending__body">
-                            <div class="st-final-team-a">
-                                <div class="st-final-team__name">${aName}</div>
-                                <div class="st-final-team__score">${aScore || '–'}</div>
-                            </div>
-                            <div class="st-final-vs">VS</div>
-                            <div class="st-final-team-b">
-                                <div class="st-final-team__name">${bName}</div>
-                                <div class="st-final-team__score">${bScore || '–'}</div>
-                            </div>
-                        </div>
-                    </div>`;
+                    finalRoot.innerHTML =
+                        `<div class="st-final-pending"><div class="st-final-pending__head"><span class="st-final-pending__label">Fināls</span><span class="st-final-pending__status">⏳ Gaida / Notiek</span></div><div class="st-final-pending__body"><div class="st-final-team-a"><div class="st-final-team__name">${aName}</div><div class="st-final-team__score">${aScore || '–'}</div></div><div class="st-final-vs">VS</div><div class="st-final-team-b"><div class="st-final-team__name">${bName}</div><div class="st-final-team__score">${bScore || '–'}</div></div></div></div>`;
                 } else {
-                    finalRoot.innerHTML = `
-                    <div class="st-final-pending">
-                        <div class="st-final-pending__head">
-                            <span class="st-final-pending__label">Fināls</span>
-                            <span class="st-final-pending__status">Finālisti drīzumā…</span>
-                        </div>
-                    </div>`;
+                    finalRoot.innerHTML =
+                        `<div class="st-final-pending"><div class="st-final-pending__head"><span class="st-final-pending__label">Fināls</span><span class="st-final-pending__status">Finālisti drīzumā…</span></div></div>`;
                 }
             }
 
@@ -1436,10 +1395,8 @@
                 const bRow = $('.row-B', card);
                 const aName = $('[data-team="A"]', card);
                 const bName = $('[data-team="B"]', card);
-
                 [aRow, bRow].forEach(r => r?.classList.remove('st-match__row--winner'));
                 [aName, bName].forEach(n => n?.classList.remove('st-match__team--winner'));
-
                 card.dataset.winnerSlot = slot ?? '';
                 let chip = $('.winner-chip', card);
                 if (!chip) {
@@ -1448,10 +1405,8 @@
                     $('.st-match__head-left', card)?.appendChild(chip);
                 }
                 if (slot === 'A' || slot === 'B') {
-                    const row = slot === 'A' ? aRow : bRow;
-                    const name = slot === 'A' ? aName : bName;
-                    row?.classList.add('st-match__row--winner');
-                    name?.classList.add('st-match__team--winner');
+                    (slot === 'A' ? aRow : bRow)?.classList.add('st-match__row--winner');
+                    (slot === 'A' ? aName : bName)?.classList.add('st-match__team--winner');
                     chip.textContent = `Uzv.: ${slot}`;
                     chip.style.display = '';
                 } else {
@@ -1467,16 +1422,28 @@
                 el.classList.toggle('st-match__team--tbd', !name || name === '—');
             }
 
+            /*
+             * FIX 1: refreshInputs now also BINDS listeners to newly-unlocked inputs.
+             * We track which inputs already have listeners so we never double-bind.
+             */
+            const boundInputs = new WeakSet();
+
             function refreshInputs(card) {
+                if (!isEditable) return;
                 const aText = $('[data-team="A"]', card)?.textContent.trim() ?? '';
                 const bText = $('[data-team="B"]', card)?.textContent.trim() ?? '';
-                const valid = aText && aText !== '—' && aText !== 'Gaida pretinieku' &&
-                    bText && bText !== '—' && bText !== 'Gaida pretinieku';
-                const lock = !valid || !isEditable;
-                const aInp = $('input[data-side="A"]', card);
-                const bInp = $('input[data-side="B"]', card);
-                if (aInp) aInp.disabled = lock;
-                if (bInp) bInp.disabled = lock;
+                const TBD = ['—', 'Gaida pretinieku', ''];
+                const valid = !TBD.includes(aText) && !TBD.includes(bText);
+                const lock = !valid;
+
+                $$('input.score-input', card).forEach(inp => {
+                    inp.disabled = lock;
+                    /* bind listeners the first time this input becomes enabled */
+                    if (!lock && !boundInputs.has(inp)) {
+                        bindInput(inp);
+                        boundInputs.add(inp);
+                    }
+                });
             }
 
             /* ── Save-state indicators ── */
@@ -1490,85 +1457,9 @@
                 if (state === 'err') err?.classList.add('active');
             }
 
-            /* ── Apply a match update object from server ── */
-            function applyMatchUpdate(m) {
-                const card = byId.get(String(m.id));
-                if (!card) return;
-
-                if (typeof m.a_name !== 'undefined') setTeam(card, 'A', m.a_name);
-                if (typeof m.b_name !== 'undefined') setTeam(card, 'B', m.b_name);
-
-                const aInp = $('input[data-side="A"]', card);
-                const bInp = $('input[data-side="B"]', card);
-                if (aInp && typeof m.score_a !== 'undefined') aInp.value = m.score_a ?? '';
-                if (bInp && typeof m.score_b !== 'undefined') bInp.value = m.score_b ?? '';
-
-                if (m.status) updateStatusBadge(card, m.status);
-                applyWinnerUI(card, m.winner_slot ?? null);
-                refreshInputs(card);
-
-                /* propagate winner into the next match */
-                if (m.winner_slot && m.next_match_id && m.next_slot) {
-                    const nextCard = byId.get(String(m.next_match_id));
-                    if (nextCard) {
-                        const winnerName = m.winner_slot === 'A' ?
-                            (m.a_name ?? $('[data-team="A"]', card)?.textContent?.trim()) :
-                            (m.b_name ?? $('[data-team="B"]', card)?.textContent?.trim());
-                        setTeam(nextCard, m.next_slot, winnerName || '—');
-                        refreshInputs(nextCard);
-                    }
-                }
-
-                if (String(m.id) === FINAL_ID) renderFinalBanner();
-                if (m.next_match_id && String(m.next_match_id) === FINAL_ID) renderFinalBanner();
-            }
-
-            /* ── Sync full server response ── */
-            function syncResponse(data) {
-                if (Array.isArray(data.matches)) {
-                    data.matches.forEach(applyMatchUpdate);
-                } else if (data.match) {
-                    applyMatchUpdate(data.match);
-                } else if (typeof data.id !== 'undefined') {
-                    applyMatchUpdate(data);
-                }
-                /* explicit final payload from server overrides DOM render */
-                if (data.final?.done && data.final?.champion) {
-                    const f = data.final;
-                    finalRoot.innerHTML = `
-                    <div class="st-champion">
-                        <div class="st-champion__icon">🏆</div>
-                        <div>
-                            <div class="st-champion__label">Turnīra uzvarētājs</div>
-                            <div class="st-champion__name">${f.champion}</div>
-                        </div>
-                        ${(f.a_scr != null && f.b_scr != null) ? `<div class="st-champion__score">${f.a_scr} – ${f.b_scr}</div>` : ''}
-                    </div>`;
-                } else {
-                    renderFinalBanner();
-                }
-            }
-
-            /* ── Autosave (debounced PATCH) ── */
-            if (!isEditable) {
-                renderFinalBanner();
-                return;
-            }
-
-            const cache = new Map(); /* matchId -> { A, B } */
+            /* ── Autosave core ── */
+            const cache = new Map();
             const timers = new Map();
-
-            /* seed cache from current DOM */
-            $$('.score-input').forEach(inp => {
-                const id = inp.dataset.matchId;
-                const side = inp.dataset.side;
-                const prev = cache.get(id) ?? {
-                    A: null,
-                    B: null
-                };
-                prev[side] = inp.value === '' ? null : Number(inp.value);
-                cache.set(id, prev);
-            });
 
             function pairReady(p) {
                 return Number.isInteger(p.A) && Number.isInteger(p.B);
@@ -1582,7 +1473,7 @@
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': csrf,
-                            Accept: 'application/json',
+                            Accept: 'application/json'
                         },
                         body: JSON.stringify({
                             score_a: A,
@@ -1600,11 +1491,23 @@
                 }
             }
 
-            $$('.score-input').forEach(inp => {
-                if (inp.disabled) return;
+            /*
+             * FIX 2: bindInput is extracted so it can be called both at startup
+             * AND when an input is unlocked later by refreshInputs.
+             * We seed the cache entry here too so the pair is ready immediately.
+             */
+            function bindInput(inp) {
                 const id = inp.dataset.matchId;
                 const side = inp.dataset.side;
                 const url = inp.dataset.url;
+
+                /* seed cache if not already there */
+                const prev = cache.get(id) ?? {
+                    A: null,
+                    B: null
+                };
+                prev[side] = inp.value === '' ? null : Number(inp.value);
+                cache.set(id, prev);
 
                 function schedule() {
                     const pair = cache.get(id) ?? {
@@ -1617,8 +1520,7 @@
                 }
 
                 inp.addEventListener('input', e => {
-                    const raw = e.currentTarget.value;
-                    const val = raw === '' ? null : Number(raw);
+                    const val = e.currentTarget.value === '' ? null : Number(e.currentTarget.value);
                     const pair = cache.get(id) ?? {
                         A: null,
                         B: null
@@ -1641,11 +1543,9 @@
                     } else if (e.key === 'Escape') {
                         e.currentTarget.blur();
                     } else if (e.key === 'Tab') {
-                        /* jump to the partner score in same card */
                         const partnerSide = side === 'A' ? 'B' : 'A';
                         const partner = document.querySelector(
-                            `.score-input[data-match-id="${id}"][data-side="${partnerSide}"]`
-                        );
+                            `.score-input[data-match-id="${id}"][data-side="${partnerSide}"]`);
                         if (partner && !partner.disabled) {
                             e.preventDefault();
                             partner.focus();
@@ -1655,9 +1555,111 @@
                 });
 
                 inp.addEventListener('focus', () => inp.select());
+            }
+
+            /*
+             * FIX 3: propagateWinner walks the FULL chain, not just one level.
+             * It follows next_match_id hops until there are no more, refreshing
+             * inputs at every step so each round unlocks as soon as both teams land.
+             */
+            function propagateWinner(fromCard, winnerName, nextMatchId, nextSlot) {
+                if (!nextMatchId || !winnerName || winnerName === '—') return;
+                const nextCard = byId.get(String(nextMatchId));
+                if (!nextCard) return;
+
+                setTeam(nextCard, nextSlot, winnerName);
+                refreshInputs(nextCard);
+
+                /* Check if the next card now also has a winner already set
+                 * (e.g. page loaded with partial bracket data) and keep walking */
+                const existingWinner = nextCard.dataset.winnerSlot;
+                if (existingWinner === 'A' || existingWinner === 'B') {
+                    const onwardName = $(`[data-team="${existingWinner}"]`, nextCard)?.textContent?.trim() ?? '';
+                    const onwardMatchId = nextCard.dataset.nextMatchId;
+                    const onwardSlot = nextCard.dataset.nextSlot;
+                    if (onwardName && onwardMatchId) {
+                        propagateWinner(nextCard, onwardName, onwardMatchId, onwardSlot);
+                    }
+                }
+
+                if (String(nextMatchId) === FINAL_ID) renderFinalBanner();
+            }
+
+            /* ── Apply a single match update from server ── */
+            function applyMatchUpdate(m) {
+                const card = byId.get(String(m.id));
+                if (!card) return;
+
+                if (typeof m.a_name !== 'undefined') setTeam(card, 'A', m.a_name);
+                if (typeof m.b_name !== 'undefined') setTeam(card, 'B', m.b_name);
+
+                const aInp = $('input[data-side="A"]', card);
+                const bInp = $('input[data-side="B"]', card);
+                if (aInp && typeof m.score_a !== 'undefined') aInp.value = m.score_a ?? '';
+                if (bInp && typeof m.score_b !== 'undefined') bInp.value = m.score_b ?? '';
+
+                if (m.status) updateStatusBadge(card, m.status);
+                applyWinnerUI(card, m.winner_slot ?? null);
+                refreshInputs(card);
+
+                /* propagate winner through the full chain */
+                if (m.winner_slot && m.next_match_id && m.next_slot) {
+                    const winnerName = m.winner_slot === 'A' ?
+                        (m.a_name ?? $('[data-team="A"]', card)?.textContent?.trim()) :
+                        (m.b_name ?? $('[data-team="B"]', card)?.textContent?.trim());
+                    propagateWinner(card, winnerName || '—', m.next_match_id, m.next_slot);
+                }
+
+                if (String(m.id) === FINAL_ID) renderFinalBanner();
+            }
+
+            /* ── Sync server response ── */
+            function syncResponse(data) {
+                if (Array.isArray(data.matches)) {
+                    data.matches.forEach(applyMatchUpdate);
+                } else if (data.match) {
+                    applyMatchUpdate(data.match);
+                } else if (typeof data.id !== 'undefined') {
+                    applyMatchUpdate(data);
+                }
+                if (data.final?.done && data.final?.champion) {
+                    const f = data.final;
+                    finalRoot.innerHTML =
+                        `<div class="st-champion"><div class="st-champion__icon">🏆</div><div><div class="st-champion__label">Turnīra uzvarētājs</div><div class="st-champion__name">${f.champion}</div></div>${(f.a_scr != null && f.b_scr != null) ? `<div class="st-champion__score">${f.a_scr} – ${f.b_scr}</div>` : ''}</div>`;
+                } else {
+                    renderFinalBanner();
+                }
+            }
+
+            /* ── Boot ── */
+            if (!isEditable) {
+                renderFinalBanner();
+                return;
+            }
+
+            /*
+             * Bind all inputs that are already enabled at page load.
+             * Inputs that are disabled get bound later inside refreshInputs
+             * the first time they become enabled.
+             */
+            $$('.score-input').forEach(inp => {
+                /* Always seed cache, even for disabled inputs */
+                const id = inp.dataset.matchId;
+                const side = inp.dataset.side;
+                const prev = cache.get(id) ?? {
+                    A: null,
+                    B: null
+                };
+                prev[side] = inp.value === '' ? null : Number(inp.value);
+                cache.set(id, prev);
+
+                if (!inp.disabled) {
+                    bindInput(inp);
+                    boundInputs.add(inp);
+                }
             });
 
-            /* ── Watch final card for attr changes (MutationObserver) ── */
+            /* ── MutationObserver on final card ── */
             const finalCard = byId.get(FINAL_ID);
             if (finalCard) {
                 new MutationObserver(renderFinalBanner).observe(finalCard, {
@@ -1669,12 +1671,9 @@
                     characterData: true,
                     childList: true,
                 });
-                $$('input[data-side]', finalCard).forEach(inp => {
-                    inp.addEventListener('input', renderFinalBanner);
-                });
+                $$('input[data-side]', finalCard).forEach(inp => inp.addEventListener('input', renderFinalBanner));
             }
 
-            /* initial render */
             renderFinalBanner();
 
         })();
