@@ -37,6 +37,9 @@ Route::get('/tournaments/calendar', [TournamentController::class, 'calendar'])
 Route::get('/tournaments/day/{date}', [TournamentController::class, 'dayTournaments'])
     ->name('tournaments.day');
 
+Route::get('/tournaments', [TournamentController::class, 'index'])->name('tournaments.index');
+Route::resource('news', NewsController::class);
+
 Route::middleware('auth')->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -44,7 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Tournament CRUD
-    Route::get('/tournaments', [TournamentController::class, 'index'])->name('tournaments.index');
+
     Route::get('/tournaments/create', [TournamentController::class, 'create'])->name('tournaments.create');
     Route::post('/tournaments', [TournamentController::class, 'store'])->name('tournaments.store');
     Route::get('/tournaments/{tournament}/edit', [TournamentController::class, 'edit'])->name('tournaments.edit');
@@ -77,7 +80,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/tournaments/{tournament}', [TournamentController::class, 'show'])->name('tournaments.show');
 
     // News
-    Route::resource('news', NewsController::class);
+
 
     // Admin panel (check admin in controller)
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
