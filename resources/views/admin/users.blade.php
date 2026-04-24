@@ -39,6 +39,7 @@
         /* ── Header ─────────────────────────────── */
         .ap-header {
             margin-bottom: 2.5rem;
+            margin-top: 45px;
         }
 
         .ap-eyebrow {

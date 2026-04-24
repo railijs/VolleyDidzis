@@ -527,7 +527,7 @@
                 <div class="nws-masthead__date">
                     {{ now()->locale('lv')->isoFormat('dddd, D. MMMM YYYY') }}
                 </div>
-                <div class="nws-masthead__flag">Sports<em>Vesti</em></div>
+                <div class="nws-masthead__flag">Sporta<em>Ziņas</em></div>
                 <div class="nws-masthead__sub">Jaunākās sporta ziņas</div>
             </div>
         </div>

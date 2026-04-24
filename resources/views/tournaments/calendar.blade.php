@@ -120,14 +120,13 @@
             border-color: var(--red-hover);
         }
 
-        /* ── Rule ── */
         .cal-rule {
             border: none;
             border-top: 1px solid var(--rule);
             margin: 0;
         }
 
-        /* ── Month header row ── */
+        /* ── Month bar ── */
         .cal-month-bar {
             display: flex;
             align-items: center;
@@ -216,7 +215,7 @@
             color: var(--red);
         }
 
-        /* ── Desktop month grid ── */
+        /* ── Desktop grid ── */
         .cal-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -287,7 +286,7 @@
             line-height: 1.4;
         }
 
-        /* ── Event chips ── */
+        /* ── Chips ── */
         .cal-chip {
             display: block;
             font-size: 0.58rem;
@@ -441,94 +440,6 @@
             gap: 0.5rem;
         }
 
-        /* ── Modal ── */
-        .cal-modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 15, 14, 0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-        }
-
-        .cal-modal-overlay.open {
-            display: flex;
-        }
-
-        .cal-modal {
-            background: var(--white);
-            max-width: 460px;
-            width: 100%;
-            margin: 1rem;
-            padding: 1.75rem;
-            border-top: 4px solid var(--red);
-            position: relative;
-            animation: calModalIn 0.22s ease both;
-        }
-
-        @keyframes calModalIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: none;
-            }
-        }
-
-        .cal-modal__title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: var(--ink);
-            margin-bottom: 1rem;
-        }
-
-        .cal-modal__close {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            color: var(--ink-3);
-            line-height: 1;
-            transition: color 0.15s;
-        }
-
-        .cal-modal__close:hover {
-            color: var(--ink);
-        }
-
-        .cal-modal__list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            max-height: 360px;
-            overflow-y: auto;
-        }
-
-        .cal-modal__item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.6rem 0.75rem;
-            border: 1px solid var(--rule);
-            cursor: pointer;
-            gap: 0.75rem;
-            font-size: 0.85rem;
-            color: var(--ink);
-            transition: background 0.12s;
-        }
-
-        .cal-modal__item:hover {
-            background: var(--paper-2);
-        }
-
         /* ── Reveal ── */
         .cal-reveal {
             opacity: 0;
@@ -554,6 +465,249 @@
             .cal-agenda {
                 display: none;
             }
+        }
+
+        /*
+         * ══ MODAL ══════════════════════════════════════════════════════════════
+         * The modal sits OUTSIDE .cal in the DOM so CSS variables defined on .cal
+         * are NOT inherited. Every color here is a hard-coded hex value to
+         * guarantee the modal renders with a solid white background regardless of
+         * nesting. This is the root cause of the "invisible" modal bug.
+         * ═══════════════════════════════════════════════════════════════════════
+         */
+        .cal-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 15, 14, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            /* above everything */
+            backdrop-filter: blur(3px);
+        }
+
+        .cal-modal-overlay.open {
+            display: flex;
+        }
+
+        .cal-modal {
+            background: #FFFFFF;
+            /* ← hard-coded, NOT var(--white) */
+            max-width: 480px;
+            width: calc(100% - 2rem);
+            margin: 1rem;
+            border-top: 4px solid #B8241C;
+            position: relative;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+            animation: calModalIn 0.22s cubic-bezier(.16, 1, .3, 1) both;
+        }
+
+        @keyframes calModalIn {
+            from {
+                opacity: 0;
+                transform: translateY(14px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .cal-modal__header {
+            padding: 1.25rem 1.5rem 1rem;
+            border-bottom: 1px solid #D8D4CC;
+        }
+
+        .cal-modal__date-label {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #B8241C;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .cal-modal__date-label::before {
+            content: '';
+            display: block;
+            width: 14px;
+            height: 2px;
+            background: #B8241C;
+        }
+
+        .cal-modal__title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            letter-spacing: 0.01em;
+            color: #0F0F0E;
+            margin: 0;
+        }
+
+        .cal-modal__subtitle {
+            font-size: 0.72rem;
+            color: #7A7770;
+            margin-top: 0.25rem;
+        }
+
+        .cal-modal__close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #B8B5AF;
+            line-height: 1;
+            width: 1.75rem;
+            height: 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s, background 0.15s;
+            border-radius: 50%;
+        }
+
+        .cal-modal__close:hover {
+            color: #0F0F0E;
+            background: #EFECE5;
+        }
+
+        .cal-modal__list {
+            list-style: none;
+            margin: 0;
+            padding: 0.4rem 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Scrollbar inside modal */
+        .cal-modal__list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .cal-modal__list::-webkit-scrollbar-thumb {
+            background: #D8D4CC;
+        }
+
+        .cal-modal__item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid #EFECE5;
+            cursor: pointer;
+            transition: background 0.12s;
+            position: relative;
+            text-decoration: none;
+        }
+
+        .cal-modal__item:last-child {
+            border-bottom: none;
+        }
+
+        /* left red hover accent */
+        .cal-modal__item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 0;
+            background: #B8241C;
+            transition: width 0.18s;
+        }
+
+        .cal-modal__item:hover {
+            background: #F8F6F1;
+        }
+
+        .cal-modal__item:hover::before {
+            width: 3px;
+        }
+
+        .cal-modal__item-name {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #0F0F0E;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cal-modal__item:hover .cal-modal__item-name {
+            color: #B8241C;
+        }
+
+        .cal-modal__item-badge {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.58rem;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.15rem 0.5rem;
+            border: 1px solid;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        /* Badge colour variants — hard-coded */
+        .cal-badge--generic {
+            color: #B8241C;
+            border-color: rgba(184, 36, 28, .35);
+            background: #F9EEEE;
+        }
+
+        .cal-badge--men {
+            color: #1A4F8A;
+            border-color: #B8CDE8;
+            background: #EBF1F9;
+        }
+
+        .cal-badge--women {
+            color: #8A1A5E;
+            border-color: #E8B8D4;
+            background: #FCEEF5;
+        }
+
+        .cal-badge--mix {
+            color: #4A1A8A;
+            border-color: #C8B8E8;
+            background: #F0EBF9;
+        }
+
+        .cal-modal__item-arrow {
+            font-size: 0.75rem;
+            color: #B8B5AF;
+            flex-shrink: 0;
+            transition: color 0.15s, transform 0.15s;
+        }
+
+        .cal-modal__item:hover .cal-modal__item-arrow {
+            color: #B8241C;
+            transform: translateX(2px);
+        }
+
+        .cal-modal__footer {
+            padding: 0.75rem 1.5rem;
+            border-top: 1px solid #D8D4CC;
+            background: #F8F6F1;
+            font-size: 0.68rem;
+            color: #B8B5AF;
+            text-align: center;
         }
     </style>
 
@@ -588,20 +742,16 @@
             {{-- Legend --}}
             <div class="cal-legend cal-reveal" data-stagger="2">
                 <div class="cal-legend__item">
-                    <div class="cal-legend__dot" style="background:var(--red)"></div>
-                    Vispārējs
+                    <div class="cal-legend__dot" style="background:#B8241C"></div>Vispārējs
                 </div>
                 <div class="cal-legend__item">
-                    <div class="cal-legend__dot" style="background:var(--men-bg);border:1px solid var(--men)"></div>
-                    Vīrieši
+                    <div class="cal-legend__dot" style="background:#EBF1F9;border:1px solid #1A4F8A"></div>Vīrieši
                 </div>
                 <div class="cal-legend__item">
-                    <div class="cal-legend__dot" style="background:var(--women-bg);border:1px solid var(--women)"></div>
-                    Sievietes
+                    <div class="cal-legend__dot" style="background:#FCEEF5;border:1px solid #8A1A5E"></div>Sievietes
                 </div>
                 <div class="cal-legend__item">
-                    <div class="cal-legend__dot" style="background:var(--mix-bg);border:1px solid var(--mix)"></div>
-                    Mix
+                    <div class="cal-legend__dot" style="background:#F0EBF9;border:1px solid #4A1A8A"></div>Mix
                 </div>
             </div>
 
@@ -632,12 +782,21 @@
         </div>
     </div>
 
-    {{-- Modal --}}
-    <div id="modalOverlay" class="cal-modal-overlay">
+    {{--
+        Modal is intentionally OUTSIDE .cal so it can escape any overflow:hidden
+        on the calendar container. CSS variables from .cal do NOT apply here —
+        all modal styles use hard-coded hex values (see the stylesheet above).
+    --}}
+    <div id="modalOverlay" class="cal-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="cal-modal">
             <button id="closeModal" class="cal-modal__close" aria-label="Aizvērt">✕</button>
-            <h3 id="modalDate" class="cal-modal__title"></h3>
+            <div class="cal-modal__header">
+                <div class="cal-modal__date-label">Turnīri</div>
+                <h3 id="modalTitle" class="cal-modal__title"></h3>
+                <div id="modalSubtitle" class="cal-modal__subtitle"></div>
+            </div>
             <ul id="modalTournaments" class="cal-modal__list"></ul>
+            <div class="cal-modal__footer">Klikšķini uz turnīra, lai skatītu sīkāk</div>
         </div>
     </div>
 
@@ -651,8 +810,8 @@
 
         const events = @json($events);
 
-        const monthNames = ["Janvāris", "Februāris", "Marts", "Aprīlis", "Maijs", "Jūnijs", "Jūlijs", "Augusts",
-            "Septembris", "Oktobris", "Novembris", "Decembris"
+        const monthNames = ["Janvāris", "Februāris", "Marts", "Aprīlis", "Maijs", "Jūnijs",
+            "Jūlijs", "Augusts", "Septembris", "Oktobris", "Novembris", "Decembris"
         ];
         const wdShort = ["Sv", "Pr", "Ot", "Tr", "Ce", "Pk", "Se"];
 
@@ -664,12 +823,14 @@
             if (!d) return null;
             const p = String(d).split('-').map(Number);
             if (p.length === 3) return new Date(p[0], p[1] - 1, p[2]);
-            const asIs = new Date(d);
-            return isNaN(asIs) ? null : new Date(asIs.getFullYear(), asIs.getMonth(), asIs.getDate());
+            const a = new Date(d);
+            return isNaN(a) ? null : new Date(a.getFullYear(), a.getMonth(), a.getDate());
         }
         const monIndex = dow => (dow + 6) % 7;
         const isWeekend = d => [6, 0].includes(d.getDay());
 
+        /* chip CSS class based on gender — these classes are defined inside .cal
+           so they work fine for calendar chips. The modal uses separate badge classes. */
         function chipCls(g) {
             const v = (g || '').toLowerCase();
             if (v === 'men') return 'cal-chip--men';
@@ -677,13 +838,13 @@
             if (v === 'mix') return 'cal-chip--mix';
             return 'cal-chip--generic';
         }
-
-        function agendaChipCls(g) {
+        /* Modal badge class — hard-coded, outside .cal scope */
+        function badgeCls(g) {
             const v = (g || '').toLowerCase();
-            if (v === 'men') return 'cal-chip--men';
-            if (v === 'women') return 'cal-chip--women';
-            if (v === 'mix') return 'cal-chip--mix';
-            return 'cal-chip--generic';
+            if (v === 'men') return 'cal-badge--men';
+            if (v === 'women') return 'cal-badge--women';
+            if (v === 'mix') return 'cal-badge--mix';
+            return 'cal-badge--generic';
         }
 
         function genderLabel(g) {
@@ -740,9 +901,8 @@
                 const isToday = dObj.getTime() === today.getTime();
 
                 const cell = document.createElement('div');
-                cell.className = `cal-cell${wknd ? ' cal-cell--weekend' : ''}${isToday ? ' cal-cell--today' : ''}`;
+                cell.className = `cal-cell${wknd?' cal-cell--weekend':''}${isToday?' cal-cell--today':''}`;
 
-                // Day number
                 const dayRow = document.createElement('div');
                 dayRow.className = 'cal-cell__day';
                 dayRow.appendChild(Object.assign(document.createElement('span'), {
@@ -756,7 +916,6 @@
                 }
                 cell.appendChild(dayRow);
 
-                // Chips
                 const maxInline = 2;
                 evs.slice(0, maxInline).forEach(ev => {
                     const btn = document.createElement('button');
@@ -802,7 +961,7 @@
 
                 const isToday = dObj.getTime() === today.getTime();
                 const row = document.createElement('div');
-                row.className = `cal-agenda-item${isToday ? ' cal-agenda-item--today' : ''}`;
+                row.className = `cal-agenda-item${isToday?' cal-agenda-item--today':''}`;
 
                 const left = document.createElement('div');
                 left.className = 'cal-agenda__left';
@@ -830,19 +989,40 @@
         }
 
         function openModal(dateObj, items) {
-            document.getElementById('modalDate').textContent =
-                `${monthNames[dateObj.getMonth()]} ${String(dateObj.getDate()).padStart(2,'0')}, ${dateObj.getFullYear()}`;
+            /* Title: "28. Aprīlis 2026" */
+            document.getElementById('modalTitle').textContent =
+                `${String(dateObj.getDate()).padStart(2,'0')}. ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+            document.getElementById('modalSubtitle').textContent =
+                `${items.length} turnīr${items.length === 1 ? 's' : 'i'}`;
+
             const list = document.getElementById('modalTournaments');
             list.innerHTML = '';
+
             items.forEach(ev => {
                 const li = document.createElement('li');
                 li.className = 'cal-modal__item';
-                li.innerHTML =
-                    `<span>${ev.title}</span><span class="cal-agenda__chip ${chipCls(ev.gender_type)}" style="font-size:0.6rem;padding:0.15rem 0.45rem;">${genderLabel(ev.gender_type)}</span>`;
+
+                const name = document.createElement('span');
+                name.className = 'cal-modal__item-name';
+                name.textContent = ev.title;
+                name.title = ev.title;
+
+                const badge = document.createElement('span');
+                badge.className = `cal-modal__item-badge ${badgeCls(ev.gender_type)}`;
+                badge.textContent = genderLabel(ev.gender_type);
+
+                const arrow = document.createElement('span');
+                arrow.className = 'cal-modal__item-arrow';
+                arrow.textContent = '→';
+                arrow.setAttribute('aria-hidden', 'true');
+
+                li.append(name, badge, arrow);
                 li.onclick = () => ev.url && (window.location.href = ev.url);
                 list.appendChild(li);
             });
+
             document.getElementById('modalOverlay').classList.add('open');
+            document.getElementById('closeModal').focus();
         }
 
         function closeModal() {

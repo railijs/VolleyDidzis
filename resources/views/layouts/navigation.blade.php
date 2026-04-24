@@ -208,7 +208,7 @@
                 </a>
                 <a href="{{ route('leaderboard') }}"
                     class="nb-link {{ request()->routeIs('leaderboard') ? 'active' : '' }}">
-                    Leaderboard
+                    Kopvērtējums
                 </a>
                 @auth
                     @if (auth()->user()->isAdmin())
