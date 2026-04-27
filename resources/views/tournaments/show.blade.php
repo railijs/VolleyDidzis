@@ -930,14 +930,19 @@
         }
 
         /* ── Modal ── */
+        /*
+         * Modals sit OUTSIDE .ts in the DOM — CSS vars from .ts do NOT apply.
+         * All colors below are hard-coded hex so the white card always renders.
+         */
         .ts-modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(10, 10, 10, 0.6);
+            background: rgba(10, 10, 10, 0.65);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 50;
+            z-index: 9999;
+            backdrop-filter: blur(3px);
         }
 
         .ts-modal-overlay.open {
@@ -945,23 +950,21 @@
         }
 
         .ts-modal {
-            background: var(--white);
+            background: #FFFFFF;
+            /* hard-coded — NOT var(--white) */
             max-width: 420px;
-            width: 100%;
+            width: calc(100% - 2rem);
             margin: 1rem;
-            border-top: 4px solid var(--red);
-            animation: tsModalIn 0.22s ease both;
+            border-top: 4px solid #C5231B;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+            animation: tsModalIn 0.22s cubic-bezier(.16, 1, .3, 1) both;
             position: relative;
-        }
-
-        .ts-modal--danger {
-            border-top-color: var(--red);
         }
 
         @keyframes tsModalIn {
             from {
                 opacity: 0;
-                transform: translateY(12px);
+                transform: translateY(14px) scale(0.98);
             }
 
             to {
@@ -972,7 +975,7 @@
 
         .ts-modal__head {
             padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--rule);
+            border-bottom: 1px solid #D5D1C9;
         }
 
         .ts-modal__title {
@@ -981,27 +984,28 @@
             font-weight: 900;
             font-style: italic;
             text-transform: uppercase;
-            color: var(--ink);
+            color: #0A0A0A;
         }
 
         .ts-modal__body {
             padding: 1.25rem 1.5rem;
             font-family: 'Barlow', sans-serif;
             font-size: 0.88rem;
-            color: var(--ink-2);
+            color: #2E2E2C;
             font-weight: 300;
             line-height: 1.6;
         }
 
         .ts-modal__body strong {
             font-weight: 600;
-            color: var(--ink);
+            color: #0A0A0A;
         }
 
         .ts-modal__foot {
             padding: 0.9rem 1.5rem;
-            border-top: 1px solid var(--rule);
-            background: var(--paper-2);
+            border-top: 1px solid #D5D1C9;
+            background: #EDEAE3;
+            /* hard-coded paper-2 */
             display: flex;
             align-items: center;
             justify-content: flex-end;
@@ -1016,8 +1020,20 @@
             border: none;
             cursor: pointer;
             font-size: 1rem;
-            color: var(--ink-3);
+            color: #6B6864;
             line-height: 1;
+            width: 1.75rem;
+            height: 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .ts-modal__close-bg:hover {
+            color: #0A0A0A;
+            background: #EFECE5;
         }
 
         .ts-btn-cancel {
@@ -1027,8 +1043,8 @@
             letter-spacing: 0.07em;
             text-transform: uppercase;
             background: none;
-            color: var(--ink-3);
-            border: 1px solid var(--rule);
+            color: #6B6864;
+            border: 1px solid #D5D1C9;
             padding: 0.5rem 1.1rem;
             cursor: pointer;
             border-radius: 0;
@@ -1036,8 +1052,9 @@
         }
 
         .ts-btn-cancel:hover {
-            background: var(--paper-2);
-            color: var(--ink);
+            background: #F7F5F0;
+            color: #0A0A0A;
+            border-color: #B0ADA8;
         }
 
         .ts-btn-confirm {
@@ -1046,18 +1063,18 @@
             font-weight: 500;
             letter-spacing: 0.07em;
             text-transform: uppercase;
-            background: var(--red);
-            color: var(--white);
-            border: 1px solid var(--red);
+            background: #C5231B;
+            color: #FFFFFF;
+            border: 1px solid #C5231B;
             padding: 0.5rem 1.25rem;
             cursor: pointer;
             border-radius: 0;
-            transition: background 0.15s;
+            transition: background 0.15s, border-color 0.15s;
         }
 
         .ts-btn-confirm:hover {
-            background: var(--red-dark);
-            border-color: var(--red-dark);
+            background: #9E1C15;
+            border-color: #9E1C15;
         }
 
         /* ── Reveal ── */
@@ -1333,8 +1350,7 @@
                                             ($applicant->user_id === auth()->id() || $isAdmin);
                                     @endphp
                                     <div class="ts-applicant">
-                                        <div class="ts-applicant__num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}
-                                        </div>
+                                        <div class="ts-applicant__num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</div>
                                         <div style="flex:1;min-width:0;">
                                             <div class="ts-applicant__team">{{ $applicant->team_name }}</div>
                                             <div class="ts-applicant__captain">
@@ -1431,7 +1447,7 @@
                     <div class="ts-facts">
                         <div class="ts-facts__head">
                             <div class="ts-facts__head-label">Kopsavilkums</div>
-                            <div class="ts-facts__head-title">Ātrāis info</div>
+                            <div class="ts-facts__head-title">Ātrā info</div>
                         </div>
                         <div class="ts-facts__row">
                             <span class="ts-facts__key">Datums</span>
