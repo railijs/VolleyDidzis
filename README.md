@@ -1,61 +1,139 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# VolleyLV
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+VolleyLV ir tīmekļa lietotne pludmales volejbola turnīru pārvaldībai Latvijā. Tā ļauj lietotājiem reģistrēties, izveidot un pievienoties turnīriem, sekot spēļu rezultātiem un skatīt rezultātu tabulas.
 
-## About Laravel
+## Funkcijas
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Lietotāju reģistrācija un autentifikācija**: Droša pieteikšanās un reģistrācija ar latviešu valodas atbalstu
+- **Turnīru pārvaldība**: Izveidot, rediģēt un pārvaldīt volejbola turnīrus
+- **Komandu reģistrācija**: Komandas var pieteikties dalībai turnīros
+- **Izlases sistēma**: Automātiska viena izslēgšanas izlase
+- **Spēļu izsekošana**: Reģistrēt rezultātus un sekot turnīra norisei
+- **Rezultātu tabulas**: Skatīt turnīra statistiku un rangus
+- **Ziņu sistēma**: Publicēt un attēlot turnīra ziņas un jaunumus
+- **Adaptīvs dizains**: Mobilajām ierīcēm draudzīgs interfeiss, izveidots ar Tailwind CSS
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Izmantotās tehnoloģijas
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Aizmugure**: Laravel 12 (PHP 8.2+)
+- **Priekšpuse**: Blade šabloni, Alpine.js, Tailwind CSS
+- **Datubāze**: MySQL/PostgreSQL (izmantojot Laravel migrācijas)
+- **Autentifikācija**: Laravel Breeze
+- **Testēšana**: Pest PHP
+- **Būvēšanas rīks**: Vite
 
-## Learning Laravel
+## Instalācija
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Priekšnosacījumi
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- PHP 8.2 vai jaunāka versija
+- Composer
+- Node.js un npm
+- MySQL vai PostgreSQL datubāze
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Uzstādīšana
 
-## Laravel Sponsors
+1. **Klonēt repozitoriju**
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+    ```bash
+    git clone <repozitorija-url>
+    cd volitis
+    ```
 
-### Premium Partners
+2. **Instalēt PHP atkarības**
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+    ```bash
+    composer install
+    ```
 
-## Contributing
+3. **Instalēt Node.js atkarības**
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    ```bash
+    npm install
+    ```
 
-## Code of Conduct
+4. **Vides konfigurācija**
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+    ```bash
+    cp .env.example .env
+    ```
 
-## Security Vulnerabilities
+    Atjauniniet `.env` failu ar saviem datubāzes akreditācijas datiem un citiem iestatījumiem.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+5. **Ģenerēt lietotnes atslēgu**
 
-## License
+    ```bash
+    php artisan key:generate
+    ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+6. **Palaist datubāzes migrācijas**
+
+    ```bash
+    php artisan migrate
+    ```
+
+7. **Aizpildīt datubāzi (pēc izvēles)**
+
+    ```bash
+    php artisan db:seed
+    ```
+
+8. **Būvēt resursus**
+
+    ```bash
+    npm run build
+    ```
+
+9. **Palaist izstrādes serveri**
+
+    ```bash
+    php artisan serve
+    ```
+
+10. **Palaist Vite resursu kompilācijai (atsevišķā terminālī)**
+    ```bash
+    npm run dev
+    ```
+
+Apmeklējiet `http://localhost:8000`, lai piekļūtu lietotnei.
+
+## Lietošana
+
+### Lietotājiem
+
+- Reģistrēt kontu vai pieteikties
+- Pārlūkot pieejamos turnīrus
+- Pievienoties turnīriem kā komandas kapteinis
+- Skatīt turnīra izlases un rezultātus
+- Pārbaudīt rezultātu tabulas un statistiku
+
+### Administratoriem
+
+- Izveidot un pārvaldīt turnīrus
+- Pārvaldīt lietotāju kontus
+- Publicēt ziņu rakstus
+- Sekot turnīra norisei
+
+## Testēšana
+
+Palaist testu komplektu ar Pest:
+
+```bash
+php artisan test
+```
+
+## Veicināšana
+
+1. Forkēt repozitoriju
+2. Izveidot funkcijas zaru (`git checkout -b feature/briniska-funkcija`)
+3. Veikt izmaiņas (`git commit -m 'Pievienot kādu brīnisku funkciju'`)
+4. Nosūtīt uz zaru (`git push origin feature/briniska-funkcija`)
+5. Atvērt Pull Request
+
+## Licence
+
+Šis projekts ir licencēts saskaņā ar MIT licenci - skatiet [LICENSE](LICENSE) failu, lai iegūtu sīkāku informāciju.
+
+## Atbalsts
+
+Lai saņemtu atbalstu, lūdzu, sazinieties ar izstrādes komandu vai izveidojiet jautājumu repozitorijā.
