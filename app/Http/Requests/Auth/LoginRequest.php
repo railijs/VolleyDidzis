@@ -33,6 +33,22 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * Get the validation error messages for the request.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'E-pasts ir obligāts.',
+            'email.string' => 'E-pasts ir jābūt teksts.',
+            'email.email' => 'Lūdzu ievadiet derīgu e-pasta adresi.',
+            'password.required' => 'Parole ir obligāta.',
+            'password.string' => 'Parole ir jābūt teksts.',
+        ];
+    }
+
+    /**
      * Attempt to authenticate the request's credentials.
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -45,7 +61,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'E-pasts vai parole ir nepareiza.',
             ]);
         }
 
@@ -68,10 +84,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => 'Pārāk daudz ienākšanas mēģinājumu. Lūdzu mēģiniet vēlreiz pēc ' . $seconds . ' sekundēm.',
         ]);
     }
 
@@ -80,6 +93,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }

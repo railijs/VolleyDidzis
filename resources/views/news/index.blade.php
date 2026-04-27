@@ -584,7 +584,7 @@
                 @php $featured = $items->first(); @endphp
                 @if ($featured)
                     <div class="nws-reveal" data-stagger="2">
-                        <div class="nws-kicker">Galvenā ziņa</div>
+                        <div class="nws-kicker">Jaunākās ziņa</div>
                         <article class="nws-hero">
                             <a href="{{ route('news.show', $featured) }}" class="nws-hero__img-wrap">
                                 @if ($featured->image_url)

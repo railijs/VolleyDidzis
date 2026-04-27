@@ -16,14 +16,9 @@ class TournamentSeeder extends Seeder
 {
     public function run(): void
     {
-        // Add/adjust as you like. Different sizes test odd and power-of-two brackets.
+        // Seed one dedicated 16-team tournament.
         $configs = [
-            ['name' => 'Rīgas Kauss — Pludmales Volejbols', 'location' => 'Rīga, LV',      'teams' => 12],
-            ['name' => 'Liepājas Pludmales Kauss',          'location' => 'Liepāja, LV',   'teams' => 10],
-            ['name' => 'Jūrmalas Smiltis Open',             'location' => 'Jūrmala, LV',   'teams' => 16],
-            ['name' => 'Ventspils Surf Volley',             'location' => 'Ventspils, LV', 'teams' => 14],
-            ['name' => 'Daugavpils Daugavas Kauss',         'location' => 'Daugavpils, LV', 'teams' => 8],
-            ['name' => 'Valmieras Meža Kauss',              'location' => 'Valmiera, LV',  'teams' => 12],
+            ['name' => 'Jūrmalas Smiltis Open', 'location' => 'Jūrmala, LV', 'teams' => 16],
         ];
 
         foreach ($configs as $cfg) {

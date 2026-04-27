@@ -1431,7 +1431,7 @@
                     <div class="ts-facts">
                         <div class="ts-facts__head">
                             <div class="ts-facts__head-label">Kopsavilkums</div>
-                            <div class="ts-facts__head-title">Ātrā info</div>
+                            <div class="ts-facts__head-title">Ātrāis info</div>
                         </div>
                         <div class="ts-facts__row">
                             <span class="ts-facts__key">Datums</span>
