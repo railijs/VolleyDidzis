@@ -1059,14 +1059,19 @@
         }
 
         /* ── Modal ── */
+        /*
+         * Modals sit OUTSIDE .db — CSS vars from .db do NOT apply here.
+         * All colors are hard-coded hex so the white card always renders.
+         */
         .db-modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(10, 10, 10, 0.6);
+            background: rgba(10, 10, 10, 0.65);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 50;
+            z-index: 9999;
+            backdrop-filter: blur(3px);
         }
 
         .db-modal-overlay.open {
@@ -1074,20 +1079,22 @@
         }
 
         .db-modal {
-            background: var(--white);
+            background: #FFFFFF;
+            /* hard-coded — NOT var(--white) */
             max-width: 440px;
-            width: 100%;
+            width: calc(100% - 2rem);
             margin: 1rem;
             padding: 1.75rem;
-            border-top: 4px solid var(--red);
-            animation: dbModalIn 0.22s ease both;
+            border-top: 4px solid #C5231B;
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.2);
+            animation: dbModalIn 0.22s cubic-bezier(.16, 1, .3, 1) both;
             position: relative;
         }
 
         @keyframes dbModalIn {
             from {
                 opacity: 0;
-                transform: translateY(14px);
+                transform: translateY(14px) scale(0.98);
             }
 
             to {
@@ -1102,6 +1109,7 @@
             font-weight: 900;
             font-style: italic;
             text-transform: uppercase;
+            color: #0A0A0A;
             margin-bottom: 1rem;
         }
 
@@ -1118,16 +1126,16 @@
             align-items: center;
             justify-content: space-between;
             padding: 0.55rem 0.75rem;
-            border: 1px solid var(--rule);
+            border: 1px solid #D5D1C9;
             cursor: pointer;
             transition: background 0.12s;
             gap: 0.75rem;
             font-size: 0.85rem;
-            color: var(--ink);
+            color: #0A0A0A;
         }
 
         .db-modal__item:hover {
-            background: var(--paper-2);
+            background: #EDEAE3;
         }
 
         .db-modal__close {
@@ -1138,7 +1146,13 @@
             border: none;
             cursor: pointer;
             font-size: 1.1rem;
-            color: var(--ink-3);
+            color: #6B6864;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+
+        .db-modal__close:hover {
+            color: #0A0A0A;
         }
 
         /* ── Reveal ── */
@@ -1314,8 +1328,7 @@
                                                     </div>
                                                     <div class="db-tourn__bar__label">
                                                         {{ $appsCount }}/{{ (int) $t->max_teams }}
-                                                        ({{ $pct }}%)
-                                                    </div>
+                                                        ({{ $pct }}%)</div>
                                                 </div>
                                             @endif
                                         </div>
@@ -1487,7 +1500,7 @@
             return new Date(y, m - 1, d);
         };
         const evCls = s => s === 'active' ? 'db-cal__cell__ev--active' : (s === 'completed' ? 'db-cal__cell__ev--done' :
-            '');
+        '');
 
         function buildMonthMap(year, month) {
             const first = new Date(year, month, 1);
