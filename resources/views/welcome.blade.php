@@ -120,7 +120,7 @@
             position: absolute;
             inset: 0;
             left: 42%;
-            background: url('https://faili.liepaja.lv/Bildes/Sports/1DX29498-20.jpg') center 25% / cover no-repeat;
+            background: url('https://webmedia.cev.eu/media/j4uhxq53/ievamaisinaphoto-6854jpg-1.jpg?width=1920&v=1dcbd04e96c9b00') center 25% / cover no-repeat;
             animation: imgIn 2s cubic-bezier(.16, 1, .3, 1) .1s both;
             z-index: 0;
         }
@@ -651,48 +651,7 @@
             </div>
         </main>
 
-        <!-- Right: feature list -->
-        <aside class="right">
-            <div class="features-label">Ko tu varēsi sagaidīt</div>
 
-            <div class="feat" style="--d:.9s">
-                <div class="feat__num">01</div>
-                <div class="feat__body">
-                    <div class="feat__title">Turnīru kalendārs</div>
-                    <div class="feat__desc">Visi gaidāmie un notiekošie turnīri vienā skatā — filtrē pēc datuma, dzimuma
-                        vai vietas.</div>
-                </div>
-                <a href="{{ route('tournaments.calendar') }}" class="feat__link">Skatīt →</a>
-            </div>
-
-            <div class="feat" style="--d:1s">
-                <div class="feat__num">02</div>
-                <div class="feat__body">
-                    <div class="feat__title">Pieteikšanās komandai</div>
-                    <div class="feat__desc">Piesakies turnīram dažos soļos — norādi kapteiņa datus un komandas
-                        nosaukumu.</div>
-                </div>
-                <a href="{{ route('tournaments.index') }}" class="feat__link">Turnīri →</a>
-            </div>
-
-            <div class="feat" style="--d:1.1s">
-                <div class="feat__num">03</div>
-                <div class="feat__body">
-                    <div class="feat__title">Rezultāti & kopvērtējums</div>
-                    <div class="feat__desc">Seko braketiem, spēļu rezultātiem un leaderboard reāllaikā.</div>
-                </div>
-                <a href="{{ route('leaderboard') }}" class="feat__link">Leaderboard →</a>
-            </div>
-
-            <div class="feat" style="--d:1.2s">
-                <div class="feat__num">04</div>
-                <div class="feat__body">
-                    <div class="feat__title">Ziņas no kopienas</div>
-                    <div class="feat__desc">Aktualitātes, paziņojumi un atskaites tieši no turnīru organizatoriem.</div>
-                </div>
-                <a href="{{ route('news.index') }}" class="feat__link">Ziņas →</a>
-            </div>
-        </aside>
 
         <!-- Bottom bar -->
         <footer class="bottombar">
